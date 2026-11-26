@@ -186,8 +186,8 @@ One Kaggle T4 run produces the whole postable pack.
 | `03_vip_party_flash.png` | 832×1024 · Ibiza rooftop, direct on-camera flash |
 | `04_porsche_gt3_pov.png` | 832×1024 · Amalfi cliff road, Porsche 911 GT3 RS, passenger POV |
 | `05_extreme_action.png` | 832×1024 · open helicopter door above a turquoise coastline |
-| `luca_voice.mp3` | kokoro-onnx `am_adam` @ speed 1.0 — **peak normalisation only** |
-| `luca_reel_clip.mp4` | 576×1024 · 25 fps · 25 real **Stable Video Diffusion** frames → audio-matched |
+| `luca_voice.mp3` | 3.63 s · kokoro-onnx `am_adam` @ speed 1.0 · −1.41 dBFS — **peak normalisation only** |
+| `luca_reel_clip.mp4` | 576×1024 · 25 fps · 91 frames from 25 real **Stable Video Diffusion** frames, 3.64 s, H.264 High + AAC |
 | `luca_video_sheet.png` | 8-frame strip of the neural clip |
 | `luca_metrics.json` | per-slide seeds/masks, timings, env fingerprint, video probe |
 
@@ -201,12 +201,26 @@ spatial attention masking, not post-processing:
 cross_attention_kwargs={"ip_adapter_masks": [mask]}   # mask: [1, num_ip_images, H, W]
 ```
 
-`mask` is `1.0` over the left half (where Luca stands), ramps smoothly to `0.0`
-by 60 % of the width, so the woman on the right keeps her own face while the
-man on the left keeps Luca's. Verified against `diffusers` 0.42 source and by
-running a real `IPAdapterPlusImageProjection` UNet: left-vs-right masks change
-the output by ~0.055 (mean abs), and mask/image count mismatches raise loudly.
-Slides `04`/`05` are single-subject, so they use the unmasked (stronger) path.
+`mask` is `1.0` over **the half of the frame where Luca actually renders**,
+ramping smoothly to `0.0`, so the woman keeps her own face while he keeps Luca's.
+Verified against `diffusers` 0.42 source and by running a real
+`IPAdapterPlusImageProjection` UNet: left-vs-right masks change the output by
+~0.055 (mean abs), and mask/image count mismatches raise loudly. Slides `04`/`05`
+are single-subject, so they use the unmasked (stronger) path.
+
+**Which half is not a detail.** Four runs isolated it by elimination:
+
+| Run | Mask | Composition |
+| --- | --- | --- |
+| `45893591367` | left, wide ramp | **two men** — identity bled onto the second subject |
+| `45895178163` | left, tight ramp | real woman, but she sat *on* the mask and the man lost Luca's face |
+| `45896917042` | left (man named first) | correct pair, still mirrored — the identity landed on **her**, Luca became a bearded stranger |
+| `45898514463` | **right** | ✅ correct: Luca right, the woman left, each with their own face |
+
+For a "woman and a man" pair SDXL consistently places the **woman on the left**,
+whatever the naming order — so a mask on the left always paints Luca's face onto
+her. `build_ip_mask` therefore supports both `left` and `right` and the
+two-person slides use `right` (1.0 above x=70 %, ramping out by x=52 %).
 
 If the masked call ever raises at runtime the kernel retries that slide
 unmasked rather than losing it, and records `masked_ip_adapter: false` plus
@@ -259,10 +273,27 @@ IP-Adapter-Plus-Face, SVD-XT, Kokoro) comes from the public hub at run time.
 Full `main()` executed end-to-end against stubbed pipelines (~14 s): all 17
 artifacts produced, `576×1024` H.264 High + AAC 24 kHz mono muxed at 25 fps,
 `luca_voice.mp3` peak −1.41 dBFS with zero clipped samples, per-slide mask
-records correct (`left`/`left`/`full`/`full`, two with `masked_ip_adapter:
-true`). Local rehearsal caught two real bugs pre-flight: a `set + set`
-`TypeError` in the metrics finaliser and an ffmpeg deadlock that hung the
-kernel for the full timeout when a frame write failed.
+records correct (two slides with `masked_ip_adapter: true`). Local rehearsal
+caught two real bugs pre-flight: a `set + set` `TypeError` in the metrics
+finaliser and an ffmpeg deadlock that would have hung the kernel for the full
+timeout whenever a frame write failed.
+
+### Final run
+
+`45898514463` — **success, 12 m 51 s wall clock, 760 s kernel, zero errors.**
+
+| Stage | Time |
+| --- | --- |
+| load RealVisXL | 40.5 s |
+| master + 4 slides | 33 + 25/26/27/26 s |
+| CLIP-ViT-H + IP-Adapter | 26.5 + 9.4 s |
+| load SVD-XT | 26.5 s |
+| **25 neural frames** | **373.7 s** |
+| kokoro (download → mp3) | 5.1 s |
+| encode + sheets + probe | 3.8 s |
+
+Peak VRAM 11.15 GB of the T4's 14.56 GB. SVD is ~50 % of the wall clock, which
+is the honest cost of real neural motion instead of a pixel trick.
 
 ## Next pilots
 
