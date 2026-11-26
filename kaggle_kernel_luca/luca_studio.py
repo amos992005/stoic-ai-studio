@@ -729,22 +729,38 @@ class FaceEngine:
     """
 
     def __init__(self, models: Dict[str, Path], device_id: int, timings: Dict[str, float],
-                 tag: str = "gpu0"):
+                 tag: str = "gpu0", use_cuda: bool = True):
         self.models = models
         self.device_id = device_id
         self.tag = tag
         self.timings = timings
+        self.use_cuda = use_cuda
         self.app = None
         self.swapper = None
 
     def _providers(self) -> List[str]:
+        """
+        Prefer CUDA, with a graceful CPU fallback.
+
+        Kaggle's `onnxruntime` build has no CUDA provider at all and reports its
+        providers with a "-gpu" suffix (`CPUExecutionProvider-gpu`), so an exact
+        membership test against "CPUExecutionProvider" silently failed and we
+        never asked for CUDA even when onnxruntime-gpu was installed.
+        """
         try:
             import onnxruntime as ort
 
-            available = ort.get_available_providers()
-            return [p for p in ("CUDAExecutionProvider", "CPUExecutionProvider") if p in available]
-        except Exception:
+            available = list(ort.get_available_providers())
+        except Exception as exc:
+            log(f"onnxruntime unavailable: {exc}", "WARN", tag=self.tag)
             return ["CPUExecutionProvider"]
+
+        wanted: List[str] = []
+        if self.use_cuda and any("CUDA" in p for p in available):
+            wanted.append(next(p for p in available if "CUDA" in p))
+        wanted.append("CPUExecutionProvider")
+        log(f"onnxruntime providers: available={available} → using={wanted}", tag=self.tag)
+        return wanted
 
     def load(self) -> None:
         from insightface.app import FaceAnalysis
@@ -759,12 +775,11 @@ class FaceEngine:
             )
             self.app.prepare(ctx_id=self.device_id, det_size=(640, 640), det_thresh=0.35)
 
-        with timed("load_inswapper", self.timings, self.tag):
-            import onnxruntime as ort
-
-            providers = self._providers()
-            self.swapper = ort.InferenceSession(str(self.models["inswapper"]), providers=providers)
-            log(f"inswapper providers: {self.swapper.get_providers()}", tag=self.tag)
+        # NOTE: the swapper is instantiated lazily in swap_male() via
+        # insightface.model_zoo.get_model — never as a bare InferenceSession.
+        with timed("check_inswapper", self.timings, self.tag):
+            size_mb = self.models["inswapper"].stat().st_size / 1024 ** 2
+            log(f"inswapper_128.onnx present ({size_mb:.0f} MB)", tag=self.tag)
 
     # -- detection ---------------------------------------------------------- #
 
@@ -774,17 +789,24 @@ class FaceEngine:
         bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
         return self.app.get(bgr)
 
-    def pick_male(self, faces: List[Any], width: int) -> Optional[Any]:
-        """The male face, preferring the rightmost candidate (where Luca stands)."""
+    def pick_male(self, faces: List[Any]) -> Tuple[Optional[Any], Optional[int]]:
+        """
+        The male face + its index, preferring the rightmost candidate.
+
+        Returns (face, index) explicitly: `list.index(face)` compares numpy
+        arrays inside Face and raises "truth value of an array is ambiguous".
+        """
         if not faces:
-            return None
-        males = [f for f in faces if getattr(f, "sex", None) == "M"]
+            return None, None
+        indexed = list(enumerate(faces))
+        males = [(i, f) for i, f in indexed if getattr(f, "sex", None) == "M"]
         if not males:
-            # genderage may be unsure on small/stylised faces — fall back to the
-            # rightmost face, which the prompts always place Luca on.
+            # genderage is unsure on stylised faces — fall back to the rightmost
+            # face, which the prompts always place Luca on.
             log("no face scored male; falling back to rightmost face", "WARN", tag=self.tag)
-            males = list(faces)
-        return max(males, key=lambda f: f.bbox[0] + f.bbox[2])
+            males = indexed
+        idx, face = max(males, key=lambda pair: pair[1].bbox[0] + pair[1].bbox[2])
+        return face, idx
 
     @staticmethod
     def face_box(face, width: int, height: int, mult: float = FACE_CROP_MULT
@@ -818,23 +840,29 @@ class FaceEngine:
             "male_index": None,
             "swapped": False,
         }
-        male = self.pick_male(faces, width)
+        male, male_index = self.pick_male(faces)
+        info["male_index"] = male_index
         if male is None:
             log("no face detected — swap skipped", "WARN", tag=self.tag)
             return scene_rgb, None, info
 
-        info["male_index"] = list(faces).index(male)
         bbox = self.face_box(male, width, height)
         info["male_bbox"] = list(bbox)
 
+        # ALWAYS go through insightface's INSwapper wrapper: it owns the FFHQ
+        # alignment templates and calls `session.run(...)`. A raw
+        # onnxruntime.InferenceSession has no `.get()`, which is exactly how the
+        # first attempt lost every swap.
         if self.swapper is None:
-            self.swapper = get_model(str(self.models["inswapper"]), providers=self._providers())
+            self.swapper = get_model(str(self.models["inswapper"]),
+                                     providers=self._providers())
+            log(f"inswapper model: {type(self.swapper).__name__}", tag=self.tag)
 
-        out = scene_rgb.copy()
-        out = self.swapper.get(out, male, source_face, paste_back=True)
+        out = np.asarray(self.swapper.get(scene_rgb.copy(), male, source_face,
+                                         paste_back=True))
         info["swapped"] = True
-        log(f"inswapper applied to male face idx={info['male_index']} bbox={bbox} "
-            f"(genders={info['genders']})", tag=self.tag)
+        log(f"inswapper → male idx={male_index} bbox={bbox} genders={info['genders']}",
+            tag=self.tag)
         return out, bbox, info
 
     # -- verification ------------------------------------------------------- #
@@ -843,7 +871,8 @@ class FaceEngine:
         faces = self.detect(image_rgb)
         if not faces:
             return None
-        face = self.pick_male(faces, image_rgb.shape[1]) or faces[0]
+        face, _ = self.pick_male(faces)
+        face = face if face is not None else faces[0]
         emb = getattr(face, "normed_embedding", None)
         return None if emb is None else np.asarray(emb, dtype=np.float32)
 
@@ -1832,7 +1861,9 @@ def probe_video(path: Path) -> Dict[str, Any]:
 
 
 def save_slide(image: Image.Image, png: Path, jpg: Path) -> None:
-    image.save(png, format="PNG", optimize=True)
+    # `compress_level=9` keeps the 1024-1210 KB PNGs safely under the 5 MB
+    # commit ceiling; the q92 JPEG next to it is the postable copy.
+    image.save(png, format="PNG", optimize=True, compress_level=9)
     image.convert("RGB").save(jpg, format="JPEG", quality=JPEG_QUALITY, optimize=True,
                               progressive=True)
     log(f"wrote {png.name} ({png.stat().st_size/1024:.0f} KB) + "
@@ -1872,7 +1903,7 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
     engine = FaceEngine(models, 0, timings, tag)
     engine.load()
     source_faces = engine.detect(np.asarray(master))
-    source_face = engine.pick_male(source_faces, master.width)
+    source_face, _ = engine.pick_male(source_faces)
     if source_face is None:
         raise RuntimeError("no face found in the master slide — biometric lock impossible")
     master_emb = engine.embedding(np.asarray(master))
@@ -1954,7 +1985,10 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
 
     # Hand the final slides to the video worker through the queue (queue, not a
     # shared file: it cannot be half-written).
-    q.put({"slides": {i: np.asarray(im) for i, im in final_slides.items()}})
+    try:
+        q.put({"slides": {i: np.asarray(im) for i, im in final_slides.items()}})
+    except Exception as exc:
+        log(f"could not publish slides to the reel worker: {exc}", "WARN", tag=tag)
     return result
 
 
@@ -1964,14 +1998,24 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
 
 
 def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path],
-             q: Any, wait_seconds: float = 600.0) -> Dict[str, Any]:
-    """cuda:1 — edge-tts voice, LivePortrait hook, SVD b-roll, muxed reel."""
+             q: Any, wait_seconds: float = 240.0, preflight_only: bool = False) -> Dict[str, Any]:
+    """
+    cuda:1 — edge-tts voice, LivePortrait hook, SVD b-roll, muxed reel.
+
+    `preflight_only` exercises every expensive/risky path (LivePortrait weights +
+    session, one real frame, one 2-frame SVD pass) and returns before the voice,
+    so a single GPU can verify the whole reel stack. It also means the carousel
+    is never blocked by a slow avatar pipeline.
+    """
     tag = "gpu1"
     device = "cuda:1"
     import torch
 
     torch.cuda.set_device(1)
     result: Dict[str, Any] = {"artifacts": [], "errors": []}
+
+    if preflight_only:
+        return _preflight_reel(output_dir, timings, models)
 
     # ---- voice first: the video length is derived from it ----
     voice = synth_voice(output_dir, timings)
@@ -2080,6 +2124,64 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
     return result
 
 
+def _preflight_reel(output_dir: Path, timings: Dict[str, float],
+                    models: Dict[str, Path]) -> Dict[str, Any]:
+    """
+    Exercise the risky parts of the reel pipeline without writing deliverables.
+
+    This is the "never lose a carousel to a slow avatar model" guard: if
+    LivePortrait or SVD cannot run, we find out from a bounded probe instead of
+    from a 25-minute poll timeout that discards 5 finished slides.
+    """
+    device = "cuda:1"
+    report: Dict[str, Any] = {"preflight": True, "checks": {}}
+    probe_image = Image.fromarray(
+        (np.random.default_rng(3).random((1024, 768, 3)) * 255).astype(np.uint8))
+
+    # --- LivePortrait: weights + session + one real frame ---
+    try:
+        with timed("preflight_liveportrait", timings, "gpu1"):
+            repo = fetch_liveportrait(timings)
+            driver = LivePortraitDriver(repo, 1, models["buffalo_l"], timings)
+            driver.load()
+            src = _nine_sixteen_portrait(probe_image, np.asarray(probe_image), (576, 1024))
+            driving = repo / "assets" / "examples" / "driving" / "d0.mp4"
+            frames, info = driver.animate(src, driving, 2, np.array([0.1, 0.6], np.float32))
+            report["checks"]["liveportrait"] = {"ok": True, "probe_frames": len(frames),
+                                                **{k: v for k, v in info.items()
+                                                   if k not in ("frames",)}}
+            del driver
+            release_memory(device)
+    except Exception as exc:
+        report["checks"]["liveportrait"] = {"ok": False,
+                                            "error": f"{type(exc).__name__}: {exc}"}
+        log(f"preflight LivePortrait FAILED: {type(exc).__name__}: {exc}", "ERROR", tag="gpu1")
+        log(traceback.format_exc(), "ERROR", tag="gpu1")
+
+    # --- SVD: two frames is enough to prove the pipeline runs ---
+    try:
+        with timed("preflight_svd", timings, "gpu1"):
+            svd = build_svd_pipeline(device, timings)
+            frames, info = svd_broll(svd, probe_image.resize(BROLL_SIZE), 2, BASE_SEED + 9,
+                                     timings, "preflight")
+            report["checks"]["svd"] = {"ok": True, "probe_frames": len(frames),
+                                       "chunk": info.get("decode_chunk_size")}
+            try:
+                svd.to("cpu")
+            except Exception:
+                pass
+            del svd
+            release_memory(device)
+    except Exception as exc:
+        report["checks"]["svd"] = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+        log(f"preflight SVD FAILED: {type(exc).__name__}: {exc}", "ERROR", tag="gpu1")
+
+    ok = all(c.get("ok") for c in report["checks"].values())
+    report["ok"] = ok
+    log(f"preflight result: {json.dumps(report['checks'], default=str)}", tag="gpu1")
+    return report
+
+
 def _nine_sixteen_portrait(image: Image.Image, arr: np.ndarray,
                            size: Tuple[int, int]) -> np.ndarray:
     """
@@ -2161,30 +2263,97 @@ def main() -> int:
         models = stage_face_models(timings)
         metrics["face_models"] = {k: str(v) for k, v in models.items()}
 
-        # ---------------- dual-GPU parallel execution ---------------- #
+        # ---------------- GPU scheduling ---------------- #
         import multiprocessing as mp
 
+        import torch
+
+        gpu_count = torch.cuda.device_count() if torch.cuda.is_available() else 0
+        log(f"GPUs visible: {gpu_count}", tag="main")
+        metrics["gpu_count"] = gpu_count
+        if gpu_count < 1:
+            raise RuntimeError("no CUDA device — enable a Kaggle GPU accelerator")
+
         ctx = mp.get_context("spawn")
-        queue: Any = ctx.Queue()
         results: Dict[str, Any] = {}
 
-        with timed("parallel_gpu_workers", timings):
-            procs = {
-                "carousel": ctx.Process(target=_worker_carousel,
-                                        args=(output_dir, timings, models, queue),
-                                        name="gpu0-carousel"),
-                "reel": ctx.Process(target=_worker_reel,
-                                    args=(output_dir, timings, models, queue),
-                                    name="gpu1-reel"),
-            }
-            for name, proc in procs.items():
-                proc.start()
-                log(f"started {name} worker on {proc.name}", tag="main")
-            for name, proc in procs.items():
-                proc.join()
-                log(f"{name} worker exited with code {proc.exitcode}", tag="main")
-                if proc.exitcode != 0:
-                    metrics["errors"].append({"worker": name, "exitcode": proc.exitcode})
+        if gpu_count >= 2:
+            # True parallel: carousel on cuda:0, reel on cuda:1.
+            queue: Any = ctx.Queue()
+            with timed("parallel_gpu_workers", timings):
+                procs = {
+                    "carousel": ctx.Process(target=_worker_carousel,
+                                            args=(output_dir, timings, models, queue),
+                                            name="gpu0-carousel"),
+                    "reel": ctx.Process(target=_worker_reel,
+                                        args=(output_dir, timings, models, queue, 240.0, False),
+                                        name="gpu1-reel"),
+                }
+                for name, proc in procs.items():
+                    proc.start()
+                    log(f"started {name} worker ({proc.name})", tag="main")
+                for name, proc in procs.items():
+                    proc.join()
+                    log(f"{name} worker exited with code {proc.exitcode}", tag="main")
+                    if proc.exitcode != 0:
+                        metrics["errors"].append({"worker": name, "exitcode": proc.exitcode})
+        else:
+            # One GPU: the avatar/b-roll stack cannot share VRAM with SDXL, so we
+            # PRE-FLIGHT it first (bounded), then hand the GPU to the carousel.
+            # Order matters — a broken avatar model must never cost us the slides.
+            log("single GPU: pre-flighting the reel stack on cuda:0", tag="main")
+            probe_queue: Any = ctx.Queue()
+            probe = ctx.Process(target=_worker_reel,
+                                args=(output_dir, timings, models, probe_queue, 1.0, True),
+                                name="preflight-reel")
+            probe.start()
+            probe.join()
+            preflight_report: Dict[str, Any] = {}
+            sidecar = output_dir / "_metrics_reel.json"
+            if sidecar.is_file():
+                try:
+                    preflight_report = json.loads(sidecar.read_text(encoding="utf-8"))
+                    sidecar.unlink()
+                except Exception as exc:
+                    log(f"could not read preflight sidecar: {exc}", "WARN", tag="main")
+            metrics["preflight"] = preflight_report.get("checks", {})
+            log(f"preflight ok={preflight_report.get('ok')}", tag="main")
+
+            with timed("sequential_workers_single_gpu", timings):
+                car_queue: Any = ctx.Queue()
+                car = ctx.Process(target=_worker_carousel,
+                                  args=(output_dir, timings, models, car_queue),
+                                  name="gpu0-carousel")
+                car.start()
+                car.join()
+                log(f"carousel worker exited with code {car.exitcode}", tag="main")
+                if car.exitcode != 0:
+                    metrics["errors"].append({"worker": "carousel",
+                                              "exitcode": car.exitcode})
+                payload: Dict[str, Any] = {}
+                try:
+                    payload = car_queue.get(timeout=30)
+                except Exception:
+                    pass
+
+                # Reel only runs if the pre-flight proved the stack works.
+                if preflight_report.get("ok"):
+                    with timed("reel_worker_single_gpu", timings):
+                        reel_proc = ctx.Process(
+                            target=_worker_reel,
+                            args=(output_dir, timings, models, _PrefilledQueue(payload),
+                                  1.0, False),
+                            name="gpu0-reel")
+                        reel_proc.start()
+                        reel_proc.join()
+                        log(f"reel worker exited with code {reel_proc.exitcode}", tag="main")
+                        if reel_proc.exitcode != 0:
+                            metrics["errors"].append({"worker": "reel",
+                                                      "exitcode": reel_proc.exitcode})
+                else:
+                    msg = "reel skipped: pre-flight failed (see metrics.preflight)"
+                    log(msg, "ERROR", tag="main")
+                    metrics["errors"].append({"worker": "reel", "error": msg})
 
         # Workers return their detail through the sidecar files they write;
         # worker-local metrics are merged below from those files.
@@ -2269,6 +2438,42 @@ def main() -> int:
     return exit_code
 
 
+def _json_safe(value: Any) -> Any:
+    """
+    Strip numpy arrays / Paths out of worker results.
+
+    The sidecars only need metadata; dumping full frames made the files huge and
+    was the sort of thing that silently fails inside a finally block.
+    """
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()
+                if not isinstance(v, np.ndarray)}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value if not isinstance(v, np.ndarray)]
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, (np.integer, np.floating)):
+        return value.item()
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return str(value)
+
+
+class _PrefilledQueue:
+    """Stand-in for mp.Queue when the slides are already in hand (single GPU)."""
+
+    def __init__(self, payload: Dict[str, Any]):
+        self._payload = payload
+
+    def get(self, timeout: Optional[float] = None) -> Dict[str, Any]:
+        if not self._payload:
+            raise RuntimeError("no carousel payload available")
+        return self._payload
+
+    def put(self, item: Any) -> None:  # pragma: no cover - symmetry only
+        self._payload = item
+
+
 # ---- worker entry points (spawn-safe: module level, no closures) ---------- #
 
 
@@ -2288,7 +2493,7 @@ def _worker_carousel(output_dir: Path, timings: Dict[str, float],
                   "artifacts": ["build.log"]}
     try:
         (output_dir / "_metrics_carousel.json").write_text(
-            json.dumps(result, default=str), encoding="utf-8")
+            json.dumps(_json_safe(result), default=str), encoding="utf-8")
     except Exception as exc:
         log(f"could not write carousel sidecar: {exc}", "WARN", tag="gpu0")
     raise SystemExit(0 if not result.get("errors") else 1)
@@ -2304,7 +2509,7 @@ def _worker_reel(output_dir: Path, timings: Dict[str, float],
         result = {"errors": [f"{type(exc).__name__}: {exc}"], "artifacts": ["build.log"]}
     try:
         (output_dir / "_metrics_reel.json").write_text(
-            json.dumps(result, default=str), encoding="utf-8")
+            json.dumps(_json_safe(result), default=str), encoding="utf-8")
     except Exception as exc:
         log(f"could not write reel sidecar: {exc}", "WARN", tag="gpu1")
     raise SystemExit(0 if not result.get("errors") else 1)

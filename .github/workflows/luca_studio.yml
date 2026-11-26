@@ -183,6 +183,7 @@ jobs:
           touch outputs/build.log
 
           FILES="outputs/luca_carousel_sheet.png outputs/luca_video_sheet.png \
+                 outputs/01_luca_master.png \
                  outputs/luca_reel_clip.mp4 outputs/luca_voice.mp3 \
                  outputs/luca_metrics.json outputs/build.log \
                  outputs/luca_slide_01.jpg outputs/luca_slide_02.jpg \

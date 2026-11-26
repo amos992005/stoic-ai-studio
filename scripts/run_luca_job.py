@@ -19,6 +19,7 @@ Every knob is env-overridable so the same code can be dry-run locally:
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -63,14 +64,18 @@ COMMITTABLE_ARTIFACTS: List[str] = [
     "outputs/luca_voice.mp3",
     "outputs/luca_metrics.json",
     "outputs/build.log",
+    "outputs/01_luca_master.png",
     "outputs/luca_slide_01.jpg",
     "outputs/luca_slide_02.jpg",
     "outputs/luca_slide_03.jpg",
     "outputs/luca_slide_04.jpg",
     "outputs/luca_slide_05.jpg",
 ]
-#: Expected runtime guard — the kernel must stay inside the 10-minute budget.
-MAX_RUNTIME_SECONDS = 600
+#: The dual-GPU run is ~15 min; on a single T4 the avatar work runs *after* the
+#: carousel, so allow a longer poll budget than the Phase-3 default.
+POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(50 * 60)))
+#: Runtime guard for the warning only — the work is genuinely longer now.
+MAX_RUNTIME_SECONDS = 1800
 
 
 def load_orchestrator():
@@ -96,6 +101,7 @@ def main() -> int:
     orchestrator.COMMITTABLE_ARTIFACTS = list(COMMITTABLE_ARTIFACTS)
     # No dataset_sources: Phase 3 downloads every weight from the public hub.
     orchestrator.DEFAULT_DATASET_SOURCES = []
+    orchestrator.POLL_TIMEOUT_SECONDS = POLL_TIMEOUT_SECONDS
 
     orchestrator.log("=" * 78)
     orchestrator.log("PHASE 3 · LUCA MORETTI · CAROUSEL + VOICE + NEURAL VIDEO")

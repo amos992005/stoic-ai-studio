@@ -492,9 +492,35 @@ def get_status(slug: str, env: Dict[str, str]) -> Optional[str]:
 # --------------------------------------------------------------------------- #
 
 
+#: Names that only a *this-run* kernel could have produced. Cleared before the
+#: download so a failed run can never be "validated" against a previous run's
+#: files — that is precisely how one failed run reported success.
+RUN_ARTIFACT_GLOBS = ("luca_*", "_metrics_*.json", "_voice_raw.mp3",
+                      "0[1-5]_*.png", "luca_voice.wav")
+
+
+def clear_stale_outputs(dest: Path) -> None:
+    """Remove artifacts from earlier runs before downloading fresh ones."""
+    if not dest.is_dir():
+        return
+    removed = 0
+    for pattern in RUN_ARTIFACT_GLOBS:
+        for path in dest.glob(pattern):
+            if path.name in (".gitkeep", "build.log"):
+                continue
+            try:
+                path.unlink()
+                removed += 1
+            except Exception:
+                pass
+    if removed:
+        log(f"cleared {removed} stale artifact(s) from {dest}")
+
+
 def download_outputs(slug: str, env: Dict[str, str], dest: Path) -> bool:
     """`kaggle kernels output` into ./outputs (which is the kernel workdir)."""
     dest.mkdir(parents=True, exist_ok=True)
+    clear_stale_outputs(dest)
     proc = run(
         ["kaggle", "kernels", "output", slug, "-p", str(dest)],
         env=env,
