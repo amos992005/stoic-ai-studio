@@ -178,24 +178,29 @@ SLIDES: List[Dict[str, Any]] = [
         "mask": "left",
         "people": 2,
         "prompt": (
-            # Ordered description: "a woman ... standing next to a man ...".
-            # Putting the *woman* first is what makes her the anchor subject;
-            # with the man first SDXL collapses the second slot back into a man,
-            # and the single male identity reference on the left reinforced it.
-            "Candid iPhone 16 Pro 24mm photo of a woman and a man together on the "
-            "sun deck of a luxury Riva yacht in Monaco at sunset. In the RIGHT "
-            "HALF of the frame a stunning young brunette woman in a bikini is "
-            "laughing naturally, long dark hair, feminine figure, looking away "
-            "from the camera; she is standing next to her date. In the LEFT HALF "
-            "of the frame a shirtless athletic 27-year-old man holds a champagne "
-            f"flute with a confident smirk, looking at the camera ({LUCA}). One "
-            "man and one woman, two different people, side by side. Bright ocean "
-            "horizon, Monaco skyline behind them, harbour lights beginning to "
-            f"glow, salt spray on the lens, {CAMERA}"
+            # Two independent lessons from the runs:
+            #   run 45893591367  man-first + loose mask  -> two men
+            #   run 45895178163  woman-first + tight mask -> real woman, but she
+            #                    landed LEFT (on the identity mask) and the man on
+            #                    the right lost Luca's face: the frame mirrored.
+            # SDXL tends to put the *first-named* subject on the left, so we name
+            # the man first (he must sit on the mask side) while describing the
+            # woman emphatically and negating "two men / no woman".
+            "Candid iPhone 16 Pro 24mm photo of a man and a woman together on the "
+            "sun deck of a luxury Riva yacht in Monaco at sunset. LEFT HALF of the "
+            "frame: a shirtless athletic 27-year-old man holding a champagne "
+            f"flute, confident smirk, looking at the camera ({LUCA}). RIGHT HALF "
+            "of the frame: a stunning young brunette woman in a bikini laughing "
+            "naturally, long dark hair, clearly a woman, standing right next to "
+            "him, looking away from the camera. One man and one woman, two "
+            "different people, side by side. Bright ocean horizon, Monaco "
+            "skyline behind them, harbour lights beginning to glow, salt spray "
+            f"on the lens, {CAMERA}"
         ),
         "negative": (
             "two men, two women, male couple, men only, no woman, two boys, "
-            "duplicate man, cloned face, twins, same face twice"
+            "duplicate man, cloned face, twins, same face twice, "
+            "woman in the center, woman on the left"
         ),
     },
     {
@@ -205,20 +210,20 @@ SLIDES: List[Dict[str, Any]] = [
         "mask": "left",
         "people": 2,
         "prompt": (
-            "Candid 35mm direct on-camera flash photo of a woman and a man "
-            "together at an Ibiza rooftop VIP party at night. In the RIGHT HALF "
-            "of the frame a gorgeous blonde woman in an evening dress holds a "
-            "cocktail and smiles, feminine figure, long blonde hair, standing "
-            "beside him; she is his date. In the LEFT HALF of the frame a "
-            "27-year-old man in an unbuttoned black silk shirt smirks at the "
-            f"camera ({LUCA}). One man and one woman, two different people, side "
-            "by side. Harsh flash falloff, dark background with bokeh club "
-            f"lights, slightly blown highlights, authentic night-flash aesthetic, "
-            f"{CAMERA}"
+            "Candid 35mm direct on-camera flash photo of a man and a woman "
+            "together at an Ibiza rooftop VIP party at night. LEFT HALF of the "
+            "frame: a 27-year-old man in an unbuttoned black silk shirt, smirking "
+            f"at the camera ({LUCA}). RIGHT HALF of the frame: a gorgeous blonde "
+            "woman in an evening dress holding a cocktail, long blonde hair, "
+            "clearly a woman, standing right beside him, smiling. One man and one "
+            "woman, two different people, side by side. Harsh flash falloff, dark "
+            "background with bokeh club lights, slightly blown highlights, "
+            f"authentic night-flash aesthetic, {CAMERA}"
         ),
         "negative": (
             "two men, two women, male couple, men only, no woman, two boys, "
-            "duplicate man, cloned face, twins, same face twice"
+            "duplicate man, cloned face, twins, same face twice, "
+            "woman in the center, woman on the left"
         ),
     },
     {
