@@ -88,13 +88,33 @@ jobs:
           print("kernel script static checks passed")
           PY
 
+      - name: Preflight — Kaggle credentials present?
+        # Never prints the values, only whether they exist (GitHub masks secrets
+        # anyway, this just fails fast with an actionable message).
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "${KAGGLE_USERNAME:-}" ] || missing="$missing KAGGLE_USERNAME"
+          [ -n "${KAGGLE_KEY:-}" ]      || missing="$missing KAGGLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing — add them under Settings → Secrets and variables → Actions (repository secrets, not environment/variable entries)."
+            exit 1
+          fi
+          echo "KAGGLE_USERNAME is set (${#KAGGLE_USERNAME} chars)"
+          echo "KAGGLE_KEY is set (${#KAGGLE_KEY} chars)"
+
       - name: Run Kaggle job
         # `tee -a` keeps a live log in the repo even if the orchestrator dies.
         # The orchestrator rotates the file first so it never grows unbounded.
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
           set -o pipefail
           mkdir -p outputs
-          : > outputs/build.log
           python scripts/run_kaggle_job.py 2>&1 | tee -a outputs/build.log
 
       - name: Upload artifacts (debug bundle)
