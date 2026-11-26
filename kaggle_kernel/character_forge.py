@@ -322,10 +322,63 @@ def ensure_dependencies(timings: Dict[str, float]) -> None:
 # --------------------------------------------------------------------------- #
 
 
+def _first_available(owner, names: List[str], label: str) -> Optional[str]:
+    """
+    Call the first API that exists on this object and return its name.
+
+    diffusers relocates these knobs between releases (0.42 removed
+    `pipe.enable_vae_slicing()` in favour of `pipe.vae.enable_slicing()`), so we
+    never hard-code a single signature for an *optional* VRAM optimisation.
+    """
+    for name in names:
+        parts = name.split(".")
+        target = owner
+        try:
+            for part in parts[:-1]:
+                target = getattr(target, part)
+            fn = getattr(target, parts[-1], None)
+        except AttributeError:
+            continue
+        if not callable(fn):
+            continue
+        try:
+            fn()
+            log(f"{label}: applied {name}()")
+            return name
+        except Exception as exc:
+            log(f"{label}: {name}() failed ({type(exc).__name__}: {exc})", "WARN")
+    log(f"{label}: no supported API on this diffusers build (skipped)", "WARN")
+    return None
+
+
+def _from_pretrained_pipeline(model_id: str, label: str):
+    """Load an SDXL pipeline in fp16, tolerating the dtype/torch_dtype rename."""
+    import torch
+    from diffusers import StableDiffusionXLPipeline
+
+    attempts: List[Dict[str, Any]] = [
+        {"variant": "fp16", "dtype": torch.float16, "use_safetensors": True},
+        {"variant": "fp16", "torch_dtype": torch.float16, "use_safetensors": True},
+        {"dtype": torch.float16, "use_safetensors": True},
+        {"torch_dtype": torch.float16, "use_safetensors": True},
+    ]
+    last_error: Optional[Exception] = None
+    for kwargs in attempts:
+        dtype_key = "dtype" if "dtype" in kwargs else "torch_dtype"
+        variant = "fp16 variant" if "variant" in kwargs else "no variant"
+        try:
+            log(f"{label}: loading {model_id} ({dtype_key}=float16, {variant})")
+            return StableDiffusionXLPipeline.from_pretrained(model_id, **kwargs)
+        except Exception as exc:
+            last_error = exc
+            log(f"{label}: attempt failed ({type(exc).__name__}: {exc})", "WARN")
+    raise RuntimeError(f"could not load {model_id}: {last_error}") from last_error
+
+
 def build_pipeline(timings: Dict[str, float]):
     """Load RealVisXL V5.0 in fp16 on cuda:0 with a Karras DPM-Solver++ scheduler."""
     import torch
-    from diffusers import DPMSolverMultistepScheduler, StableDiffusionXLPipeline
+    from diffusers import DPMSolverMultistepScheduler
 
     if not torch.cuda.is_available():
         raise RuntimeError(
@@ -336,40 +389,48 @@ def build_pipeline(timings: Dict[str, float]):
     device = "cuda:0"
     log(f"device={device} · {torch.cuda.get_device_name(0)}")
 
-    # `variant="fp16"` downloads half the bytes; fall back for repos without it.
-    load_kwargs: Dict[str, Any] = {
-        "torch_dtype": torch.float16,
-        "use_safetensors": True,
-    }
     with timed("load_sdxl_pipeline", timings):
-        try:
-            pipe = StableDiffusionXLPipeline.from_pretrained(
-                MODEL_ID, variant="fp16", **load_kwargs
-            )
-        except Exception as exc:
-            log(f"fp16 variant unavailable ({type(exc).__name__}: {exc}); retrying", "WARN")
-            pipe = StableDiffusionXLPipeline.from_pretrained(MODEL_ID, **load_kwargs)
+        pipe = _from_pretrained_pipeline(MODEL_ID, "sdxl")
 
     with timed("configure_scheduler_and_vram", timings):
-        pipe.scheduler = DPMSolverMultistepScheduler.from_config(
-            pipe.scheduler.config,
-            use_karras_sigmas=True,
-            algorithm_type="dpmsolver++",
-        )
-        pipe.set_progress_bar_config(disable=False, desc="diffusion")
-        pipe = pipe.to(device, dtype=torch.float16)
-        # T4-friendly memory hygiene.
-        pipe.enable_vae_slicing()
-        pipe.enable_vae_tiling()
         try:
-            pipe.enable_attention_slicing("max")
-        except Exception as exc:  # pragma: no cover
-            log(f"attention slicing unavailable: {exc}", "WARN")
-        try:  # newer diffusers only: never silently crop to a training bucket
-            pipe.set_use_resolution_binning(False)
-            log("resolution binning disabled (exact 768x1344 output)")
+            pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+                pipe.scheduler.config,
+                use_karras_sigmas=True,
+                algorithm_type="dpmsolver++",
+            )
+            log("scheduler: DPM-Solver++ with Karras sigmas")
+        except Exception as exc:
+            log(f"scheduler swap failed, keeping default: {exc}", "WARN")
+
+        try:
+            pipe.set_progress_bar_config(disable=False, desc="diffusion")
         except Exception:
             pass
+
+        try:
+            pipe.to(device)
+            log(f"pipeline moved to {device} (fp16 weights)")
+        except Exception as exc:
+            raise RuntimeError(f"could not move pipeline to {device}: {exc}") from exc
+
+        # Optional, version-dependent VRAM guarantees — never fatal.
+        _first_available(pipe, ["vae.enable_slicing", "enable_vae_slicing"], "vae slicing")
+        _first_available(pipe, ["vae.enable_tiling", "enable_vae_tiling"], "vae tiling")
+        _first_available(
+            pipe,
+            ["enable_attention_slicing", "unet.enable_attention_slicing"],
+            "attention slicing",
+        )
+        _first_available(pipe, ["set_use_resolution_binning"], "resolution binning")
+
+        # fp32 VAE avoids NaNs / colour blooming on several SDXL checkpoints.
+        try:
+            if getattr(pipe, "vae", None) is not None:
+                pipe.vae.to(dtype=torch.float32)
+                log("vae upcast to float32 (numerical stability)")
+        except Exception as exc:
+            log(f"vae upcast skipped: {exc}", "WARN")
 
     return pipe, device
 
@@ -386,13 +447,31 @@ def attach_face_adapter(pipe, device: str, timings: Dict[str, float]) -> bool:
     log(f"attaching IP-Adapter Face ({IP_ADAPTER_WEIGHT}) @ scale {IP_ADAPTER_SCALE}")
     try:
         with timed("load_clip_vision", timings):
-            image_encoder = CLIPVisionModelWithProjection.from_pretrained(
-                CLIP_VISION_ID,
-                torch_dtype=torch.float16,
-                use_safetensors=True,
-            ).to(device)
+            image_encoder = None
+            last_error: Optional[Exception] = None
+            # transformers 5.x deprecates `torch_dtype` in favour of `dtype`.
+            for kwargs in (
+                {"dtype": torch.float16, "use_safetensors": True},
+                {"torch_dtype": torch.float16, "use_safetensors": True},
+                {"dtype": torch.float16},
+                {},
+            ):
+                try:
+                    image_encoder = CLIPVisionModelWithProjection.from_pretrained(
+                        CLIP_VISION_ID, **kwargs
+                    )
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    log(f"clip-vision load attempt failed ({type(exc).__name__}: {exc})", "WARN")
+            if image_encoder is None:
+                raise RuntimeError(
+                    f"could not load {CLIP_VISION_ID}: {last_error}"
+                ) from last_error
+            image_encoder = image_encoder.to(device, dtype=torch.float16)
             image_encoder.eval()
             pipe.image_encoder = image_encoder
+            log("clip vision encoder ready (ViT-H, fp16)")
 
         with timed("load_ip_adapter", timings):
             pipe.load_ip_adapter(
@@ -400,7 +479,16 @@ def attach_face_adapter(pipe, device: str, timings: Dict[str, float]) -> bool:
                 subfolder=IP_ADAPTER_SUBFOLDER,
                 weight_name=IP_ADAPTER_WEIGHT,
             )
-            pipe.set_ip_adapter_scale(IP_ADAPTER_SCALE)
+            if hasattr(pipe, "set_ip_adapter_scale"):
+                pipe.set_ip_adapter_scale(IP_ADAPTER_SCALE)
+            else:  # older/newer private hook
+                setter = getattr(pipe, "_set_ip_adapter_scale", None)
+                if setter is None:
+                    raise RuntimeError(
+                        "this diffusers build exposes no IP-Adapter scale setter"
+                    )
+                setter(IP_ADAPTER_SCALE)
+            log(f"ip-adapter scale set to {IP_ADAPTER_SCALE}")
         log("IP-Adapter Face ready — character consistency is locked.")
         return True
     except Exception as exc:
