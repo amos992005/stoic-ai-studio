@@ -178,17 +178,24 @@ SLIDES: List[Dict[str, Any]] = [
         "mask": "left",
         "people": 2,
         "prompt": (
-            # Two people must be named up front: a description that buries the
-            # woman after a long male clause gets collapsed into a solo portrait.
-            "Candid iPhone 16 Pro 24mm photo of two people together on the sun "
-            "deck of a luxury Riva yacht in Monaco at sunset. LEFT HALF of the "
-            "frame: a shirtless athletic 27-year-old man holding a champagne "
-            f"flute, confident smirk, looking at the camera ({LUCA}). RIGHT HALF "
-            "of the frame: a stunning young brunette woman in a bikini, laughing "
-            "naturally and looking away from the camera. A man and a woman, two "
-            "different people, side by side. Bright ocean horizon, Monaco "
-            "skyline behind them, harbour lights beginning to glow, salt spray "
-            f"on the lens, {CAMERA}"
+            # Ordered description: "a woman ... standing next to a man ...".
+            # Putting the *woman* first is what makes her the anchor subject;
+            # with the man first SDXL collapses the second slot back into a man,
+            # and the single male identity reference on the left reinforced it.
+            "Candid iPhone 16 Pro 24mm photo of a woman and a man together on the "
+            "sun deck of a luxury Riva yacht in Monaco at sunset. In the RIGHT "
+            "HALF of the frame a stunning young brunette woman in a bikini is "
+            "laughing naturally, long dark hair, feminine figure, looking away "
+            "from the camera; she is standing next to her date. In the LEFT HALF "
+            "of the frame a shirtless athletic 27-year-old man holds a champagne "
+            f"flute with a confident smirk, looking at the camera ({LUCA}). One "
+            "man and one woman, two different people, side by side. Bright ocean "
+            "horizon, Monaco skyline behind them, harbour lights beginning to "
+            f"glow, salt spray on the lens, {CAMERA}"
+        ),
+        "negative": (
+            "two men, two women, male couple, men only, no woman, two boys, "
+            "duplicate man, cloned face, twins, same face twice"
         ),
     },
     {
@@ -198,14 +205,20 @@ SLIDES: List[Dict[str, Any]] = [
         "mask": "left",
         "people": 2,
         "prompt": (
-            "Candid 35mm direct on-camera flash photo of two people together at "
-            "an Ibiza rooftop VIP party at night. LEFT HALF of the frame: a "
-            "27-year-old man in an unbuttoned black silk shirt, smirking at the "
-            f"camera ({LUCA}). RIGHT HALF of the frame: a gorgeous blonde woman "
-            "in an evening dress holding a cocktail, smiling. A man and a woman, "
-            "two different people, side by side. Harsh flash falloff, dark "
-            "background with bokeh club lights, slightly blown highlights, "
-            f"authentic night-flash aesthetic, {CAMERA}"
+            "Candid 35mm direct on-camera flash photo of a woman and a man "
+            "together at an Ibiza rooftop VIP party at night. In the RIGHT HALF "
+            "of the frame a gorgeous blonde woman in an evening dress holds a "
+            "cocktail and smiles, feminine figure, long blonde hair, standing "
+            "beside him; she is his date. In the LEFT HALF of the frame a "
+            "27-year-old man in an unbuttoned black silk shirt smirks at the "
+            f"camera ({LUCA}). One man and one woman, two different people, side "
+            "by side. Harsh flash falloff, dark background with bokeh club "
+            f"lights, slightly blown highlights, authentic night-flash aesthetic, "
+            f"{CAMERA}"
+        ),
+        "negative": (
+            "two men, two women, male couple, men only, no woman, two boys, "
+            "duplicate man, cloned face, twins, same face twice"
         ),
     },
     {
@@ -687,9 +700,15 @@ def build_ip_mask(kind: Optional[str], width: int, height: int):
     Build the `[1, 1, H, W]` spatial mask that confines the face reference.
 
     "left": 1.0 over the left part of the frame (where Luca stands) fading to
-            0.0 by ~58% of the width, so the woman on the right keeps her own
+            0.0 by ~48% of the width, so the woman on the right keeps her own
             face. The ramp is kept soft: the attention-mask downsampler
             interpolates bicubically, so a hard edge would show up as a seam.
+
+            The ramp matters more than it looks. Run 45893591367 ramped 44%→60%
+            and the male identity still reached x≈50%, so the second subject on
+            the right was pushed towards a *man* -- SDXL resolves "the other
+            person" as male when it inherits half an identity. Tightening to
+            30%→48% keeps the reference contribution clear of the right half.
 
     "full" / None: no mask (single-subject slides).
     """
@@ -702,7 +721,7 @@ def build_ip_mask(kind: Optional[str], width: int, height: int):
         raise ValueError(f"unknown mask kind {kind!r}")
 
     x = np.linspace(0.0, 1.0, width, dtype=np.float32)[None, :]
-    ramp_start, ramp_end = 0.44, 0.60
+    ramp_start, ramp_end = 0.30, 0.48
     weights = np.clip((ramp_end - x) / (ramp_end - ramp_start), 0.0, 1.0)
     weights = weights * weights * (3.0 - 2.0 * weights)  # smoothstep
     column = weights.reshape(1, width).repeat(height, axis=0)
@@ -754,6 +773,7 @@ def generate_image(
     cfg: float,
     ip_adapter_image: Optional[Any] = None,
     mask_kind: Optional[str] = None,
+    negative_prompt: Optional[str] = None,
     label: str = "image",
 ) -> Tuple[Image.Image, Dict[str, Any]]:
     """Run one diffusion pass, optionally with a spatially masked face reference."""
@@ -772,7 +792,7 @@ def generate_image(
 
     kwargs: Dict[str, Any] = {
         "prompt": prompt,
-        "negative_prompt": NEGATIVE_PROMPT,
+        "negative_prompt": negative_prompt or NEGATIVE_PROMPT,
         "width": width,
         "height": height,
         "num_inference_steps": steps,
@@ -1404,6 +1424,11 @@ def main() -> int:
                         seed=seed, steps=SLIDE_STEPS, cfg=SLIDE_CFG,
                         ip_adapter_image=master if face_locked else None,
                         mask_kind=slide["mask"],
+                        negative_prompt=(
+                            NEGATIVE_PROMPT + ", " + slide["negative"]
+                            if slide.get("negative")
+                            else None
+                        ),
                         label=slide["filename"],
                     )
                     save_png(image, png_path)
