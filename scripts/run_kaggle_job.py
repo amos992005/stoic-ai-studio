@@ -51,7 +51,8 @@ DEFAULT_DATASET_SOURCES = [
     f"amos992005/{KERNEL_SLUG}",
     "amos992005/stoic-ai-studio",
 ]
-KERNEL_TITLE = "stoic-ai-studio character forge"
+#: Kaggle warns unless slugify(title) == kernel slug; keep them identical.
+KERNEL_TITLE = KERNEL_SLUG
 
 #: 25 s polling, 25 min budget — overridable so the flow can be dry-run locally.
 POLL_INTERVAL_SECONDS = max(1, int(os.environ.get("KAGGLE_POLL_INTERVAL_SECONDS", "25")))
@@ -124,8 +125,43 @@ def sanitize(value: Optional[str]) -> str:
     return cleaned
 
 
-def write_kaggle_credentials(username: str, key: str) -> Path:
-    """Write ~/.kaggle/kaggle.json with 0600 so the CLI never prompts."""
+def is_access_token(key: str) -> bool:
+    """Kaggle's newer API tokens are prefixed `KGAT_`; legacy keys are 32 hex."""
+    return key.strip().lower().startswith("kgat_")
+
+
+def unpack_credentials(username: str, key: str) -> tuple:
+    """
+    Tolerate people pasting the whole `kaggle.json` (~ or {"username","key"})
+    into a single secret; extract the real username/key pair.
+    """
+    blob = key if key.strip().startswith("{") else (
+        username if username.strip().startswith("{") else ""
+    )
+    if blob:
+        try:
+            data = json.loads(blob)
+            extracted_user = str(data.get("username", "") or "").strip()
+            extracted_key = str(data.get("key", "") or "").strip()
+            if extracted_user and extracted_key:
+                log("parsed a kaggle.json blob out of the secret")
+                return extracted_user, extracted_key
+        except json.JSONDecodeError:
+            log("secret looks like JSON but could not be parsed; using it verbatim", "WARN")
+    return username, key
+
+
+def write_kaggle_credentials(username: str, key: str) -> List[Path]:
+    """
+    Persist credentials for the CLI.
+
+    * legacy key  -> `~/.kaggle/kaggle.json` ({"username", "key"}), mode 600
+    * `KGAT_...`  -> `~/.kaggle/access_token` (bare token), mode 600
+
+    CLI 2.x only accepts KGAT tokens through the access-token path; putting them
+    in kaggle.json's "key" field makes auth fail with "Authentication required".
+    Both files are 0600 and the directory 0700.
+    """
     kaggle_dir = Path.home() / ".kaggle"
     if kaggle_dir.exists() and not kaggle_dir.is_dir():
         kaggle_dir.unlink()
@@ -135,24 +171,43 @@ def write_kaggle_credentials(username: str, key: str) -> Path:
     except OSError:
         pass
 
-    credentials = kaggle_dir / "kaggle.json"
-    credentials.write_text(
-        json.dumps({"username": username, "key": key}, indent=2), encoding="utf-8"
-    )
-    try:
-        credentials.chmod(0o600)
-    except OSError as exc:
-        log(f"chmod 600 failed on {credentials}: {exc}", "WARN")
+    written: List[Path] = []
 
-    mode = oct(credentials.stat().st_mode & 0o777)
-    log(f"wrote credentials to {credentials} (mode {mode})")
-    return credentials
+    def _write(path: Path, content: str) -> None:
+        path.write_text(content, encoding="utf-8")
+        try:
+            path.chmod(0o600)
+        except OSError as exc:
+            log(f"chmod 600 failed on {path}: {exc}", "WARN")
+        written.append(path)
+        log(f"wrote {path} (mode {oct(path.stat().st_mode & 0o777)})")
+
+    token = is_access_token(key)
+    if token:
+        _write(kaggle_dir / "access_token", key + "\n")
+        # Keep username discoverable for the kernel slug without an API call.
+        _write(kaggle_dir / "username", username + "\n")
+    else:
+        _write(kaggle_dir / "kaggle.json", json.dumps({"username": username, "key": key}, indent=2))
+    return written
 
 
 def env_with_credentials(username: str, key: str) -> Dict[str, str]:
-    env = os.environ.copy()
-    env["KAGGLE_USERNAME"] = username
-    env["KAGGLE_KEY"] = key
+    """
+    Build a clean environment for the `kaggle` CLI.
+
+    Exactly one auth style is exported so the CLI cannot fall back to a legacy
+    lookup with a token that only works on the access-token path.
+    """
+    env = {k: v for k, v in os.environ.items() if k not in {"KAGGLE_KEY", "KAGGLE_API_TOKEN"}}
+    if is_access_token(key):
+        env["KAGGLE_API_TOKEN"] = key
+        env["KAGGLE_USERNAME"] = username
+        log("auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)")
+    else:
+        env["KAGGLE_USERNAME"] = username
+        env["KAGGLE_KEY"] = key
+        log("auth mode: legacy API key (KAGGLE_USERNAME + KAGGLE_KEY)")
     env.setdefault("KAGGLE_CONFIG_DIR", str(Path.home() / ".kaggle"))
     env["PYTHONUNBUFFERED"] = "1"
     return env
@@ -219,7 +274,9 @@ def build_metadata(username: str) -> Dict[str, Any]:
     """
     metadata: Dict[str, Any] = {
         "id": f"{username}/{KERNEL_SLUG}",
-        "title": f"{KERNEL_TITLE} ({username})",
+        # Must slugify to exactly the kernel slug, otherwise the CLI warns and
+        # the kernel can be created/updated under a surprising name.
+        "title": KERNEL_TITLE,
         "code_file": CODE_FILE,
         "language": "python",
         "kernel_type": "script",
@@ -527,16 +584,23 @@ def main() -> int:
         log("missing Kaggle credentials in environment", "ERROR")
         return 2
 
+    username, key = unpack_credentials(username, key)
+    if not username or not key:
+        annotate_error(
+            "Kaggle credentials are malformed after sanitising (empty username or key)."
+        )
+        return 2
+
     log(f"username: {username}")
     log(f"key: {key[:4]}…{key[-2:]} (len={len(key)})" if len(key) > 8 else "key: <short>")
-    if key.startswith("KGAT_"):
-        log("detected KGAT_ API token style key — kaggle.json auth path is required")
+    if is_access_token(key):
+        log("detected KGAT_ API token — using the access-token auth path")
 
     env = env_with_credentials(username, key)
     try:
         write_kaggle_credentials(username, key)
     except Exception as exc:
-        log(f"could not write kaggle.json: {exc}", "WARN")
+        log(f"could not persist Kaggle credentials: {exc}", "WARN")
 
     log_group("kaggle CLI version")
     run(["kaggle", "--version"], env=env, timeout=120)
