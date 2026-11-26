@@ -35,26 +35,25 @@ KERNEL_TITLE = KERNEL_SLUG
 KERNEL_DIR = REPO_ROOT / "kaggle_kernel_luca"
 CODE_FILE = "luca_studio.py"
 
-#: Success = a postable carousel, a real voice line, and a real neural clip.
+#: Success = the postable carousel pack. Every slide is a deliverable, so the
+#: sheet plus all five JPEGs are required; a run that produces those is a real
+#: result even if the avatar pass was cut off.
 REQUIRED_ARTIFACTS: List[str] = [
     "luca_carousel_sheet.png",
-    "luca_voice.mp3",
-    "luca_reel_clip.mp4",
-    "luca_metrics.json",
-]
-#: Nice-to-have (warn only) — individual slides are also delivered as JPEGs.
-OPTIONAL_ARTIFACTS: List[str] = [
-    "01_luca_master.png",
-    "02_monaco_yacht_date.png",
-    "03_vip_party_flash.png",
-    "04_porsche_gt3_pov.png",
-    "05_extreme_action.png",
+    "luca_slide_01.jpg",
     "luca_slide_02.jpg",
     "luca_slide_03.jpg",
     "luca_slide_04.jpg",
     "luca_slide_05.jpg",
+    "luca_metrics.json",
+]
+#: The reel is best-effort (its own worker, own budget) — warn, never fail.
+OPTIONAL_ARTIFACTS: List[str] = [
+    "luca_reel_clip.mp4",
+    "luca_voice.mp3",
     "luca_video_sheet.png",
     "luca_voice.wav",
+    "01_luca_master.png",
 ]
 #: Everything the workflow may commit back (5 MB per-file ceiling applies).
 COMMITTABLE_ARTIFACTS: List[str] = [
@@ -71,9 +70,10 @@ COMMITTABLE_ARTIFACTS: List[str] = [
     "outputs/luca_slide_04.jpg",
     "outputs/luca_slide_05.jpg",
 ]
-#: The dual-GPU run is ~15 min; on a single T4 the avatar work runs *after* the
-#: carousel, so allow a longer poll budget than the Phase-3 default.
-POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(50 * 60)))
+#: Must exceed the kernel's own KERNEL_BUDGET_S (30 min) plus provisioning,
+#: model downloads and output download, otherwise we kill a kernel that is about
+#: to report a perfectly good carousel.
+POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(48 * 60)))
 #: Runtime guard for the warning only — the work is genuinely longer now.
 MAX_RUNTIME_SECONDS = 1800
 

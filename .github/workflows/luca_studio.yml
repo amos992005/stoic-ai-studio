@@ -53,7 +53,7 @@ jobs:
   luca:
     name: Luca Moretti (Kaggle T4) — carousel + voice + neural video
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 65
 
     steps:
       - name: Checkout
@@ -134,7 +134,17 @@ jobs:
           assert src.count("strength=ADETAILER_STRENGTH") >= 1
           assert "ADETAILER_STRENGTH = 0.27" in src, "adetailer strength must be 0.27"
           assert "ADETAILER_SCALE = 0.60" in src, "a-face adapter scale must be 0.60"
-          print("phase 3 static checks passed")
+
+          # Failure modes that actually cost us whole runs — keep them fixed.
+          assert "list(faces).index" not in src, \
+              "insightface Face compares ndarrays: never recover an index via list.index"
+          assert "insightface.model_zoo" in src or "model_zoo import get_model" in src, \
+              "inswapper must be built via model_zoo.get_model (an INSwapper, not a session)"
+          assert "CAROUSEL_BUDGET_S" in src and "REEL_MIN_BUDGET_S" in src, \
+              "workers must be wall-clock bounded"
+          assert "_load_slides" in src, "the reel must read published slides from disk"
+          assert "no reel frames were produced" in src, "the reel must fail loudly, not silently"
+          print("phase 4 static checks passed")
           PY
           ls -la kaggle_kernel_luca/
 

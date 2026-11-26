@@ -129,6 +129,18 @@ CAROUSEL_SHEET = "luca_carousel_sheet.png"
 VIDEO_SHEET = "luca_video_sheet.png"
 VOICE_MP3 = "luca_voice.mp3"
 REEL_MP4 = "luca_reel_clip.mp4"
+
+#: Wall-clock budgets. The GitHub job allows 40 min and Kaggle kills a run at
+#: 12 h, but the binding constraint is that a *finished* artifact must exist
+#: early: the carousel is published first and the reel is strictly optional.
+KERNEL_BUDGET_S = int(os.environ.get("KERNEL_BUDGET_S", str(30 * 60)))
+CAROUSEL_BUDGET_S = int(os.environ.get("CAROUSEL_BUDGET_S", str(17 * 60)))
+REEL_BUDGET_S = int(os.environ.get("REEL_BUDGET_S", str(15 * 60)))
+REEL_MIN_BUDGET_S = int(os.environ.get("REEL_MIN_BUDGET_S", str(8 * 60)))
+REEL_AWAIT_SLIDES_S = int(os.environ.get("REEL_AWAIT_SLIDES_S", "900"))
+#: LivePortrait (module load + 60 frames) and one SVD shot, in seconds.
+LIVEPORTRAIT_BUDGET_S = int(os.environ.get("LIVEPORTRAIT_BUDGET_S", str(10 * 60)))
+SVD_SHOT_BUDGET_S = int(os.environ.get("SVD_SHOT_BUDGET_S", str(3 * 60)))
 METRICS_FILENAME = "luca_metrics.json"
 BUILD_LOG = "build.log"
 
@@ -1512,6 +1524,17 @@ class LivePortraitDriver:
         from src.live_portrait_wrapper import LivePortraitWrapper
         from src.utils.cropper import Cropper
 
+        import torch
+
+        visible = torch.cuda.device_count()
+        if self.device_id >= visible:
+            raise RuntimeError(
+                f"LivePortrait asked for cuda:{self.device_id} but only {visible} "
+                f"GPU(s) exist — clamping to cuda:0")
+        self.device_id = min(self.device_id, max(0, visible - 1))
+        log(f"LivePortrait device cuda:{self.device_id} "
+            f"(visible={visible})", tag="gpu1")
+
         with timed("load_liveportrait", self.timings, "gpu1"):
             weights = self.repo / "pretrained_weights"
             cfg = InferenceConfig(
@@ -1533,6 +1556,30 @@ class LivePortraitDriver:
                 checkpoint_G=str(weights / "liveportrait/base_models/spade_generator.pth"),
                 checkpoint_S=str(weights / "liveportrait/retargeting_models/stitching_retargeting_module.pth"),
             )
+            checkpoints = {
+                "appearance_feature_extractor": cfg.checkpoint_F,
+                "motion_extractor": cfg.checkpoint_M,
+                "warping_module": cfg.checkpoint_W,
+                "spade_generator": cfg.checkpoint_G,
+                "stitching_retargeting_module": cfg.checkpoint_S,
+            }
+            for name, path in checkpoints.items():
+                candidate = Path(str(path))
+                if not candidate.is_file() or candidate.stat().st_size < 1024:
+                    raise RuntimeError(f"{name} checkpoint missing/empty: {candidate}")
+                log(f"checkpoint {name}: {candidate.stat().st_size / 1024 ** 2:.1f} MB",
+                    tag="gpu1")
+            # The stall in the previous run happened during module construction,
+            # immediately after motion_extractor — the first step that commits
+            # GPU memory. Log free VRAM so the next failure is unambiguous.
+            try:
+                free_b, total_b = torch.cuda.mem_get_info(self.device_id)
+                log(f"VRAM before LivePortrait load: "
+                    f"{free_b / 1024 ** 2:.0f} MB free / {total_b / 1024 ** 2:.0f} MB",
+                    tag="gpu1")
+            except Exception:
+                pass
+            log("constructing LivePortraitWrapper (F, M, W, G, stitching)…", tag="gpu1")
             self.wrapper = LivePortraitWrapper(inference_cfg=cfg)
             log(f"wrapper on {self.wrapper.device}", tag="gpu1")
 
@@ -1763,7 +1810,7 @@ def svd_broll(pipe, image: Image.Image, n_frames: int, seed: int,
             last = exc
             log(f"svd {label} chunk={chunk} failed: {type(exc).__name__}: {exc}",
                 "WARN", tag="gpu1")
-            release_memory("cuda:1")
+            release_memory(_reel_device())
     raise RuntimeError(f"SVD failed for {label}: {last}") from last
 
 
@@ -1898,6 +1945,9 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
         })
 
     master = scenes[1]
+    # The master is a deliverable in its own right; write it before the slower
+    # swap/adetailer stages so it can never be collateral damage.
+    _publish_slide(output_dir, 1, SLIDES[0]["filename"], master, timings, tag)
 
     # ---- Stage 2 + 3 ----
     engine = FaceEngine(models, 0, timings, tag)
@@ -1950,6 +2000,7 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
                 verdict = "MATCH" if similarity >= 0.45 else "DRIFT"
                 log(f"identity {slide['filename']}: cosine={similarity:.4f} ({verdict})", tag=tag)
             final_slides[idx] = polished
+            _publish_slide(output_dir, idx, slide["filename"], polished, timings, tag)
         except Exception as exc:
             detail = f"{type(exc).__name__}: {exc}"
             log(f"slide {slide['filename']} post-process FAILED — {detail}", "ERROR", tag=tag)
@@ -1967,8 +2018,8 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
         image = final_slides[idx]
         png = output_dir / slide["filename"]
         jpg = output_dir / f"luca_slide_{idx:02d}.jpg"
-        with timed(f"write_{idx:02d}", timings, tag):
-            save_slide(image, png, jpg)
+        if not (png.is_file() and jpg.is_file()):
+            _publish_slide(output_dir, idx, slide["filename"], image, timings, tag)
         result["artifacts"] += [slide["filename"], jpg.name]
         sheet_items.append((slide["title"], image))
 
@@ -1998,7 +2049,8 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
 
 
 def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path],
-             q: Any, wait_seconds: float = 240.0, preflight_only: bool = False) -> Dict[str, Any]:
+             q: Any, wait_seconds: float = REEL_AWAIT_SLIDES_S,
+             preflight_only: bool = False, deadline_s: float = 0.0) -> Dict[str, Any]:
     """
     cuda:1 — edge-tts voice, LivePortrait hook, SVD b-roll, muxed reel.
 
@@ -2008,10 +2060,20 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
     is never blocked by a slow avatar pipeline.
     """
     tag = "gpu1"
-    device = "cuda:1"
     import torch
 
-    torch.cuda.set_device(1)
+    # Run 45907486374 stalled *inside* LivePortrait's model construction because
+    # we asked for cuda:1 on a node that only had one GPU. Never assume: the
+    # reel takes the last visible device.
+    dev_idx = 0
+    try:
+        visible = torch.cuda.device_count()
+        dev_idx = 1 if visible > 1 else 0
+        torch.cuda.set_device(dev_idx)
+    except Exception as exc:
+        log(f"could not set the reel device: {exc}", "WARN", tag=tag)
+    device = f"cuda:{dev_idx}"
+    log(f"reel using {device} (visible GPUs: {torch.cuda.device_count()})", tag=tag)
     result: Dict[str, Any] = {"artifacts": [], "errors": []}
 
     if preflight_only:
@@ -2036,36 +2098,73 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
     log(f"envelope: {total_frames} frames, "
         f"{(mouth['mouth_open'] > 0.05).mean():.0%} active", tag=tag)
 
-    # ---- wait for cuda:0 to publish the face-locked slides ----
-    with timed("await_carousel", timings, tag):
-        payload = q.get(timeout=wait_seconds)
-    slides: Dict[int, np.ndarray] = payload["slides"]
-    log(f"received {len(slides)} face-locked slides from cuda:0", tag=tag)
+    # ---- the face-locked slides ----
+    # cuda:0 publishes them to disk as it finishes each one, so we read from
+    # there: that keeps this worker alive even when the carousel is still busy
+    # or was terminated by its budget.
+    slides: Dict[int, np.ndarray] = _load_slides(output_dir)
+    if not slides and wait_seconds > 0:
+        with timed("await_carousel", timings, tag):
+            try:
+                payload = q.get(timeout=wait_seconds)
+                slides = payload.get("slides") or {}
+            except Exception as exc:
+                log(f"carousel payload unavailable: {type(exc).__name__}", "WARN", tag=tag)
+        slides = slides or _load_slides(output_dir)
+    log(f"b-roll source slides available: {sorted(slides)}", tag=tag)
 
     frames_all: List[np.ndarray] = []
     boundaries: List[int] = []
 
+    t_deadline = (time.monotonic() + deadline_s) if deadline_s > 0 else float("inf")
+
+    def _has_time(need: float, label: str) -> bool:
+        left = t_deadline - time.monotonic()
+        if left < need:
+            log(f"skipping {label}: {left:.0f}s left, needs ~{need:.0f}s",
+                "WARN", tag=tag)
+            return False
+        return True
+
     # ---- Shot 1: LivePortrait talking avatar ----
-    with timed("shot1_liveportrait", timings, tag):
-        repo = fetch_liveportrait(timings)
-        driver = LivePortraitDriver(repo, 1, models["buffalo_l"], timings)
-        driver.load()
+    # Strictly best-effort: if the avatar pass fails or runs out of budget we
+    # fall back to SVD-only shots so the reel still ships. It must never raise
+    # past this block — one broken model cannot cost the whole run.
+    hook_frames: List[np.ndarray] = []
+    if not _has_time(LIVEPORTRAIT_BUDGET_S, "LivePortrait shot 1"):
+        result["shot1"] = {"skipped": "insufficient budget"}
+    else:
+        try:
+            with timed("shot1_liveportrait", timings, tag):
+                repo = fetch_liveportrait(timings)
+                driver = LivePortraitDriver(repo, dev_idx, models["buffalo_l"], timings)
+                driver.load()
 
-        master = Image.open(output_dir / MASTER_FILENAME).convert("RGB")
-        # 576x1024 9:16 crop around the face, keeping the head high in frame
-        src = _nine_sixteen_portrait(master, np.asarray(master), (576, 1024))
-        driving = repo / "assets" / "examples" / "driving" / "d0.mp4"
-        if not driving.exists():
-            raise RuntimeError(f"driving video missing: {driving}")
+                master = Image.open(output_dir / MASTER_FILENAME).convert("RGB")
+                # 576x1024 9:16 crop around the face, head high in frame
+                src = _nine_sixteen_portrait(master, np.asarray(master), (576, 1024))
+                driving = repo / "assets" / "examples" / "driving" / "d0.mp4"
+                if not driving.exists():
+                    raise RuntimeError(f"driving video missing: {driving}")
 
-        hook_frames, hook_info = driver.animate(
-            src, driving, HOOK_FRAMES, mouth["mouth_open"][:HOOK_FRAMES])
+                hook_frames, hook_info = driver.animate(
+                    src, driving, HOOK_FRAMES, mouth["mouth_open"][:HOOK_FRAMES])
+                result["shot1"] = hook_info
+                del driver
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            log(f"LivePortrait unavailable — falling back to SVD shots: {detail}",
+                "ERROR", tag=tag)
+            log(traceback.format_exc(), "ERROR", tag=tag)
+            result["errors"].append({"shot": "liveportrait", "error": detail})
+            result["shot1"] = {"ok": False, "error": detail}
+            hook_frames = []
+        finally:
+            release_memory(device)
+
+    if hook_frames:
         frames_all.extend(hook_frames)
         boundaries.append(len(frames_all))
-        result["shot1"] = hook_info
-
-        del driver
-        release_memory(device)
 
     # ---- Shots 2-3: SVD b-roll, forward-only ----
     svd = build_svd_pipeline(device, timings)
@@ -2074,7 +2173,12 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
     for name, slide_idx in broll_specs:
         arr = slides.get(slide_idx)
         if arr is None:
-            raise RuntimeError(f"slide {slide_idx} unavailable for b-roll {name}")
+            log(f"slide {slide_idx} unavailable — skipping b-roll {name}", "WARN", tag=tag)
+            result["errors"].append({"shot": name, "error": f"slide {slide_idx} missing"})
+            continue
+        if not _has_time(SVD_SHOT_BUDGET_S, f"b-roll {name}"):
+            result["errors"].append({"shot": name, "error": "out of budget"})
+            continue
         image = Image.fromarray(arr).resize(BROLL_SIZE, Image.LANCZOS)
         frames, info = svd_broll(svd, image, BROLL_FRAMES, BASE_SEED + 40 + slide_idx,
                                  timings, name)
@@ -2082,6 +2186,13 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
         boundaries.append(len(frames_all))
         info["source_slide"] = slide_idx
         result["broll"].append({"shot": name, **info})
+
+    if not frames_all:
+        try:
+            svd.to("cpu")
+        except Exception:
+            pass
+        raise RuntimeError("no reel frames were produced (avatar and b-roll both unavailable)")
 
     try:
         svd.to("cpu")
@@ -2133,8 +2244,11 @@ def _preflight_reel(output_dir: Path, timings: Dict[str, float],
     LivePortrait or SVD cannot run, we find out from a bounded probe instead of
     from a 25-minute poll timeout that discards 5 finished slides.
     """
-    device = "cuda:1"
-    report: Dict[str, Any] = {"preflight": True, "checks": {}}
+    import torch
+
+    dev_idx = 1 if torch.cuda.device_count() > 1 else 0
+    device = f"cuda:{dev_idx}"
+    report: Dict[str, Any] = {"preflight": True, "device": device, "checks": {}}
     probe_image = Image.fromarray(
         (np.random.default_rng(3).random((1024, 768, 3)) * 255).astype(np.uint8))
 
@@ -2142,7 +2256,7 @@ def _preflight_reel(output_dir: Path, timings: Dict[str, float],
     try:
         with timed("preflight_liveportrait", timings, "gpu1"):
             repo = fetch_liveportrait(timings)
-            driver = LivePortraitDriver(repo, 1, models["buffalo_l"], timings)
+            driver = LivePortraitDriver(repo, dev_idx, models["buffalo_l"], timings)
             driver.load()
             src = _nine_sixteen_portrait(probe_image, np.asarray(probe_image), (576, 1024))
             driving = repo / "assets" / "examples" / "driving" / "d0.mp4"
@@ -2277,8 +2391,12 @@ def main() -> int:
         ctx = mp.get_context("spawn")
         results: Dict[str, Any] = {}
 
+        # Budgets are enforced by the parent with a hard join timeout, so no
+        # worker can ever wedge the kernel. The ordering is deliberate: the
+        # slides ARE the deliverable, so cuda:0 always runs first and the reel
+        # only gets the time that is provably left over.
         if gpu_count >= 2:
-            # True parallel: carousel on cuda:0, reel on cuda:1.
+            # Dedicated devices — genuine parallel, as designed.
             queue: Any = ctx.Queue()
             with timed("parallel_gpu_workers", timings):
                 procs = {
@@ -2286,74 +2404,60 @@ def main() -> int:
                                             args=(output_dir, timings, models, queue),
                                             name="gpu0-carousel"),
                     "reel": ctx.Process(target=_worker_reel,
-                                        args=(output_dir, timings, models, queue, 240.0, False),
+                                        args=(output_dir, timings, models, queue,
+                                              REEL_AWAIT_SLIDES_S, False,
+                                              float(REEL_BUDGET_S * 1.5)),
                                         name="gpu1-reel"),
                 }
-                for name, proc in procs.items():
-                    proc.start()
-                    log(f"started {name} worker ({proc.name})", tag="main")
-                for name, proc in procs.items():
-                    proc.join()
-                    log(f"{name} worker exited with code {proc.exitcode}", tag="main")
-                    if proc.exitcode != 0:
-                        metrics["errors"].append({"worker": name, "exitcode": proc.exitcode})
+                _supervise(procs, {"carousel": CAROUSEL_BUDGET_S,
+                                   "reel": REEL_BUDGET_S * 2},
+                           timings, metrics)
         else:
-            # One GPU: the avatar/b-roll stack cannot share VRAM with SDXL, so we
-            # PRE-FLIGHT it first (bounded), then hand the GPU to the carousel.
-            # Order matters — a broken avatar model must never cost us the slides.
-            log("single GPU: pre-flighting the reel stack on cuda:0", tag="main")
-            probe_queue: Any = ctx.Queue()
-            probe = ctx.Process(target=_worker_reel,
-                                args=(output_dir, timings, models, probe_queue, 1.0, True),
-                                name="preflight-reel")
-            probe.start()
-            probe.join()
-            preflight_report: Dict[str, Any] = {}
-            sidecar = output_dir / "_metrics_reel.json"
-            if sidecar.is_file():
-                try:
-                    preflight_report = json.loads(sidecar.read_text(encoding="utf-8"))
-                    sidecar.unlink()
-                except Exception as exc:
-                    log(f"could not read preflight sidecar: {exc}", "WARN", tag="main")
-            metrics["preflight"] = preflight_report.get("checks", {})
-            log(f"preflight ok={preflight_report.get('ok')}", tag="main")
+            # One GPU. Carousel FIRST (it is the real deliverable), then the reel
+            # on whatever budget is left. Run 45907486374 spent 40 min here and
+            # delivered nothing because the avatar pass ran before the slides.
+            log("single GPU: carousel first, reel if the budget allows", tag="main")
+            car_queue: Any = ctx.Queue()
+            car = ctx.Process(target=_worker_carousel,
+                              args=(output_dir, timings, models, car_queue),
+                              name="gpu0-carousel")
+            car.start(); t_car = time.monotonic(); car.join(CAROUSEL_BUDGET_S)
+            if car.is_alive():
+                log(f"carousel exceeded {CAROUSEL_BUDGET_S}s — terminating "
+                    f"(slides already written stay on disk)", "ERROR", tag="main")
+                car.terminate(); car.join(30)
+                metrics["errors"].append({"worker": "carousel", "error": "timeout"})
+            car_seconds = time.monotonic() - t_car
+            metrics["timings_seconds"]["main/carousel_wall"] = round(car_seconds, 1)
+            log(f"carousel worker done in {car_seconds:.0f}s "
+                f"(exit {car.exitcode})", tag="main")
 
-            with timed("sequential_workers_single_gpu", timings):
-                car_queue: Any = ctx.Queue()
-                car = ctx.Process(target=_worker_carousel,
-                                  args=(output_dir, timings, models, car_queue),
-                                  name="gpu0-carousel")
-                car.start()
-                car.join()
-                log(f"carousel worker exited with code {car.exitcode}", tag="main")
-                if car.exitcode != 0:
-                    metrics["errors"].append({"worker": "carousel",
-                                              "exitcode": car.exitcode})
-                payload: Dict[str, Any] = {}
-                try:
-                    payload = car_queue.get(timeout=30)
-                except Exception:
-                    pass
-
-                # Reel only runs if the pre-flight proved the stack works.
-                if preflight_report.get("ok"):
-                    with timed("reel_worker_single_gpu", timings):
-                        reel_proc = ctx.Process(
-                            target=_worker_reel,
-                            args=(output_dir, timings, models, _PrefilledQueue(payload),
-                                  1.0, False),
-                            name="gpu0-reel")
-                        reel_proc.start()
-                        reel_proc.join()
-                        log(f"reel worker exited with code {reel_proc.exitcode}", tag="main")
-                        if reel_proc.exitcode != 0:
-                            metrics["errors"].append({"worker": "reel",
-                                                      "exitcode": reel_proc.exitcode})
-                else:
-                    msg = "reel skipped: pre-flight failed (see metrics.preflight)"
-                    log(msg, "ERROR", tag="main")
-                    metrics["errors"].append({"worker": "reel", "error": msg})
+            remaining = KERNEL_BUDGET_S - (time.monotonic() - t_start)
+            log(f"budget left for the reel: {remaining:.0f}s "
+                f"(need ≥{REEL_MIN_BUDGET_S}s)", tag="main")
+            if remaining < REEL_MIN_BUDGET_S:
+                msg = (f"reel skipped: only {remaining:.0f}s left of the "
+                       f"{KERNEL_BUDGET_S}s kernel budget")
+                log(msg, "WARN", tag="main")
+                metrics["reel_skipped"] = msg
+            else:
+                # slides are already on disk, so the reel does not need them
+                # passed through shared memory at all.
+                with timed("reel_worker_single_gpu", timings):
+                    reel_proc = ctx.Process(
+                        target=_worker_reel,
+                        args=(output_dir, timings, models, _PrefilledQueue({}),
+                              0.0, False, float(max(60.0, remaining - 120))),
+                        name="gpu0-reel")
+                    reel_proc.start(); t_reel = time.monotonic()
+                    reel_proc.join(remaining - 90)  # keep time to package + exit
+                    if reel_proc.is_alive():
+                        log("reel exceeded its budget — terminating; the carousel "
+                            "pack is already complete", "ERROR", tag="main")
+                        reel_proc.terminate(); reel_proc.join(30)
+                        metrics["errors"].append({"worker": "reel", "error": "timeout"})
+                    log(f"reel worker finished in {time.monotonic()-t_reel:.0f}s "
+                        f"(exit {reel_proc.exitcode})", tag="main")
 
         # Workers return their detail through the sidecar files they write;
         # worker-local metrics are merged below from those files.
@@ -2386,10 +2490,26 @@ def main() -> int:
             metrics["errors"] += reel.get("errors", [])
 
         # ---------------- verification ---------------- #
-        required = [CAROUSEL_SHEET, REEL_MP4, VOICE_MP3, METRICS_FILENAME]
-        missing = [n for n in required if not (output_dir / n).is_file()]
+        # Two tiers. The carousel is the deliverable and must exist; the reel is
+        # best-effort and its absence is reported, never fatal — otherwise one
+        # slow avatar model makes the whole run worthless.
+        core_required = [CAROUSEL_SHEET, METRICS_FILENAME]
+        slides_required = [f"luca_slide_{i:02d}.jpg" for i in range(1, 6)]
+        reel_required = [REEL_MP4, VOICE_MP3]
+
+        missing = [n for n in core_required + slides_required
+                   if not (output_dir / n).is_file()]
+        metrics["missing_slides"] = missing
         if missing:
-            raise RuntimeError(f"required artifacts missing: {missing}")
+            raise RuntimeError(f"carousel artifacts missing: {missing}")
+
+        missing_reel = [n for n in reel_required if not (output_dir / n).is_file()]
+        metrics["missing_reel_artifacts"] = missing_reel
+        if missing_reel:
+            msg = f"reel artifacts missing: {missing_reel}"
+            log(msg, "ERROR")
+            metrics["errors"].append({"stage": "reel_artifacts", "error": msg})
+            metrics.setdefault("reel_skipped", msg)
 
         verdicts = []
         for name, value in (metrics.get("identity_cosine") or {}).items():
@@ -2408,7 +2528,12 @@ def main() -> int:
             f"({video.get('duration_s')}s), shots={video.get('shot_boundaries')}, "
             f"mouth-active={active}", tag="main")
 
-        metrics["status"] = "success" if not metrics["errors"] else "success_with_errors"
+        if metrics["errors"]:
+            metrics["status"] = "success_with_errors"
+        elif metrics.get("reel_skipped"):
+            metrics["status"] = "carousel_only"
+        else:
+            metrics["status"] = "success"
 
     except Exception as exc:
         detail = f"{type(exc).__name__}: {exc}"
@@ -2436,6 +2561,70 @@ def main() -> int:
         tee.close()
 
     return exit_code
+
+
+def _publish_slide(output_dir: Path, index: int, filename: str,
+                   image: Image.Image, timings: Dict[str, float], tag: str) -> None:
+    """
+    Write a finished slide to disk immediately.
+
+    Kaggle keeps /kaggle/working on disk even while the kernel is still running,
+    so publishing as we go means an over-running avatar pass can never cost us
+    slides we already finished (which is exactly what happened in run 45907486374).
+    """
+    with timed(f"write_{index:02d}", timings, tag):
+        save_slide(image, output_dir / filename, output_dir / f"luca_slide_{index:02d}.jpg")
+
+
+def _reel_device() -> str:
+    """The device the reel should use: cuda:1 when present, else cuda:0."""
+    try:
+        import torch
+
+        return f"cuda:{1 if torch.cuda.device_count() > 1 else 0}"
+    except Exception:
+        return "cuda:0"
+
+
+def _load_slides(output_dir: Path) -> Dict[int, np.ndarray]:
+    """
+    Read the face-locked slides from disk (cuda:0 writes each one as it lands).
+
+    Disk, not inter-process memory, because the reel must be able to work with
+    whatever the carousel managed to publish before its budget ran out.
+    """
+    slides: Dict[int, np.ndarray] = {}
+    for entry in SLIDES:
+        path = output_dir / f"luca_slide_{entry['index']:02d}.jpg"
+        if not path.is_file():
+            path = output_dir / entry["filename"]
+        if path.is_file():
+            try:
+                slides[entry["index"]] = np.asarray(Image.open(path).convert("RGB"))
+            except Exception as exc:
+                log(f"could not read slide {path.name}: {exc}", "WARN", tag="gpu1")
+    return slides
+
+
+def _supervise(procs: Dict[str, Any], budgets: Dict[str, float],
+               timings: Dict[str, float], metrics: Dict[str, Any]) -> None:
+    """Run workers with hard wall-clock limits; nothing is allowed to wedge."""
+    deadlines = {name: time.monotonic() + budgets[name] for name in procs}
+    for name, proc in procs.items():
+        proc.start()
+        log(f"started {name} worker ({proc.name})", tag="main")
+    for name, proc in procs.items():
+        wait = max(1.0, deadlines[name] - time.monotonic())
+        proc.join(wait)
+        if proc.is_alive():
+            log(f"{name} worker exceeded {budgets[name]:.0f}s — terminating",
+                "ERROR", tag="main")
+            proc.terminate()
+            proc.join(30)
+            metrics["errors"].append({"worker": name, "error": "timeout"})
+        log(f"{name} worker exited with code {proc.exitcode}", tag="main")
+        if proc.exitcode not in (0, None) and not proc.is_alive():
+            metrics["errors"].append({"worker": name, "exitcode": proc.exitcode})
 
 
 def _json_safe(value: Any) -> Any:

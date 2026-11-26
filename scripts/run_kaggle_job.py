@@ -287,7 +287,11 @@ def build_metadata(username: str) -> Dict[str, Any]:
         "kernel_type": "script",
         "is_private": "true",
         "enable_gpu": "true",
+        # Two T4s: the carousel and the avatar/b-roll worker each get a device.
+        # Set ACCELERATOR=nvidia-tesla-p100 or similar to override.
+        "machine_shape": os.environ.get("KAGGLE_ACCELERATOR", "NvidiaTeslaT4x2"),
         "enable_internet": "true",
+        "enable_tpu": "false",
         "dataset_sources": [],
         "competition_sources": [],
         "kernel_sources": [],
@@ -515,6 +519,23 @@ def clear_stale_outputs(dest: Path) -> None:
                 pass
     if removed:
         log(f"cleared {removed} stale artifact(s) from {dest}")
+
+
+#: The minimum set that makes a run worth keeping even if the kernel was killed
+#: mid-flight: the sheet plus all five slides.
+SALVAGE_CORE = ("luca_carousel_sheet.png",) + tuple(
+    f"luca_slide_{i:02d}.jpg" for i in range(1, 6))
+
+
+def read_metrics_status(root: Path) -> str:
+    """Kernel-reported status, for logs and salvage decisions."""
+    path = root / "luca_metrics.json"
+    if not path.is_file():
+        return "absent"
+    try:
+        return str(json.loads(path.read_text(encoding="utf-8")).get("status"))
+    except Exception:
+        return "unreadable"
 
 
 def download_outputs(slug: str, env: Dict[str, str], dest: Path) -> bool:
@@ -801,7 +822,21 @@ def main() -> int:
             )
 
     missing_required = [n for n in REQUIRED_ARTIFACTS if n not in summary["downloaded"]]
-    success = final_status == "complete" and not missing_required
+
+    # A kernel that over-ran its poll budget may still have published a complete
+    # carousel. Treating that as a total loss is what made the previous run
+    # worthless, so: complete carousel = salvageable.
+    core_present = all((OUTPUT_DIR / name).is_file() for name in SALVAGE_CORE)
+    salvaged = final_status != "complete" and core_present
+    metrics_status = read_metrics_status(OUTPUT_DIR)
+    if salvaged:
+        log(
+            f"kernel ended {final_status} but a complete carousel is on disk "
+            f"(metrics status: {metrics_status}) — salvaging the slide pack",
+            "WARN",
+        )
+
+    success = not missing_required and (final_status == "complete" or salvaged)
     if missing_required:
         log(f"required artifacts absent: {', '.join(missing_required)}", "ERROR")
 
@@ -813,6 +848,10 @@ def main() -> int:
         )
     if summary["missing"]:
         log(f"missing artifacts: {', '.join(summary['missing'])}", "WARN")
+
+    if success and salvaged:
+        log("✔ salvaged carousel + reel from a kernel that over-ran its budget")
+        return 0
 
     if success:
         primary = REQUIRED_ARTIFACTS[0]
