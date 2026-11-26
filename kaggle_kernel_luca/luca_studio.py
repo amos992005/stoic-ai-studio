@@ -175,55 +175,56 @@ SLIDES: List[Dict[str, Any]] = [
         "index": 2,
         "filename": "02_monaco_yacht_date.png",
         "title": "02 · MONACO · YACHT",
-        "mask": "left",
+        "mask": "right",
         "people": 2,
         "prompt": (
-            # Two independent lessons from the runs:
-            #   run 45893591367  man-first + loose mask  -> two men
-            #   run 45895178163  woman-first + tight mask -> real woman, but she
-            #                    landed LEFT (on the identity mask) and the man on
-            #                    the right lost Luca's face: the frame mirrored.
-            # SDXL tends to put the *first-named* subject on the left, so we name
-            # the man first (he must sit on the mask side) while describing the
-            # woman emphatically and negating "two men / no woman".
-            "Candid iPhone 16 Pro 24mm photo of a man and a woman together on the "
+            # What four runs taught us, in order:
+            #   45893591367  man-first, loose left mask   -> two men (bleed)
+            #   45895178163  woman-first, tight left mask -> real woman, but she
+            #                sat ON the mask and the man lost Luca's face
+            #   45896917042  man-first, tight left mask   -> correct pair, still
+            #                mirrored: the woman took the left half, so the
+            #                identity landed on HER and Luca came out as a
+            #                stranger with a beard.
+            # Conclusion: the composition is right, the *side* was wrong. The
+            # mask now covers the right half, where Luca actually renders.
+            "Candid iPhone 16 Pro 24mm photo of a woman and a man together on the "
             "sun deck of a luxury Riva yacht in Monaco at sunset. LEFT HALF of the "
-            "frame: a shirtless athletic 27-year-old man holding a champagne "
-            f"flute, confident smirk, looking at the camera ({LUCA}). RIGHT HALF "
-            "of the frame: a stunning young brunette woman in a bikini laughing "
-            "naturally, long dark hair, clearly a woman, standing right next to "
-            "him, looking away from the camera. One man and one woman, two "
-            "different people, side by side. Bright ocean horizon, Monaco "
-            "skyline behind them, harbour lights beginning to glow, salt spray "
-            f"on the lens, {CAMERA}"
+            "frame: a stunning young brunette woman in a bikini laughing "
+            "naturally, long dark hair, clearly a woman, looking away from the "
+            "camera. RIGHT HALF of the frame: a shirtless athletic 27-year-old "
+            "man holding a champagne flute, confident smirk, looking at the "
+            f"camera ({LUCA}). One man and one woman, two different people, side "
+            "by side. Bright ocean horizon, Monaco skyline behind them, harbour "
+            f"lights beginning to glow, salt spray on the lens, {CAMERA}"
         ),
         "negative": (
             "two men, two women, male couple, men only, no woman, two boys, "
             "duplicate man, cloned face, twins, same face twice, "
-            "woman in the center, woman on the left"
+            "man on the left"
         ),
     },
     {
         "index": 3,
         "filename": "03_vip_party_flash.png",
         "title": "03 · IBIZA · VIP",
-        "mask": "left",
+        "mask": "right",
         "people": 2,
         "prompt": (
-            "Candid 35mm direct on-camera flash photo of a man and a woman "
+            "Candid 35mm direct on-camera flash photo of a woman and a man "
             "together at an Ibiza rooftop VIP party at night. LEFT HALF of the "
-            "frame: a 27-year-old man in an unbuttoned black silk shirt, smirking "
-            f"at the camera ({LUCA}). RIGHT HALF of the frame: a gorgeous blonde "
-            "woman in an evening dress holding a cocktail, long blonde hair, "
-            "clearly a woman, standing right beside him, smiling. One man and one "
-            "woman, two different people, side by side. Harsh flash falloff, dark "
-            "background with bokeh club lights, slightly blown highlights, "
-            f"authentic night-flash aesthetic, {CAMERA}"
+            "frame: a gorgeous blonde woman in an evening dress holding a "
+            "cocktail, long blonde hair, clearly a woman, smiling. RIGHT HALF of "
+            "the frame: a 27-year-old man in an unbuttoned black silk shirt, "
+            f"smirking at the camera ({LUCA}). One man and one woman, two "
+            "different people, side by side. Harsh flash falloff, dark background "
+            "with bokeh club lights, slightly blown highlights, authentic "
+            f"night-flash aesthetic, {CAMERA}"
         ),
         "negative": (
             "two men, two women, male couple, men only, no woman, two boys, "
             "duplicate man, cloned face, twins, same face twice, "
-            "woman in the center, woman on the left"
+            "man on the left"
         ),
     },
     {
@@ -704,37 +705,46 @@ def build_ip_mask(kind: Optional[str], width: int, height: int):
     """
     Build the `[1, 1, H, W]` spatial mask that confines the face reference.
 
-    "left": 1.0 over the left part of the frame (where Luca stands) fading to
-            0.0 by ~48% of the width, so the woman on the right keeps her own
-            face. The ramp is kept soft: the attention-mask downsampler
-            interpolates bicubically, so a hard edge would show up as a seam.
+    "right": 1.0 over the RIGHT part of the frame, fading to 0.0 by ~35% of the
+            width. This is the side Luca actually lands on: across three runs
+            SDXL consistently places the *woman* on the left of a
+            "man and a woman" pair, whatever order they are named in. Masking
+            the left therefore applied Luca's identity to the woman and left
+            Luca himself unlocked -- he came out as a different man. Masking the
+            right is what makes the reference land on the intended subject.
 
-            The ramp matters more than it looks. Run 45893591367 ramped 44%→60%
-            and the male identity still reached x≈50%, so the second subject on
-            the right was pushed towards a *man* -- SDXL resolves "the other
-            person" as male when it inherits half an identity. Tightening to
-            30%→48% keeps the reference contribution clear of the right half.
+    "left": symmetric fallback, kept so the side can be flipped by env if a
+            future checkpoint changes its composition bias.
 
     "full" / None: no mask (single-subject slides).
+
+    The ramp stays soft: the attention-mask downsampler interpolates
+    bicubically, so a hard edge would show up as a visible seam.
     """
     import torch
 
     if kind in (None, "full"):
         return None
 
-    if kind != "left":
+    if kind not in ("left", "right"):
         raise ValueError(f"unknown mask kind {kind!r}")
 
     x = np.linspace(0.0, 1.0, width, dtype=np.float32)[None, :]
-    ramp_start, ramp_end = 0.30, 0.48
-    weights = np.clip((ramp_end - x) / (ramp_end - ramp_start), 0.0, 1.0)
+    if kind == "right":
+        ramp_start, ramp_end = 0.52, 0.70
+        weights = np.clip((x - ramp_start) / (ramp_end - ramp_start), 0.0, 1.0)
+        side = "1.0 → x>70%, 0.0 → x<52%"
+    else:
+        ramp_start, ramp_end = 0.30, 0.48
+        weights = np.clip((ramp_end - x) / (ramp_end - ramp_start), 0.0, 1.0)
+        side = f"1.0 → x<{ramp_start:.0%}, 0.0 → x>{ramp_end:.0%}"
     weights = weights * weights * (3.0 - 2.0 * weights)  # smoothstep
     column = weights.reshape(1, width).repeat(height, axis=0)
 
     mask = torch.from_numpy(column.astype(np.float32)).unsqueeze(0).unsqueeze(0)
     log(
-        f"ip mask 'left': {tuple(mask.shape)} · coverage {float(column.mean()):.1%} "
-        f"(1.0 → x<{ramp_start:.0%}, 0.0 → x>{ramp_end:.0%})"
+        f"ip mask '{kind}': {tuple(mask.shape)} · coverage {float(column.mean()):.1%} "
+        f"({side})"
     )
     return mask
 
