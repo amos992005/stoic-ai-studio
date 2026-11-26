@@ -35,3 +35,6 @@ _kokoro-v1.0.onnx
 _voices-v1.0.bin
 stoic_lipsync/
 .kaggle_dataset/
+
+# Phase 3: generated kernel metadata
+kaggle_kernel_luca/kernel-metadata.json

@@ -1,0 +1,228 @@
+name: Luca Studio · Phase 3
+
+# $0 orchestrator: pushes the Luca kernel to Kaggle (Tesla T4), waits for it,
+# then commits the postable asset pack straight back to the branch.
+#
+# Auto-runs on pushes to arena/** that touch the kernel, its driver, or this
+# workflow. Every other phase is dispatch-only so no quota is ever wasted —
+# when iterating on unrelated files (README, docs) nothing is triggered.
+
+on:
+  workflow_dispatch:
+    inputs:
+      slide_steps:
+        description: "Sampling steps per carousel slide (default 30)"
+        required: false
+        default: "30"
+      svd_frames:
+        description: "Neural frames from Stable Video Diffusion (default 25)"
+        required: false
+        default: "25"
+      voice:
+        description: "Kokoro voice id (am_adam / am_michael / bm_lewis)"
+        required: false
+        default: "am_adam"
+  push:
+    branches:
+      - "arena/**"
+    paths:
+      - "kaggle_kernel_luca/**"
+      - "scripts/run_luca_job.py"
+      - "scripts/run_kaggle_job.py"
+      - ".github/workflows/luca_studio.yml"
+
+permissions:
+  contents: write
+
+# Shared with Phases 1-2: never race for the same free Kaggle GPU quota.
+concurrency:
+  group: character-forge-kaggle
+  cancel-in-progress: false
+
+env:
+  PYTHONUNBUFFERED: "1"
+  OUTPUT_DIR: outputs
+  MAX_COMMIT_BYTES: "5242880"
+  # Kernel-side knobs (env vars are read by luca_studio.py).
+  SLIDE_STEPS: ${{ github.event.inputs.slide_steps || '30' }}
+  SVD_NUM_FRAMES: ${{ github.event.inputs.svd_frames || '25' }}
+  VOICE_NAME: ${{ github.event.inputs.voice || 'am_adam' }}
+  BASE_SEED: "777"
+
+jobs:
+  luca:
+    name: Luca Moretti (Kaggle T4) — carousel + voice + neural video
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install orchestrator dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade -r requirements.txt
+          python -c "import six" || python -m pip install six
+          python -c "import kaggle, PIL, six; print('kaggle + pillow + six ready')"
+          kaggle --version
+
+      - name: Static checks (syntax, banned techniques, required APIs)
+        run: |
+          set -euo pipefail
+          python -m py_compile kaggle_kernel_luca/luca_studio.py scripts/run_luca_job.py
+          python - <<'PY'
+          import pathlib
+          src = pathlib.Path("kaggle_kernel_luca/luca_studio.py").read_text()
+
+          # Source-compiling deps are forbidden (Kaggle is Python 3.13, no compiler).
+          forbidden = ["import dlib", "import basicsr", "import spacy", "from basicsr",
+                       "import face_alignment", "import insightface"]
+          hits = [f for f in forbidden if f in src]
+          assert not hits, f"source-compiling dependency reintroduced: {hits}"
+
+          # Techniques the user explicitly banned in Phase 3.
+          banned = {
+              "WSOLA time stretching": "def time_stretch",
+              "procedural pixel-slice mouth": "open_mouth_patch",
+              "custom biquad filter": "def biquad_",
+              "custom parametric EQ": "def peaking_boost",
+              "pixel-slice strip shift": "apply_head_motion",
+          }
+          found = [name for name, token in banned.items() if token in src]
+          assert not found, f"banned technique reintroduced: {found}"
+
+          # The pieces that make Phase 3 what it is.
+          required = [
+              "StableVideoDiffusionPipeline",       # real neural video
+              "ip_adapter_masks",                   # anti face-bleed
+              "IPAdapterMaskProcessor",
+              "cross_attention_kwargs",
+              "ip-adapter-plus-face_sdxl_vit-h.safetensors",
+              "RealVisXL_V5.0",
+              "DPMSolverMultistepScheduler",
+              "use_karras_sigmas",
+              "kokoro_onnx",
+              "am_adam",
+              "libx264",
+              "yuv420p",
+              "ping-pong",                          # loop mode
+          ]
+          missing = [r for r in required if r not in src]
+          assert not missing, f"kernel missing expected pieces: {missing}"
+
+          # The audio chain must be a single scalar multiply.
+          assert "linear peak normalisation only" in src
+          print("phase 3 static checks passed")
+          PY
+          ls -la kaggle_kernel_luca/
+
+      - name: Preflight — Kaggle credentials present?
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "${KAGGLE_USERNAME:-}" ] || missing="$missing KAGGLE_USERNAME"
+          [ -n "${KAGGLE_KEY:-}" ]      || missing="$missing KAGGLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing — add them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "credentials present (username ${#KAGGLE_USERNAME} chars, key ${#KAGGLE_KEY} chars)"
+
+      - name: Run Kaggle Luca job
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          set -o pipefail
+          mkdir -p outputs
+          python scripts/run_luca_job.py 2>&1 | tee -a outputs/build.log
+
+      - name: Upload artifacts (debug bundle)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: luca-studio-${{ github.run_id }}
+          path: outputs/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit artifacts back to the branch
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+          git config user.name  "stoic-forge-bot"
+          git config user.email "stoic-forge-bot@users.noreply.github.com"
+          mkdir -p outputs
+          touch outputs/build.log
+
+          FILES="outputs/luca_carousel_sheet.png outputs/luca_video_sheet.png \
+                 outputs/luca_reel_clip.mp4 outputs/luca_voice.mp3 \
+                 outputs/luca_metrics.json outputs/build.log \
+                 outputs/luca_slide_01.jpg outputs/luca_slide_02.jpg \
+                 outputs/luca_slide_03.jpg outputs/luca_slide_04.jpg \
+                 outputs/luca_slide_05.jpg"
+
+          keep() {
+            mkdir -p /tmp/artifact_keep
+            for f in $FILES; do
+              [ -f "$f" ] && cp -f "$f" "/tmp/artifact_keep/$(basename "$f")" || true
+            done
+          }
+          restore() {
+            for f in $FILES; do
+              b="$(basename "$f")"
+              [ -f "/tmp/artifact_keep/$b" ] && cp -f "/tmp/artifact_keep/$b" "$f" || true
+            done
+          }
+
+          keep
+          git fetch origin "$BRANCH" || true
+          if ! git pull --rebase --autostash origin "$BRANCH"; then
+            echo "::warning::rebase conflicted; resolving artifact conflicts in our favour"
+            for f in $FILES; do
+              git checkout --ours -- "$f" 2>/dev/null && git add -f "$f" || true
+            done
+            git rebase --continue --no-edit >/dev/null 2>&1 || {
+              echo "::warning::aborting rebase and publishing our results"
+              git rebase --abort || true
+            }
+          fi
+          restore
+
+          for f in $FILES; do
+            if [ ! -f "$f" ]; then
+              echo "skip  $f (not produced)"
+              continue
+            fi
+            size=$(stat -c%s "$f")
+            if [ "$size" -ge "$MAX_COMMIT_BYTES" ]; then
+              echo "skip  $f (${size} bytes >= ${MAX_COMMIT_BYTES} commit budget)"
+              continue
+            fi
+            git add -f "$f"
+            echo "stage $f (${size} bytes)"
+          done
+
+          if git diff --cached --quiet; then
+            echo "::notice::nothing new to commit"
+            exit 0
+          fi
+          git commit -m "chore(luca): publish Phase 3 assets (carousel, voice, neural clip) [skip ci]" \
+                     -m "Automated by .github/workflows/luca_studio.yml · run ${{ github.run_id }}"
+          git push origin "HEAD:${BRANCH}"

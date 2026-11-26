@@ -1,8 +1,9 @@
 name: Talking Pilot · Micro-Pilot 2
 
-# One-shot path: push to an arena/** branch (or dispatch) renders the clip on a
-# Kaggle T4 and commits the results straight back to that branch.
-# NOTE: deliberately NOT triggered by main — no duplicate serialized runs.
+# MANUAL ONLY (dispatch). Phase 2 is closed out: the envelope-mouth synthesiser
+# it produces has been superseded by Phase 3's real neural video, so this
+# workflow no longer auto-runs on push. Kept for reproducibility of the Phase 2
+# artifacts; trigger it by hand from the Actions tab if you ever need a re-run.
 
 on:
   workflow_dispatch:
@@ -12,14 +13,6 @@ on:
         type: choice
         options: ["true", "false"]
         default: "true"
-  push:
-    branches:
-      - "arena/**"
-    paths:
-      - "kaggle_kernel_talking/**"
-      - "scripts/run_talking_job.py"
-      - "scripts/run_kaggle_job.py"
-      - ".github/workflows/talking_pilot.yml"
 
 permissions:
   contents: write
