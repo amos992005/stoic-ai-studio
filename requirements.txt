@@ -1,0 +1,10 @@
+# Dependencies for the GitHub Actions orchestrator (CPU only).
+# The GPU-side dependencies live on Kaggle and are guarded inside
+# kaggle_kernel/character_forge.py.
+#
+# NOTE: kaggle 2.x is the current CLI but it does not declare `six`, which
+# kaggle/models/upload_file.py imports -> `kaggle --version` crashes with
+# ModuleNotFoundError. We pin the major version and install `six` explicitly.
+kaggle>=1.6.17,<3
+six>=1.16.0
+pillow>=10.0.0
