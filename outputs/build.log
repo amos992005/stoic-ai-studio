@@ -1,0 +1,219 @@
+===== stoic-ai-studio · orchestrator run · 2026-11-26 17:06:00Z =====
+===== (previous log was 0 bytes and has been rotated) =====
+[2026-11-26 17:06:00Z] [INFO ] rotated outputs/build.log (previous size: 0 bytes)
+[2026-11-26 17:06:00Z] [INFO ] ==============================================================================
+[2026-11-26 17:06:00Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-26 17:06:00Z] [INFO ] ==============================================================================
+[2026-11-26 17:06:00Z] [INFO ] username: amosovadia
+[2026-11-26 17:06:00Z] [INFO ] key: KGAT…48 (len=37)
+[2026-11-26 17:06:00Z] [INFO ] detected KGAT_ API token — using the access-token auth path
+[2026-11-26 17:06:00Z] [INFO ] auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)
+[2026-11-26 17:06:00Z] [INFO ] wrote /home/runner/.kaggle/access_token (mode 0o600)
+[2026-11-26 17:06:00Z] [INFO ] wrote /home/runner/.kaggle/username (mode 0o600)
+::group::kaggle CLI version
+[2026-11-26 17:06:00Z] [INFO ] $ kaggle --version
+    | Kaggle CLI 2.2.5
+::endgroup::
+[2026-11-26 17:06:01Z] [INFO ] generated kaggle_kernel/kernel-metadata.json:
+    | {
+    |   "id": "amosovadia/stoic-character-forge",
+    |   "title": "stoic-character-forge",
+    |   "code_file": "character_forge.py",
+    |   "language": "python",
+    |   "kernel_type": "script",
+    |   "is_private": "true",
+    |   "enable_gpu": "true",
+    |   "enable_internet": "true",
+    |   "dataset_sources": [],
+    |   "competition_sources": [],
+    |   "kernel_sources": [],
+    |   "model_sources": []
+    | }
+::group::pushing kernel amosovadia/stoic-character-forge
+[2026-11-26 17:06:01Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel
+    | Kernel version 1 successfully pushed.  Please check progress at https://www.kaggle.com/code/amosovadia/stoic-character-forge
+::endgroup::
+[2026-11-26 17:06:03Z] [INFO ] kernel push accepted — Kaggle is provisioning a T4.
+[2026-11-26 17:06:03Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:06:03Z] [INFO ] status → queued
+[2026-11-26 17:06:03Z] [INFO ] ★ status transition: (none) → queued
+[2026-11-26 17:06:03Z] [INFO ] still queued · 1499s of budget left · sleeping 25s
+[2026-11-26 17:06:28Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:06:28Z] [INFO ] status → queued
+[2026-11-26 17:06:28Z] [INFO ] still queued · 1474s of budget left · sleeping 25s
+[2026-11-26 17:06:53Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:06:54Z] [INFO ] status → queued
+[2026-11-26 17:06:54Z] [INFO ] still queued · 1449s of budget left · sleeping 25s
+[2026-11-26 17:07:19Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:07:19Z] [INFO ] status → queued
+[2026-11-26 17:07:19Z] [INFO ] still queued · 1423s of budget left · sleeping 25s
+[2026-11-26 17:07:44Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:07:44Z] [INFO ] status → queued
+[2026-11-26 17:07:44Z] [INFO ] still queued · 1398s of budget left · sleeping 25s
+[2026-11-26 17:08:09Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:08:10Z] [INFO ] status → queued
+[2026-11-26 17:08:10Z] [INFO ] still queued · 1373s of budget left · sleeping 25s
+[2026-11-26 17:08:35Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:08:35Z] [INFO ] status → queued
+[2026-11-26 17:08:35Z] [INFO ] still queued · 1347s of budget left · sleeping 25s
+[2026-11-26 17:09:00Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:09:01Z] [INFO ] status → queued
+[2026-11-26 17:09:01Z] [INFO ] still queued · 1322s of budget left · sleeping 25s
+[2026-11-26 17:09:26Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:09:26Z] [INFO ] status → queued
+[2026-11-26 17:09:26Z] [INFO ] still queued · 1297s of budget left · sleeping 25s
+[2026-11-26 17:09:51Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:09:51Z] [INFO ] status → queued
+[2026-11-26 17:09:51Z] [INFO ] still queued · 1271s of budget left · sleeping 25s
+[2026-11-26 17:10:16Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:10:17Z] [INFO ] status → queued
+[2026-11-26 17:10:17Z] [INFO ] still queued · 1246s of budget left · sleeping 25s
+[2026-11-26 17:10:42Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:10:42Z] [INFO ] status → queued
+[2026-11-26 17:10:42Z] [INFO ] still queued · 1221s of budget left · sleeping 25s
+[2026-11-26 17:11:07Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:11:07Z] [INFO ] status → queued
+[2026-11-26 17:11:07Z] [INFO ] still queued · 1195s of budget left · sleeping 25s
+[2026-11-26 17:11:32Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:11:33Z] [INFO ] status → queued
+[2026-11-26 17:11:33Z] [INFO ] still queued · 1170s of budget left · sleeping 25s
+[2026-11-26 17:11:58Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:11:58Z] [INFO ] status → queued
+[2026-11-26 17:11:58Z] [INFO ] still queued · 1145s of budget left · sleeping 25s
+[2026-11-26 17:12:23Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:12:23Z] [INFO ] status → queued
+[2026-11-26 17:12:23Z] [INFO ] still queued · 1119s of budget left · sleeping 25s
+[2026-11-26 17:12:48Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:12:49Z] [INFO ] status → queued
+[2026-11-26 17:12:49Z] [INFO ] still queued · 1094s of budget left · sleeping 25s
+[2026-11-26 17:13:14Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:13:14Z] [INFO ] status → running
+[2026-11-26 17:13:14Z] [INFO ] ★ status transition: queued → running
+[2026-11-26 17:13:14Z] [INFO ] still running · 1069s of budget left · sleeping 25s
+[2026-11-26 17:13:39Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:13:39Z] [INFO ] status → running
+[2026-11-26 17:13:39Z] [INFO ] still running · 1043s of budget left · sleeping 25s
+[2026-11-26 17:14:04Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:14:05Z] [INFO ] status → running
+[2026-11-26 17:14:05Z] [INFO ] still running · 1018s of budget left · sleeping 25s
+[2026-11-26 17:14:30Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:14:30Z] [INFO ] status → error
+[2026-11-26 17:14:30Z] [INFO ] ★ status transition: running → error
+[2026-11-26 17:14:30Z] [ERROR] kernel ended with failure status: error
+[2026-11-26 17:14:30Z] [INFO ] status timeline: [{"at": "2026-11-26 17:06:03Z", "status": "queued"}, {"at": "2026-11-26 17:13:14Z", "status": "running"}, {"at": "2026-11-26 17:14:30Z", "status": "error"}]
+::group::downloading kernel outputs
+[2026-11-26 17:14:30Z] [INFO ] $ kaggle kernels output amosovadia/stoic-character-forge -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | build.log: Skipping, found more recently modified local copy (use --force to force download)
+    | Downloading metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/metrics.json
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-character-forge.log 
+    ! 
+    !   0%|          | 0.00/1.48k [00:00<?, ?B/s]
+    ! 100%|██████████| 1.48k/1.48k [00:00<00:00, 6.33MB/s]
+[2026-11-26 17:14:31Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-26 17:14:31Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-character-forge
+
+===== kaggle kernels logs · fetched 2026-11-26 17:14:31Z =====
+[{"stream_name":"stdout","time":1.6718209210000001,"data":"[2026-11-26T17:12:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.671861708,"data":"[2026-11-26T17:12:52Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":1.671870464,"data":"[2026-11-26T17:12:52Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.671875411,"data":"[2026-11-26T17:12:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":24.208421101,"data":"[2026-11-26T17:13:15Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":37.056285435,"data":"[2026-11-26T17:13:28Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":37.05633474,"data":"[2026-11-26T17:13:28Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":37.056341825,"data":"[2026-11-26T17:13:28Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stderr","time":37.056711999,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":37.056728978,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":37.430762281,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":72.780799372,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 19.62it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 35.88it/s]\rFetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 43.62it/s]\rFetching 18 files:  83%|████████▎ | 15/18 [00:19\u003c00:00, 43.62it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:26\u003c00:05,  2.62s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  3.01s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.96s/it]\n"}
+,{"stream_name":"stderr","time":72.961662155,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stderr","time":73.038500938,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2582.93it/s]\n"}
+,{"stream_name":"stderr","time":75.031254726,"data":"\rLoading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:01,  3.70it/s]\rLoading pipeline components...:  29%|██▊       | 2/7 [00:02\u003c00:06,  1.20s/it]\n"}
+,{"stream_name":"stderr","time":75.131529671,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":75.236007644,"data":"\rLoading weights:  47%|████▋     | 244/517 [00:00\u003c00:00, 2437.68it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":75.243194006,"data":"\rLoading weights:  94%|█████████▍| 488/517 [00:00\u003c00:00, 2375.62it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2441.06it/s]\n"}
+,{"stream_name":"stderr","time":75.678942064,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:03,  1.23it/s]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:00,  2.24it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.42it/s]\n"}
+,{"stream_name":"stdout","time":75.679841812,"data":"[2026-11-26T17:14:06Z] [INFO ] ✔ done:  load_sdxl_pipeline (38.6s)\n"}
+,{"stream_name":"stdout","time":75.679911762,"data":"[2026-11-26T17:14:06Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stderr","time":76.426997209,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":77.97095428,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":78.032739274,"data":"[2026-11-26T17:14:09Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.4s)\n"}
+,{"stream_name":"stdout","time":78.032769075,"data":"[2026-11-26T17:14:09Z] [ERROR] FATAL: AttributeError: 'StableDiffusionXLPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":78.034403426,"data":"[2026-11-26T17:14:09Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":78.034416694,"data":"  File \"/kaggle/src/script.py\", line 644, in main\n"}
+,{"stream_name":"stdout","time":78.034424242,"data":"    pipe, device = build_pipeline(timings)\n"}
+,{"stream_name":"stdout","time":78.034426778,"data":"                   ~~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":78.034429327,"data":"  File \"/kaggle/src/script.py\", line 362, in build_pipeline\n"}
+,{"stream_name":"stdout","time":78.03443176,"data":"    pipe.enable_vae_slicing()\n"}
+,{"stream_name":"stdout","time":78.034434036,"data":"    ^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":78.034436373,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
+,{"stream_name":"stdout","time":78.034438815,"data":"    raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
+,{"stream_name":"stdout","time":78.034441177,"data":"AttributeError: 'StableDiffusionXLPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":78.03444356,"data":"\n"}
+,{"stream_name":"stdout","time":78.042945386,"data":"[2026-11-26T17:14:09Z] [INFO ] total wall clock: 76.373s\n"}
+,{"stream_name":"stderr","time":83.827035604,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":83.827067876,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":84.054636195,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":84.054661752,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":84.820559285,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":85.879732146,"data":"[NbConvertApp] Writing 385902 bytes to __results__.html\n"}
+]
+[2026-11-26 17:14:31Z] [INFO ] appended kaggle kernels logs → outputs/build.log (7261 chars)
+
+===== kernel log file stoic-character-forge.log · fetched 2026-11-26 17:14:31Z =====
+[{"stream_name":"stdout","time":1.6718209210000001,"data":"[2026-11-26T17:12:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.671861708,"data":"[2026-11-26T17:12:52Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":1.671870464,"data":"[2026-11-26T17:12:52Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.671875411,"data":"[2026-11-26T17:12:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":24.208421101,"data":"[2026-11-26T17:13:15Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":37.056285435,"data":"[2026-11-26T17:13:28Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":37.05633474,"data":"[2026-11-26T17:13:28Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":37.056341825,"data":"[2026-11-26T17:13:28Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stderr","time":37.056711999,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":37.056728978,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":37.430762281,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":72.780799372,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 19.62it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 35.88it/s]\rFetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 43.62it/s]\rFetching 18 files:  83%|████████▎ | 15/18 [00:19\u003c00:00, 43.62it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:26\u003c00:05,  2.62s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  3.01s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.96s/it]\n"}
+,{"stream_name":"stderr","time":72.961662155,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stderr","time":73.038500938,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2582.93it/s]\n"}
+,{"stream_name":"stderr","time":75.031254726,"data":"\rLoading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:01,  3.70it/s]\rLoading pipeline components...:  29%|██▊       | 2/7 [00:02\u003c00:06,  1.20s/it]\n"}
+,{"stream_name":"stderr","time":75.131529671,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":75.236007644,"data":"\rLoading weights:  47%|████▋     | 244/517 [00:00\u003c00:00, 2437.68it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":75.243194006,"data":"\rLoading weights:  94%|█████████▍| 488/517 [00:00\u003c00:00, 2375.62it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2441.06it/s]\n"}
+,{"stream_name":"stderr","time":75.678942064,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:03,  1.23it/s]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:00,  2.24it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.42it/s]\n"}
+,{"stream_name":"stdout","time":75.679841812,"data":"[2026-11-26T17:14:06Z] [INFO ] ✔ done:  load_sdxl_pipeline (38.6s)\n"}
+,{"stream_name":"stdout","time":75.679911762,"data":"[2026-11-26T17:14:06Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stderr","time":76.426997209,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":77.97095428,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":78.032739274,"data":"[2026-11-26T17:14:09Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.4s)\n"}
+,{"stream_name":"stdout","time":78.032769075,"data":"[2026-11-26T17:14:09Z] [ERROR] FATAL: AttributeError: 'StableDiffusionXLPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":78.034403426,"data":"[2026-11-26T17:14:09Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":78.034416694,"data":"  File \"/kaggle/src/script.py\", line 644, in main\n"}
+,{"stream_name":"stdout","time":78.034424242,"data":"    pipe, device = build_pipeline(timings)\n"}
+,{"stream_name":"stdout","time":78.034426778,"data":"                   ~~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":78.034429327,"data":"  File \"/kaggle/src/script.py\", line 362, in build_pipeline\n"}
+,{"stream_name":"stdout","time":78.03443176,"data":"    pipe.enable_vae_slicing()\n"}
+,{"stream_name":"stdout","time":78.034434036,"data":"    ^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":78.034436373,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
+,{"stream_name":"stdout","time":78.034438815,"data":"    raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
+,{"stream_name":"stdout","time":78.034441177,"data":"AttributeError: 'StableDiffusionXLPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":78.03444356,"data":"\n"}
+,{"stream_name":"stdout","time":78.042945386,"data":"[2026-11-26T17:14:09Z] [INFO ] total wall clock: 76.373s\n"}
+,{"stream_name":"stderr","time":83.827035604,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":83.827067876,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":84.054636195,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":84.054661752,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":84.820559285,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":85.879732146,"data":"[NbConvertApp] Writing 385902 bytes to __results__.html\n"}
+]
+[2026-11-26 17:14:31Z] [INFO ] appended kernel log file stoic-character-forge.log → outputs/build.log (7261 chars)
+[2026-11-26 17:14:31Z] [WARN ] artifact ✘ contact_sheet.png (missing)
+[2026-11-26 17:14:31Z] [WARN ] artifact ✘ 01_master_face.png (missing)
+[2026-11-26 17:14:31Z] [WARN ] artifact ✘ 02_library_scene.png (missing)
+[2026-11-26 17:14:31Z] [WARN ] artifact ✘ 03_rainy_street.png (missing)
+[2026-11-26 17:14:31Z] [WARN ] artifact ✘ 04_podcast_studio.png (missing)
+[2026-11-26 17:14:31Z] [INFO ] artifact ✔ metrics.json (1 KB)
+[2026-11-26 17:14:31Z] [WARN ] missing artifacts: contact_sheet.png, 01_master_face.png, 02_library_scene.png, 03_rainy_street.png, 04_podcast_studio.png
+::error::character forge did not produce a complete result (status=error, downloaded=True). See outputs/build.log.
+[2026-11-26 17:14:31Z] [ERROR] ✘ job failed — inspect outputs/build.log
