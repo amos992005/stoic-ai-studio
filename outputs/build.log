@@ -1,20 +1,20 @@
-===== stoic-ai-studio · orchestrator run · 2026-11-26 22:52:35Z =====
-===== (previous log was 126819 bytes and has been rotated) =====
-[2026-11-26 22:52:35Z] [INFO ] rotated outputs/build.log (previous size: 126819 bytes)
-[2026-11-26 22:52:35Z] [INFO ] ==============================================================================
-[2026-11-26 22:52:35Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
-[2026-11-26 22:52:35Z] [INFO ] ==============================================================================
-[2026-11-26 22:52:35Z] [INFO ] username: amosovadia
-[2026-11-26 22:52:35Z] [INFO ] key: KGAT…48 (len=37)
-[2026-11-26 22:52:35Z] [INFO ] detected KGAT_ API token — using the access-token auth path
-[2026-11-26 22:52:35Z] [INFO ] auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)
-[2026-11-26 22:52:35Z] [INFO ] wrote /home/runner/.kaggle/access_token (mode 0o600)
-[2026-11-26 22:52:35Z] [INFO ] wrote /home/runner/.kaggle/username (mode 0o600)
+===== stoic-ai-studio · orchestrator run · 2026-11-26 23:36:57Z =====
+===== (previous log was 23335 bytes and has been rotated) =====
+[2026-11-26 23:36:57Z] [INFO ] rotated outputs/build.log (previous size: 23335 bytes)
+[2026-11-26 23:36:57Z] [INFO ] ==============================================================================
+[2026-11-26 23:36:57Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-26 23:36:57Z] [INFO ] ==============================================================================
+[2026-11-26 23:36:57Z] [INFO ] username: amosovadia
+[2026-11-26 23:36:57Z] [INFO ] key: KGAT…48 (len=37)
+[2026-11-26 23:36:57Z] [INFO ] detected KGAT_ API token — using the access-token auth path
+[2026-11-26 23:36:57Z] [INFO ] auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)
+[2026-11-26 23:36:57Z] [INFO ] wrote /home/runner/.kaggle/access_token (mode 0o600)
+[2026-11-26 23:36:57Z] [INFO ] wrote /home/runner/.kaggle/username (mode 0o600)
 ::group::kaggle CLI version
-[2026-11-26 22:52:35Z] [INFO ] $ kaggle --version
+[2026-11-26 23:36:57Z] [INFO ] $ kaggle --version
     | Kaggle CLI 2.2.5
 ::endgroup::
-[2026-11-26 22:52:36Z] [INFO ] generated kaggle_kernel_luca/kernel-metadata.json:
+[2026-11-26 23:36:58Z] [INFO ] generated kaggle_kernel_luca/kernel-metadata.json:
     | {
     |   "id": "amosovadia/stoic-luca-studio",
     |   "title": "stoic-luca-studio",
@@ -23,301 +23,992 @@
     |   "kernel_type": "script",
     |   "is_private": "true",
     |   "enable_gpu": "true",
+    |   "machine_shape": "NvidiaTeslaT4x2",
     |   "enable_internet": "true",
+    |   "enable_tpu": "false",
     |   "dataset_sources": [],
     |   "competition_sources": [],
     |   "kernel_sources": [],
     |   "model_sources": []
     | }
 ::group::pushing kernel amosovadia/stoic-luca-studio
-[2026-11-26 22:52:36Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel_luca
-    | Kernel version 7 successfully pushed.  Please check progress at https://www.kaggle.com/code/amosovadia/stoic-luca-studio
+[2026-11-26 23:36:58Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel_luca
+    | Kernel version 8 successfully pushed.  Please check progress at https://www.kaggle.com/code/amosovadia/stoic-luca-studio
 ::endgroup::
-[2026-11-26 22:52:37Z] [INFO ] kernel push accepted — Kaggle is provisioning a T4.
-[2026-11-26 22:52:37Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:52:38Z] [INFO ] status → queued
-[2026-11-26 22:52:38Z] [INFO ] ★ status transition: (none) → queued
-[2026-11-26 22:52:38Z] [INFO ] still queued · 2999s of budget left · sleeping 25s
-[2026-11-26 22:53:03Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:53:04Z] [INFO ] status → running
-[2026-11-26 22:53:04Z] [INFO ] ★ status transition: queued → running
-[2026-11-26 22:53:04Z] [INFO ] still running · 2974s of budget left · sleeping 25s
-[2026-11-26 22:53:29Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:53:29Z] [INFO ] status → running
-[2026-11-26 22:53:29Z] [INFO ] still running · 2948s of budget left · sleeping 25s
-[2026-11-26 22:53:54Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:53:55Z] [INFO ] status → running
-[2026-11-26 22:53:55Z] [INFO ] still running · 2923s of budget left · sleeping 25s
-[2026-11-26 22:54:20Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:54:20Z] [INFO ] status → running
-[2026-11-26 22:54:20Z] [INFO ] still running · 2897s of budget left · sleeping 25s
-[2026-11-26 22:54:45Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:54:45Z] [INFO ] status → running
-[2026-11-26 22:54:45Z] [INFO ] still running · 2872s of budget left · sleeping 25s
-[2026-11-26 22:55:10Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:55:11Z] [INFO ] status → running
-[2026-11-26 22:55:11Z] [INFO ] still running · 2846s of budget left · sleeping 25s
-[2026-11-26 22:55:36Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:55:36Z] [INFO ] status → running
-[2026-11-26 22:55:36Z] [INFO ] still running · 2821s of budget left · sleeping 25s
-[2026-11-26 22:56:01Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:56:02Z] [INFO ] status → running
-[2026-11-26 22:56:02Z] [INFO ] still running · 2795s of budget left · sleeping 25s
-[2026-11-26 22:56:27Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:56:27Z] [INFO ] status → running
-[2026-11-26 22:56:27Z] [INFO ] still running · 2770s of budget left · sleeping 25s
-[2026-11-26 22:56:52Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:56:53Z] [INFO ] status → running
-[2026-11-26 22:56:53Z] [INFO ] still running · 2745s of budget left · sleeping 25s
-[2026-11-26 22:57:18Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:57:18Z] [INFO ] status → running
-[2026-11-26 22:57:18Z] [INFO ] still running · 2719s of budget left · sleeping 25s
-[2026-11-26 22:57:43Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:57:44Z] [INFO ] status → running
-[2026-11-26 22:57:44Z] [INFO ] still running · 2694s of budget left · sleeping 25s
-[2026-11-26 22:58:09Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:58:09Z] [INFO ] status → running
-[2026-11-26 22:58:09Z] [INFO ] still running · 2668s of budget left · sleeping 25s
-[2026-11-26 22:58:34Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:58:35Z] [INFO ] status → running
-[2026-11-26 22:58:35Z] [INFO ] still running · 2642s of budget left · sleeping 25s
-[2026-11-26 22:59:00Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:59:00Z] [INFO ] status → running
-[2026-11-26 22:59:00Z] [INFO ] still running · 2617s of budget left · sleeping 25s
-[2026-11-26 22:59:25Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:59:26Z] [INFO ] status → running
-[2026-11-26 22:59:26Z] [INFO ] still running · 2592s of budget left · sleeping 25s
-[2026-11-26 22:59:51Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 22:59:51Z] [INFO ] status → running
-[2026-11-26 22:59:51Z] [INFO ] still running · 2566s of budget left · sleeping 25s
-[2026-11-26 23:00:16Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:00:17Z] [INFO ] status → running
-[2026-11-26 23:00:17Z] [INFO ] still running · 2541s of budget left · sleeping 25s
-[2026-11-26 23:00:42Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:00:42Z] [INFO ] status → running
-[2026-11-26 23:00:42Z] [INFO ] still running · 2515s of budget left · sleeping 25s
-[2026-11-26 23:01:07Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:01:08Z] [INFO ] status → running
-[2026-11-26 23:01:08Z] [INFO ] still running · 2490s of budget left · sleeping 25s
-[2026-11-26 23:01:33Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:01:33Z] [INFO ] status → running
-[2026-11-26 23:01:33Z] [INFO ] still running · 2464s of budget left · sleeping 25s
-[2026-11-26 23:01:58Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:01:59Z] [INFO ] status → running
-[2026-11-26 23:01:59Z] [INFO ] still running · 2438s of budget left · sleeping 25s
-[2026-11-26 23:02:24Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:02:24Z] [INFO ] status → running
-[2026-11-26 23:02:24Z] [INFO ] still running · 2413s of budget left · sleeping 25s
-[2026-11-26 23:02:49Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:02:50Z] [INFO ] status → running
-[2026-11-26 23:02:50Z] [INFO ] still running · 2388s of budget left · sleeping 25s
-[2026-11-26 23:03:15Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:03:15Z] [INFO ] status → running
-[2026-11-26 23:03:15Z] [INFO ] still running · 2362s of budget left · sleeping 25s
-[2026-11-26 23:03:40Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:03:41Z] [INFO ] status → running
-[2026-11-26 23:03:41Z] [INFO ] still running · 2337s of budget left · sleeping 25s
-[2026-11-26 23:04:06Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:04:06Z] [INFO ] status → running
-[2026-11-26 23:04:06Z] [INFO ] still running · 2311s of budget left · sleeping 25s
-[2026-11-26 23:04:31Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:04:32Z] [INFO ] status → running
-[2026-11-26 23:04:32Z] [INFO ] still running · 2286s of budget left · sleeping 25s
-[2026-11-26 23:04:57Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:04:57Z] [INFO ] status → running
-[2026-11-26 23:04:57Z] [INFO ] still running · 2260s of budget left · sleeping 25s
-[2026-11-26 23:05:22Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:05:23Z] [INFO ] status → running
-[2026-11-26 23:05:23Z] [INFO ] still running · 2235s of budget left · sleeping 25s
-[2026-11-26 23:05:48Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:05:48Z] [INFO ] status → running
-[2026-11-26 23:05:48Z] [INFO ] still running · 2209s of budget left · sleeping 25s
-[2026-11-26 23:06:13Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:06:14Z] [INFO ] status → running
-[2026-11-26 23:06:14Z] [INFO ] still running · 2184s of budget left · sleeping 25s
-[2026-11-26 23:06:39Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:06:39Z] [INFO ] status → running
-[2026-11-26 23:06:39Z] [INFO ] still running · 2158s of budget left · sleeping 25s
-[2026-11-26 23:07:04Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:07:05Z] [INFO ] status → running
-[2026-11-26 23:07:05Z] [INFO ] still running · 2133s of budget left · sleeping 25s
-[2026-11-26 23:07:30Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:07:30Z] [INFO ] status → running
-[2026-11-26 23:07:30Z] [INFO ] still running · 2107s of budget left · sleeping 25s
-[2026-11-26 23:07:55Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:07:56Z] [INFO ] status → running
-[2026-11-26 23:07:56Z] [INFO ] still running · 2082s of budget left · sleeping 25s
-[2026-11-26 23:08:21Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:08:21Z] [INFO ] status → running
-[2026-11-26 23:08:21Z] [INFO ] still running · 2056s of budget left · sleeping 25s
-[2026-11-26 23:08:46Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:08:47Z] [INFO ] status → running
-[2026-11-26 23:08:47Z] [INFO ] still running · 2031s of budget left · sleeping 25s
-[2026-11-26 23:09:12Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:09:12Z] [INFO ] status → running
-[2026-11-26 23:09:12Z] [INFO ] still running · 2005s of budget left · sleeping 25s
-[2026-11-26 23:09:37Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:09:38Z] [INFO ] status → running
-[2026-11-26 23:09:38Z] [INFO ] still running · 1980s of budget left · sleeping 25s
-[2026-11-26 23:10:03Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:10:03Z] [INFO ] status → running
-[2026-11-26 23:10:03Z] [INFO ] still running · 1954s of budget left · sleeping 25s
-[2026-11-26 23:10:28Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:10:29Z] [INFO ] status → running
-[2026-11-26 23:10:29Z] [INFO ] still running · 1929s of budget left · sleeping 25s
-[2026-11-26 23:10:54Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:10:54Z] [INFO ] status → running
-[2026-11-26 23:10:54Z] [INFO ] still running · 1903s of budget left · sleeping 25s
-[2026-11-26 23:11:19Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:11:20Z] [INFO ] status → running
-[2026-11-26 23:11:20Z] [INFO ] still running · 1878s of budget left · sleeping 25s
-[2026-11-26 23:11:45Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:11:45Z] [INFO ] status → running
-[2026-11-26 23:11:45Z] [INFO ] still running · 1852s of budget left · sleeping 25s
-[2026-11-26 23:12:10Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:12:11Z] [INFO ] status → running
-[2026-11-26 23:12:11Z] [INFO ] still running · 1827s of budget left · sleeping 25s
-[2026-11-26 23:12:36Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:12:36Z] [INFO ] status → running
-[2026-11-26 23:12:36Z] [INFO ] still running · 1801s of budget left · sleeping 25s
-[2026-11-26 23:13:01Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:13:02Z] [INFO ] status → running
-[2026-11-26 23:13:02Z] [INFO ] still running · 1776s of budget left · sleeping 25s
-[2026-11-26 23:13:27Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:13:27Z] [INFO ] status → running
-[2026-11-26 23:13:27Z] [INFO ] still running · 1750s of budget left · sleeping 25s
-[2026-11-26 23:13:52Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:13:53Z] [INFO ] status → running
-[2026-11-26 23:13:53Z] [INFO ] still running · 1725s of budget left · sleeping 25s
-[2026-11-26 23:14:18Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:14:18Z] [INFO ] status → running
-[2026-11-26 23:14:18Z] [INFO ] still running · 1699s of budget left · sleeping 25s
-[2026-11-26 23:14:43Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:14:44Z] [INFO ] status → running
-[2026-11-26 23:14:44Z] [INFO ] still running · 1674s of budget left · sleeping 25s
-[2026-11-26 23:15:09Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:15:09Z] [INFO ] status → running
-[2026-11-26 23:15:09Z] [INFO ] still running · 1648s of budget left · sleeping 25s
-[2026-11-26 23:15:34Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:15:35Z] [INFO ] status → running
-[2026-11-26 23:15:35Z] [INFO ] still running · 1623s of budget left · sleeping 25s
-[2026-11-26 23:16:00Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:16:00Z] [INFO ] status → running
-[2026-11-26 23:16:00Z] [INFO ] still running · 1597s of budget left · sleeping 25s
-[2026-11-26 23:16:25Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:16:26Z] [INFO ] status → running
-[2026-11-26 23:16:26Z] [INFO ] still running · 1572s of budget left · sleeping 25s
-[2026-11-26 23:16:51Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:16:51Z] [INFO ] status → running
-[2026-11-26 23:16:51Z] [INFO ] still running · 1546s of budget left · sleeping 25s
-[2026-11-26 23:17:16Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:17:17Z] [INFO ] status → running
-[2026-11-26 23:17:17Z] [INFO ] still running · 1521s of budget left · sleeping 25s
-[2026-11-26 23:17:42Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:17:42Z] [INFO ] status → running
-[2026-11-26 23:17:42Z] [INFO ] still running · 1495s of budget left · sleeping 25s
-[2026-11-26 23:18:07Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:18:08Z] [INFO ] status → running
-[2026-11-26 23:18:08Z] [INFO ] still running · 1470s of budget left · sleeping 25s
-[2026-11-26 23:18:33Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:18:33Z] [INFO ] status → running
-[2026-11-26 23:18:33Z] [INFO ] still running · 1444s of budget left · sleeping 25s
-[2026-11-26 23:18:58Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:18:59Z] [INFO ] status → running
-[2026-11-26 23:18:59Z] [INFO ] still running · 1419s of budget left · sleeping 25s
-[2026-11-26 23:19:24Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:19:24Z] [INFO ] status → running
-[2026-11-26 23:19:24Z] [INFO ] still running · 1393s of budget left · sleeping 25s
-[2026-11-26 23:19:49Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:19:49Z] [INFO ] status → running
-[2026-11-26 23:19:49Z] [INFO ] still running · 1368s of budget left · sleeping 25s
-[2026-11-26 23:20:14Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:20:15Z] [INFO ] status → running
-[2026-11-26 23:20:15Z] [INFO ] still running · 1342s of budget left · sleeping 25s
-[2026-11-26 23:20:40Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:20:40Z] [INFO ] status → running
-[2026-11-26 23:20:40Z] [INFO ] still running · 1317s of budget left · sleeping 25s
-[2026-11-26 23:21:05Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:21:06Z] [INFO ] status → running
-[2026-11-26 23:21:06Z] [INFO ] still running · 1292s of budget left · sleeping 25s
-[2026-11-26 23:21:31Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:21:31Z] [INFO ] status → running
-[2026-11-26 23:21:31Z] [INFO ] still running · 1266s of budget left · sleeping 25s
-[2026-11-26 23:21:56Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:21:57Z] [INFO ] status → running
-[2026-11-26 23:21:57Z] [INFO ] still running · 1241s of budget left · sleeping 25s
-[2026-11-26 23:22:22Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:22:22Z] [INFO ] status → running
-[2026-11-26 23:22:22Z] [INFO ] still running · 1215s of budget left · sleeping 25s
-[2026-11-26 23:22:47Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:22:48Z] [INFO ] status → running
-[2026-11-26 23:22:48Z] [INFO ] still running · 1190s of budget left · sleeping 25s
-[2026-11-26 23:23:13Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:23:13Z] [INFO ] status → running
-[2026-11-26 23:23:13Z] [INFO ] still running · 1164s of budget left · sleeping 25s
-[2026-11-26 23:23:38Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:23:39Z] [INFO ] status → running
-[2026-11-26 23:23:39Z] [INFO ] still running · 1139s of budget left · sleeping 25s
-[2026-11-26 23:24:04Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:24:04Z] [INFO ] status → running
-[2026-11-26 23:24:04Z] [INFO ] still running · 1113s of budget left · sleeping 25s
-[2026-11-26 23:24:29Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:24:30Z] [INFO ] status → running
-[2026-11-26 23:24:30Z] [INFO ] still running · 1088s of budget left · sleeping 25s
-[2026-11-26 23:24:55Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:24:55Z] [INFO ] status → running
-[2026-11-26 23:24:55Z] [INFO ] still running · 1062s of budget left · sleeping 25s
-[2026-11-26 23:25:20Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:25:21Z] [INFO ] status → running
-[2026-11-26 23:25:21Z] [INFO ] still running · 1037s of budget left · sleeping 25s
-[2026-11-26 23:25:46Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:25:46Z] [INFO ] status → running
-[2026-11-26 23:25:46Z] [INFO ] still running · 1011s of budget left · sleeping 25s
-[2026-11-26 23:26:11Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:26:12Z] [INFO ] status → running
-[2026-11-26 23:26:12Z] [INFO ] still running · 986s of budget left · sleeping 25s
-[2026-11-26 23:26:37Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:26:37Z] [INFO ] status → running
-[2026-11-26 23:26:37Z] [INFO ] still running · 960s of budget left · sleeping 25s
-[2026-11-26 23:27:02Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:27:03Z] [INFO ] status → running
-[2026-11-26 23:27:03Z] [INFO ] still running · 935s of budget left · sleeping 25s
-[2026-11-26 23:27:28Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:27:28Z] [INFO ] status → running
-[2026-11-26 23:27:28Z] [INFO ] still running · 909s of budget left · sleeping 25s
-[2026-11-26 23:27:53Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:27:54Z] [INFO ] status → running
-[2026-11-26 23:27:54Z] [INFO ] still running · 884s of budget left · sleeping 25s
-[2026-11-26 23:28:19Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:28:19Z] [INFO ] status → running
-[2026-11-26 23:28:19Z] [INFO ] still running · 858s of budget left · sleeping 25s
-[2026-11-26 23:28:44Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:28:45Z] [INFO ] status → running
-[2026-11-26 23:28:45Z] [INFO ] still running · 833s of budget left · sleeping 25s
-[2026-11-26 23:29:10Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:29:10Z] [INFO ] status → running
-[2026-11-26 23:29:10Z] [INFO ] still running · 807s of budget left · sleeping 25s
-[2026-11-26 23:29:35Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:29:36Z] [INFO ] status → running
-[2026-11-26 23:29:36Z] [INFO ] still running · 782s of budget left · sleeping 25s
-[2026-11-26 23:30:01Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:30:01Z] [INFO ] status → running
-[2026-11-26 23:30:01Z] [INFO ] still running · 756s of budget left · sleeping 25s
-[2026-11-26 23:30:26Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:30:27Z] [INFO ] status → running
-[2026-11-26 23:30:27Z] [INFO ] still running · 731s of budget left · sleeping 25s
-[2026-11-26 23:30:52Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:30:52Z] [INFO ] status → running
-[2026-11-26 23:30:52Z] [INFO ] still running · 705s of budget left · sleeping 25s
-[2026-11-26 23:31:17Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:31:18Z] [INFO ] status → running
-[2026-11-26 23:31:18Z] [INFO ] still running · 680s of budget left · sleeping 25s
-[2026-11-26 23:31:43Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:31:43Z] [INFO ] status → running
-[2026-11-26 23:31:43Z] [INFO ] still running · 654s of budget left · sleeping 25s
-[2026-11-26 23:32:08Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:32:09Z] [INFO ] status → running
-[2026-11-26 23:32:09Z] [INFO ] still running · 628s of budget left · sleeping 25s
-[2026-11-26 23:32:34Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
-[2026-11-26 23:32:34Z] [INFO ] status → running
-[2026-11-26 23:32:34Z] [INFO ] still running · 603s of budget left · sleeping 25s
+[2026-11-26 23:36:59Z] [INFO ] kernel push accepted — Kaggle is provisioning a T4.
+[2026-11-26 23:36:59Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:37:00Z] [INFO ] status → queued
+[2026-11-26 23:37:00Z] [INFO ] ★ status transition: (none) → queued
+[2026-11-26 23:37:00Z] [INFO ] still queued · 2879s of budget left · sleeping 25s
+[2026-11-26 23:37:25Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:37:26Z] [INFO ] status → running
+[2026-11-26 23:37:26Z] [INFO ] ★ status transition: queued → running
+[2026-11-26 23:37:26Z] [INFO ] still running · 2854s of budget left · sleeping 25s
+[2026-11-26 23:37:51Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:37:51Z] [INFO ] status → running
+[2026-11-26 23:37:51Z] [INFO ] still running · 2828s of budget left · sleeping 25s
+[2026-11-26 23:38:16Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:38:17Z] [INFO ] status → running
+[2026-11-26 23:38:17Z] [INFO ] still running · 2803s of budget left · sleeping 25s
+[2026-11-26 23:38:42Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:38:43Z] [INFO ] status → running
+[2026-11-26 23:38:43Z] [INFO ] still running · 2777s of budget left · sleeping 25s
+[2026-11-26 23:39:08Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:39:08Z] [INFO ] status → running
+[2026-11-26 23:39:08Z] [INFO ] still running · 2751s of budget left · sleeping 25s
+[2026-11-26 23:39:33Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:39:34Z] [INFO ] status → running
+[2026-11-26 23:39:34Z] [INFO ] still running · 2726s of budget left · sleeping 25s
+[2026-11-26 23:39:59Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:40:00Z] [INFO ] status → running
+[2026-11-26 23:40:00Z] [INFO ] still running · 2700s of budget left · sleeping 25s
+[2026-11-26 23:40:25Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:40:25Z] [INFO ] status → running
+[2026-11-26 23:40:25Z] [INFO ] still running · 2674s of budget left · sleeping 25s
+[2026-11-26 23:40:50Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:40:51Z] [INFO ] status → running
+[2026-11-26 23:40:51Z] [INFO ] still running · 2649s of budget left · sleeping 25s
+[2026-11-26 23:41:16Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:41:16Z] [INFO ] status → running
+[2026-11-26 23:41:16Z] [INFO ] still running · 2623s of budget left · sleeping 25s
+[2026-11-26 23:41:41Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:41:42Z] [INFO ] status → running
+[2026-11-26 23:41:42Z] [INFO ] still running · 2598s of budget left · sleeping 25s
+[2026-11-26 23:42:07Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:42:07Z] [INFO ] status → running
+[2026-11-26 23:42:07Z] [INFO ] still running · 2572s of budget left · sleeping 25s
+[2026-11-26 23:42:32Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:42:33Z] [INFO ] status → running
+[2026-11-26 23:42:33Z] [INFO ] still running · 2547s of budget left · sleeping 25s
+[2026-11-26 23:42:58Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:42:59Z] [INFO ] status → running
+[2026-11-26 23:42:59Z] [INFO ] still running · 2521s of budget left · sleeping 25s
+[2026-11-26 23:43:24Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:43:24Z] [INFO ] status → running
+[2026-11-26 23:43:24Z] [INFO ] still running · 2495s of budget left · sleeping 25s
+[2026-11-26 23:43:49Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:43:50Z] [INFO ] status → running
+[2026-11-26 23:43:50Z] [INFO ] still running · 2470s of budget left · sleeping 25s
+[2026-11-26 23:44:15Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:44:15Z] [INFO ] status → running
+[2026-11-26 23:44:15Z] [INFO ] still running · 2444s of budget left · sleeping 25s
+[2026-11-26 23:44:40Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:44:41Z] [INFO ] status → running
+[2026-11-26 23:44:41Z] [INFO ] still running · 2419s of budget left · sleeping 25s
+[2026-11-26 23:45:06Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:45:06Z] [INFO ] status → running
+[2026-11-26 23:45:06Z] [INFO ] still running · 2393s of budget left · sleeping 25s
+[2026-11-26 23:45:31Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:45:32Z] [INFO ] status → running
+[2026-11-26 23:45:32Z] [INFO ] still running · 2367s of budget left · sleeping 25s
+[2026-11-26 23:45:57Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:45:58Z] [INFO ] status → running
+[2026-11-26 23:45:58Z] [INFO ] still running · 2342s of budget left · sleeping 25s
+[2026-11-26 23:46:23Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:46:23Z] [INFO ] status → running
+[2026-11-26 23:46:23Z] [INFO ] still running · 2316s of budget left · sleeping 25s
+[2026-11-26 23:46:48Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:46:49Z] [INFO ] status → running
+[2026-11-26 23:46:49Z] [INFO ] still running · 2291s of budget left · sleeping 25s
+[2026-11-26 23:47:14Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:47:15Z] [INFO ] status → running
+[2026-11-26 23:47:15Z] [INFO ] still running · 2265s of budget left · sleeping 25s
+[2026-11-26 23:47:40Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:47:40Z] [INFO ] status → running
+[2026-11-26 23:47:40Z] [INFO ] still running · 2239s of budget left · sleeping 25s
+[2026-11-26 23:48:05Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:48:06Z] [INFO ] status → running
+[2026-11-26 23:48:06Z] [INFO ] still running · 2214s of budget left · sleeping 25s
+[2026-11-26 23:48:31Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:48:31Z] [INFO ] status → running
+[2026-11-26 23:48:31Z] [INFO ] still running · 2188s of budget left · sleeping 25s
+[2026-11-26 23:48:56Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:48:57Z] [INFO ] status → running
+[2026-11-26 23:48:57Z] [INFO ] still running · 2163s of budget left · sleeping 25s
+[2026-11-26 23:49:22Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:49:23Z] [INFO ] status → running
+[2026-11-26 23:49:23Z] [INFO ] still running · 2137s of budget left · sleeping 25s
+[2026-11-26 23:49:48Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:49:48Z] [INFO ] status → running
+[2026-11-26 23:49:48Z] [INFO ] still running · 2111s of budget left · sleeping 25s
+[2026-11-26 23:50:13Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:50:14Z] [INFO ] status → running
+[2026-11-26 23:50:14Z] [INFO ] still running · 2086s of budget left · sleeping 25s
+[2026-11-26 23:50:39Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:50:40Z] [INFO ] status → running
+[2026-11-26 23:50:40Z] [INFO ] still running · 2060s of budget left · sleeping 25s
+[2026-11-26 23:51:05Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:51:05Z] [INFO ] status → running
+[2026-11-26 23:51:05Z] [INFO ] still running · 2034s of budget left · sleeping 25s
+[2026-11-26 23:51:30Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:51:31Z] [INFO ] status → running
+[2026-11-26 23:51:31Z] [INFO ] still running · 2009s of budget left · sleeping 25s
+[2026-11-26 23:51:56Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:51:56Z] [INFO ] status → running
+[2026-11-26 23:51:56Z] [INFO ] still running · 1983s of budget left · sleeping 25s
+[2026-11-26 23:52:21Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:52:22Z] [INFO ] status → running
+[2026-11-26 23:52:22Z] [INFO ] still running · 1958s of budget left · sleeping 25s
+[2026-11-26 23:52:47Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:52:48Z] [INFO ] status → running
+[2026-11-26 23:52:48Z] [INFO ] still running · 1932s of budget left · sleeping 25s
+[2026-11-26 23:53:13Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:53:13Z] [INFO ] status → running
+[2026-11-26 23:53:13Z] [INFO ] still running · 1906s of budget left · sleeping 25s
+[2026-11-26 23:53:38Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:53:39Z] [INFO ] status → running
+[2026-11-26 23:53:39Z] [INFO ] still running · 1881s of budget left · sleeping 25s
+[2026-11-26 23:54:04Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:54:05Z] [INFO ] status → running
+[2026-11-26 23:54:05Z] [INFO ] still running · 1855s of budget left · sleeping 25s
+[2026-11-26 23:54:30Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:54:30Z] [INFO ] status → running
+[2026-11-26 23:54:30Z] [INFO ] still running · 1829s of budget left · sleeping 25s
+[2026-11-26 23:54:55Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:54:56Z] [INFO ] status → running
+[2026-11-26 23:54:56Z] [INFO ] still running · 1804s of budget left · sleeping 25s
+[2026-11-26 23:55:21Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-26 23:55:22Z] [INFO ] status → error
+[2026-11-26 23:55:22Z] [INFO ] ★ status transition: running → error
+[2026-11-26 23:55:22Z] [ERROR] kernel ended with failure status: error
+[2026-11-26 23:55:22Z] [INFO ] status timeline: [{"at": "2026-11-26 23:37:00Z", "status": "queued"}, {"at": "2026-11-26 23:37:26Z", "status": "running"}, {"at": "2026-11-26 23:55:22Z", "status": "error"}]
+::group::downloading kernel outputs
+[2026-11-26 23:55:22Z] [INFO ] cleared 10 stale artifact(s) from /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+[2026-11-26 23:55:22Z] [INFO ] $ kaggle kernels output amosovadia/stoic-luca-studio -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | Downloading 01_luca_master.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/01_luca_master.png
+    | Downloading 02_monaco_yacht_date.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/02_monaco_yacht_date.png
+    | Downloading 03_vip_party_flash.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/03_vip_party_flash.png
+    | Downloading 04_porsche_gt3_pov.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/04_porsche_gt3_pov.png
+    | Downloading 05_extreme_action.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/05_extreme_action.png
+    | build.log: Skipping, found more recently modified local copy (use --force to force download)
+    | Downloading luca_carousel_sheet.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_carousel_sheet.png
+    | Downloading luca_metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_metrics.json
+    | Downloading luca_slide_01.jpg to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_slide_01.jpg
+    | Downloading luca_slide_02.jpg to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_slide_02.jpg
+    | Downloading luca_slide_03.jpg to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_slide_03.jpg
+    | Downloading luca_slide_04.jpg to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_slide_04.jpg
+    | Downloading luca_slide_05.jpg to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_slide_05.jpg
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-luca-studio.log 
+    ! 
+    !   0%|          | 0.00/1.64M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.64M/1.64M [00:00<00:00, 20.0MB/s]
+    ! 
+    !   0%|          | 0.00/1.13M [00:00<?, ?B/s]
+    !  89%|████████▉ | 1.00M/1.13M [00:00<00:00, 6.96MB/s]
+    ! 100%|██████████| 1.13M/1.13M [00:00<00:00, 7.65MB/s]
+    ! 
+    !   0%|          | 0.00/1.18M [00:00<?, ?B/s]
+    !  85%|████████▌ | 1.00M/1.18M [00:00<00:00, 7.07MB/s]
+    ! 100%|██████████| 1.18M/1.18M [00:00<00:00, 8.00MB/s]
+    ! 
+    !   0%|          | 0.00/1.16M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.16M/1.16M [00:00<00:00, 13.2MB/s]
+    ! 
+    !   0%|          | 0.00/1.29M [00:00<?, ?B/s]
+    !  78%|███████▊  | 1.00M/1.29M [00:00<00:00, 7.00MB/s]
+    ! 100%|██████████| 1.29M/1.29M [00:00<00:00, 8.52MB/s]
+    ! 
+    !   0%|          | 0.00/1.95M [00:00<?, ?B/s]
+    !  51%|█████▏    | 1.00M/1.95M [00:00<00:00, 2.39MB/s]
+    ! 100%|██████████| 1.95M/1.95M [00:00<00:00, 2.33MB/s]
+    ! 100%|██████████| 1.95M/1.95M [00:00<00:00, 2.34MB/s]
+    ! 
+    !   0%|          | 0.00/6.21k [00:00<?, ?B/s]
+    ! 100%|██████████| 6.21k/6.21k [00:00<00:00, 34.2MB/s]
+    ! 
+    !   0%|          | 0.00/259k [00:00<?, ?B/s]
+    ! 100%|██████████| 259k/259k [00:00<00:00, 2.73MB/s]
+    ! 
+    !   0%|          | 0.00/159k [00:00<?, ?B/s]
+    ! 100%|██████████| 159k/159k [00:00<00:00, 2.66MB/s]
+    ! 
+    !   0%|          | 0.00/170k [00:00<?, ?B/s]
+    ! 100%|██████████| 170k/170k [00:00<00:00, 2.18MB/s]
+    ! 
+    !   0%|          | 0.00/167k [00:00<?, ?B/s]
+    ! 100%|██████████| 167k/167k [00:00<00:00, 1.77MB/s]
+    ! 
+    !   0%|          | 0.00/209k [00:00<?, ?B/s]
+    ! 100%|██████████| 209k/209k [00:00<00:00, 3.01MB/s]
+[2026-11-26 23:55:27Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-26 23:55:27Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-luca-studio
+
+===== kaggle kernels logs · fetched 2026-11-26 23:55:28Z =====
+[{"stream_name":"stdout","time":1.424765767,"data":"[2026-11-26T23:37:03Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.424801239,"data":"[2026-11-26T23:37:03Z] [INFO ] stoic-ai-studio · PHASE 3.1 · LUCA MORETTI · dual-GPU upgrade\n"}
+,{"stream_name":"stdout","time":1.42481042,"data":"[2026-11-26T23:37:03Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.424814268,"data":"[2026-11-26T23:37:03Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.932227943,"data":"[2026-11-26T23:37:04Z] [INFO ] [deps] installing: ['onnxruntime-gpu', 'edge-tts', 'insightface\u003e=2.1']\n"}
+,{"stream_name":"stdout","time":1.9322553230000001,"data":"[2026-11-26T23:37:04Z] [INFO ] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":13.578409898,"data":"[2026-11-26T23:37:15Z] [INFO ] [deps] installed: onnxruntime-gpu edge-tts insightface\u003e=2.1\n"}
+,{"stream_name":"stdout","time":13.578444686,"data":"[2026-11-26T23:37:15Z] [INFO ] ✔ done:  pip_install_deps (11.6s)\n"}
+,{"stream_name":"stdout","time":33.38291794,"data":"[2026-11-26T23:37:35Z] [INFO ] [deps] diffusers 0.42.0\n"}
+,{"stream_name":"stdout","time":46.332316713,"data":"[2026-11-26T23:37:48Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\", \"onnxruntime\": \"1.32.0\", \"insightface\": \"2.1\", \"cv2\": \"4.14.0\", \"edge_tts\": \"7.3.1\"}\n"}
+,{"stream_name":"stdout","time":46.332469513,"data":"[2026-11-26T23:37:48Z] [INFO ] [face] ▶ start: fetch_buffalo_l\n"}
+,{"stream_name":"stdout","time":49.56184488,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ 1k3d68.onnx (143.6 MB)\n"}
+,{"stream_name":"stdout","time":49.561892674,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ genderage.onnx (1.3 MB)\n"}
+,{"stream_name":"stdout","time":49.561972567,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ det_10g.onnx (16.9 MB)\n"}
+,{"stream_name":"stdout","time":49.562037576,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ w600k_r50.onnx (174.4 MB)\n"}
+,{"stream_name":"stdout","time":49.562102203,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ 2d106det.onnx (5.0 MB)\n"}
+,{"stream_name":"stdout","time":49.562355318,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] buffalo_l models: ['1k3d68.onnx', '2d106det.onnx', 'det_10g.onnx', 'genderage.onnx', 'w600k_r50.onnx']\n"}
+,{"stream_name":"stdout","time":49.562394366,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] ✔ done:  fetch_buffalo_l (3.2s)\n"}
+,{"stream_name":"stdout","time":49.56246098,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] ▶ start: fetch_inswapper\n"}
+,{"stream_name":"stderr","time":49.665200292,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":54.156758061,"data":"[2026-11-26T23:37:56Z] [INFO ] [face]   ✓ inswapper from ezioruan/inswapper_128.onnx (554.3 MB)\n"}
+,{"stream_name":"stdout","time":54.156787729,"data":"[2026-11-26T23:37:56Z] [INFO ] [face] ✔ done:  fetch_inswapper (4.6s)\n"}
+,{"stream_name":"stdout","time":54.156820329,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] GPUs visible: 2\n"}
+,{"stream_name":"stdout","time":54.157810681,"data":"[2026-11-26T23:37:56Z] [INFO ] ▶ start: parallel_gpu_workers\n"}
+,{"stream_name":"stdout","time":54.161805234,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] started carousel worker (gpu0-carousel)\n"}
+,{"stream_name":"stdout","time":54.164214626,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] started reel worker (gpu1-reel)\n"}
+,{"stream_name":"stderr","time":54.395392579,"data":"Process gpu1-reel:\n"}
+,{"stream_name":"stderr","time":54.399432237,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":54.399934614,"data":"  File \"/usr/lib/python3.13/multiprocessing/process.py\", line 313, in _bootstrap\n"}
+,{"stream_name":"stderr","time":54.399963774,"data":"    self.run()\n"}
+,{"stream_name":"stderr","time":54.399968519,"data":"    ~~~~~~~~^^\n"}
+,{"stream_name":"stderr","time":54.399972383,"data":"  File \"/usr/lib/python3.13/multiprocessing/process.py\", line 108, in run\n"}
+,{"stream_name":"stderr","time":54.399977194,"data":"    self._target(*self._args, **self._kwargs)\n"}
+,{"stream_name":"stderr","time":54.399995994,"data":"    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":54.400000846,"data":"TypeError: _worker_reel() takes 4 positional arguments but 7 were given\n"}
+,{"stream_name":"stdout","time":66.437446795,"data":"[2026-11-26T23:38:08Z] [INFO ] [gpu0] ▶ start: load_sdxl\n"}
+,{"stream_name":"stdout","time":66.437476755,"data":"[2026-11-26T23:38:08Z] [INFO ] [gpu0] loading SG161222/RealVisXL_V5.0 (['variant', 'torch_dtype', 'use_safetensors'])\n"}
+,{"stream_name":"stderr","time":66.437706545,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":66.437717187,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":66.581854587,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":103.253514212,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 60.86it/s]\rFetching 18 files:  83%|████████▎ | 15/18 [00:01\u003c00:00,  7.65it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00,  7.65it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:30\u003c00:02,  2.75s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:36\u003c00:00,  3.09s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:36\u003c00:00,  2.03s/it]\n"}
+,{"stream_name":"stderr","time":105.399174887,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:01\u003c00:11,  1.88s/it]\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.86it/s]\n"}
+,{"stream_name":"stderr","time":105.47155259,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2744.30it/s]\n"}
+,{"stream_name":"stderr","time":105.617711819,"data":"\rLoading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:01,  2.37it/s]\n"}
+,{"stream_name":"stderr","time":105.71795773,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":105.809837167,"data":"\rLoading weights:  52%|█████▏    | 271/517 [00:00\u003c00:00, 2708.30it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2694.55it/s]\n"}
+,{"stream_name":"stderr","time":105.875305384,"data":"\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.36it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.67it/s]\n"}
+,{"stream_name":"stdout","time":105.875983995,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] ✔ done:  load_sdxl (39.4s)\n"}
+,{"stream_name":"stdout","time":105.875996827,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] ▶ start: configure_pipeline\n"}
+,{"stream_name":"stdout","time":105.894227072,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] scheduler: DPM++ SDE Karras (singlestep, sde-dpmsolver++)\n"}
+,{"stream_name":"stdout","time":107.928692891,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":107.928736968,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] attention slicing disabled (needed by Stage-3 IP-Adapter)\n"}
+,{"stream_name":"stderr","time":107.928839909,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":107.931499715,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] ✔ done:  configure_pipeline (2.1s)\n"}
+,{"stream_name":"stdout","time":107.931515842,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] ▶ start: scene_01\n"}
+,{"stream_name":"stdout","time":107.93159337,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] txt2img 01_luca_master.png: 1024x1024 seed=42 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":107.94251245,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (132 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":107.94765717,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":107.947676323,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['deck in monaco harbour , natural mediterranean afternoon sunlight , visible skin pores , unretouched , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":109.041469588,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (132 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":109.04410766,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['deck in monaco harbour , natural mediterranean afternoon sunlight , visible skin pores , unretouched , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":109.158831825,"data":" `last_sigmas_type='zero'` is not supported for `lower_order_final=False`. Changing scheduler {self.config} to have `lower_order_final` set to True.\n"}
+,{"stream_name":"stderr","time":135.242060269,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:03\u003c01:51,  3.59s/it]\r  6%|▋         | 2/32 [00:03\u003c00:50,  1.68s/it]\r  9%|▉         | 3/32 [00:04\u003c00:36,  1.24s/it]\r 12%|█▎        | 4/32 [00:05\u003c00:29,  1.04s/it]\r 16%|█▌        | 5/32 [00:06\u003c00:25,  1.08it/s]\r 19%|█▉        | 6/32 [00:06\u003c00:22,  1.17it/s]\r 22%|██▏       | 7/32 [00:07\u003c00:20,  1.23it/s]\r 25%|██▌       | 8/32 [00:08\u003c00:18,  1.27it/s]\r 28%|██▊       | 9/32 [00:09\u003c00:17,  1.30it/s]\r 31%|███▏      | 10/32 [00:09\u003c00:16,  1.32it/s]\r 34%|███▍      | 11/32 [00:10\u003c00:15,  1.34it/s]\r 38%|███▊      | 12/32 [00:11\u003c00:14,  1.35it/s]\r 41%|████      | 13/32 [00:11\u003c00:14,  1.35it/s]\r 44%|████▍     | 14/32 [00:12\u003c00:13,  1.35it/s]\r 47%|████▋     | 15/32 [00:13\u003c00:12,  1.36it/s]\r 50%|█████     | 16/32 [00:14\u003c00:11,  1.35it/s]\r 53%|█████▎    | 17/32 [00:14\u003c00:11,  1.36it/s]\r 56%|█████▋    | 18/32 [00:15\u003c00:10,  1.35it/s]\r 59%|█████▉    | 19/32 [00:16\u003c00:09,  1.35it/s]\r 62%|██████▎   | 20/32 [00:17\u003c00:08,  1.35it/s]\r 66%|██████▌   | 21/32 [00:17\u003c00:08,  1.35it/s]\r 69%|██████▉   | 22/32 [00:18\u003c00:07,  1.35it/s]\r 72%|███████▏  | 23/32 [00:19\u003c00:06,  1.35it/s]\r 75%|███████▌  | 24/32 [00:20\u003c00:05,  1.35it/s]\r 78%|███████▊  | 25/32 [00:20\u003c00:05,  1.35it/s]\r 81%|████████▏ | 26/32 [00:21\u003c00:04,  1.34it/s]\r 84%|████████▍ | 27/32 [00:22\u003c00:03,  1.34it/s]\r 88%|████████▊ | 28/32 [00:23\u003c00:02,  1.34it/s]\r 91%|█████████ | 29/32 [00:23\u003c00:02,  1.34it/s]\r 94%|█████████▍| 30/32 [00:24\u003c00:01,  1.34it/s]\r 97%|█████████▋| 31/32 [00:25\u003c00:00,  1.33it/s]\r100%|██████████| 32/32 [00:26\u003c00:00,  1.33it/s]\r100%|██████████| 32/32 [00:26\u003c00:00,  1.23it/s]\n"}
+,{"stream_name":"stderr","time":135.243402365,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":135.243422858,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":135.243555719,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":137.631238541,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":139.512387936,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] ✔ done:  scene_01 (31.6s)\n"}
+,{"stream_name":"stdout","time":139.512436566,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] ▶ start: scene_02\n"}
+,{"stream_name":"stdout","time":139.512465218,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] txt2img 02_monaco_yacht_date.png: 832x1024 seed=44 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":139.522684135,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['resting naturally on the teak backrest and his left hand holding a chilled champagne flute by the stem with five natural fingers , looking at the camera with a confident smirk , clear blue - green eyes , no sunglasses , warm sunset light , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":139.534056634,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['resting naturally on the teak backrest and his left hand holding a chilled champagne flute by the stem with five natural fingers , looking at the camera with a confident smirk , clear blue - green eyes , no sunglasses , warm sunset light , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":159.79286198,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  3.04it/s]\r  6%|▋         | 2/32 [00:00\u003c00:15,  1.97it/s]\r  9%|▉         | 3/32 [00:01\u003c00:16,  1.77it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:16,  1.69it/s]\r 16%|█▌        | 5/32 [00:02\u003c00:16,  1.65it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:16,  1.62it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:15,  1.61it/s]\r 25%|██▌       | 8/32 [00:04\u003c00:15,  1.60it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:14,  1.59it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:13,  1.59it/s]\r 34%|███▍      | 11/32 [00:06\u003c00:13,  1.58it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:12,  1.58it/s]\r 41%|████      | 13/32 [00:07\u003c00:12,  1.57it/s]\r 44%|████▍     | 14/32 [00:08\u003c00:11,  1.57it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:10,  1.57it/s]\r 50%|█████     | 16/32 [00:09\u003c00:10,  1.57it/s]\r 53%|█████▎    | 17/32 [00:10\u003c00:09,  1.56it/s]\r 56%|█████▋    | 18/32 [00:11\u003c00:08,  1.56it/s]\r 59%|█████▉    | 19/32 [00:11\u003c00:08,  1.56it/s]\r 62%|██████▎   | 20/32 [00:12\u003c00:07,  1.56it/s]\r 66%|██████▌   | 21/32 [00:13\u003c00:07,  1.55it/s]\r 69%|██████▉   | 22/32 [00:13\u003c00:06,  1.55it/s]\r 72%|███████▏  | 23/32 [00:14\u003c00:05,  1.55it/s]\r 75%|███████▌  | 24/32 [00:15\u003c00:05,  1.55it/s]\r 78%|███████▊  | 25/32 [00:15\u003c00:04,  1.55it/s]\r 81%|████████▏ | 26/32 [00:16\u003c00:03,  1.54it/s]\r 84%|████████▍ | 27/32 [00:16\u003c00:03,  1.54it/s]\r 88%|████████▊ | 28/32 [00:17\u003c00:02,  1.54it/s]\r 91%|█████████ | 29/32 [00:18\u003c00:01,  1.54it/s]\r 94%|█████████▍| 30/32 [00:18\u003c00:01,  1.54it/s]\r 97%|█████████▋| 31/32 [00:19\u003c00:00,  1.54it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.55it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.58it/s]\n"}
+,{"stream_name":"stderr","time":159.793913788,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":159.918627623,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":163.278618817,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] ✔ done:  scene_02 (23.8s)\n"}
+,{"stream_name":"stdout","time":163.278667325,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] ▶ start: scene_03\n"}
+,{"stream_name":"stdout","time":163.278683431,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] txt2img 03_vip_party_flash.png: 832x1024 seed=45 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":163.289339597,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['on the right , one hand resting naturally on the vip table holding a crystal rocks glass with ice and amber whiskey with five natural fingers , looking at the camera with a confident smirk , clear eyes , no sunglasses , dark night sky bokeh background with no extra faces between them , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":163.300063107,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['on the right , one hand resting naturally on the vip table holding a crystal rocks glass with ice and amber whiskey with five natural fingers , looking at the camera with a confident smirk , clear eyes , no sunglasses , dark night sky bokeh background with no extra faces between them , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":184.250182506,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:09,  3.19it/s]\r  6%|▋         | 2/32 [00:00\u003c00:15,  1.96it/s]\r  9%|▉         | 3/32 [00:01\u003c00:16,  1.74it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:16,  1.65it/s]\r 16%|█▌        | 5/32 [00:02\u003c00:16,  1.61it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:16,  1.58it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:15,  1.56it/s]\r 25%|██▌       | 8/32 [00:04\u003c00:15,  1.55it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:14,  1.54it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:14,  1.53it/s]\r 34%|███▍      | 11/32 [00:06\u003c00:13,  1.53it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.52it/s]\r 41%|████      | 13/32 [00:08\u003c00:12,  1.52it/s]\r 44%|████▍     | 14/32 [00:08\u003c00:11,  1.52it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:11,  1.51it/s]\r 50%|█████     | 16/32 [00:10\u003c00:10,  1.51it/s]\r 53%|█████▎    | 17/32 [00:10\u003c00:09,  1.51it/s]\r 56%|█████▋    | 18/32 [00:11\u003c00:09,  1.51it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:08,  1.50it/s]\r 62%|██████▎   | 20/32 [00:12\u003c00:07,  1.50it/s]\r 66%|██████▌   | 21/32 [00:13\u003c00:07,  1.50it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:06,  1.50it/s]\r 72%|███████▏  | 23/32 [00:14\u003c00:05,  1.50it/s]\r 75%|███████▌  | 24/32 [00:15\u003c00:05,  1.50it/s]\r 78%|███████▊  | 25/32 [00:16\u003c00:04,  1.50it/s]\r 81%|████████▏ | 26/32 [00:16\u003c00:04,  1.49it/s]\r 84%|████████▍ | 27/32 [00:17\u003c00:03,  1.49it/s]\r 88%|████████▊ | 28/32 [00:18\u003c00:02,  1.49it/s]\r 91%|█████████ | 29/32 [00:18\u003c00:02,  1.49it/s]\r 94%|█████████▍| 30/32 [00:19\u003c00:01,  1.48it/s]\r 97%|█████████▋| 31/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.53it/s]\n"}
+,{"stream_name":"stderr","time":184.251034599,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":184.385518601,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":187.850703229,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] ✔ done:  scene_03 (24.6s)\n"}
+,{"stream_name":"stdout","time":187.850761335,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] ▶ start: scene_04\n"}
+,{"stream_name":"stdout","time":187.850766876,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] txt2img 04_porsche_gt3_pov.png: 832x1024 seed=46 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":187.863230234,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [\"of a parked white porsche 9 1 1 gt 3 rs , one hand resting flat and naturally with five fingers on the car 's sleek front fender and the other hand relaxed by his pocket , looking directly at the camera with a confident smirk , no sunglasses , mediterranean sea cliffs in background , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy\"]\n"}
+,{"stream_name":"stderr","time":187.875252384,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [\"of a parked white porsche 9 1 1 gt 3 rs , one hand resting flat and naturally with five fingers on the car 's sleek front fender and the other hand relaxed by his pocket , looking directly at the camera with a confident smirk , no sunglasses , mediterranean sea cliffs in background , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy\"]\n"}
+,{"stream_name":"stderr","time":209.991328116,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  3.00it/s]\r  6%|▋         | 2/32 [00:01\u003c00:16,  1.84it/s]\r  9%|▉         | 3/32 [00:01\u003c00:17,  1.64it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:17,  1.56it/s]\r 16%|█▌        | 5/32 [00:03\u003c00:17,  1.52it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:17,  1.50it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:16,  1.48it/s]\r 25%|██▌       | 8/32 [00:05\u003c00:16,  1.47it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:15,  1.46it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:15,  1.45it/s]\r 34%|███▍      | 11/32 [00:07\u003c00:14,  1.45it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.44it/s]\r 41%|████      | 13/32 [00:08\u003c00:13,  1.44it/s]\r 44%|████▍     | 14/32 [00:09\u003c00:12,  1.44it/s]\r 47%|████▋     | 15/32 [00:10\u003c00:11,  1.44it/s]\r 50%|█████     | 16/32 [00:10\u003c00:11,  1.43it/s]\r 53%|█████▎    | 17/32 [00:11\u003c00:10,  1.43it/s]\r 56%|█████▋    | 18/32 [00:12\u003c00:09,  1.42it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:09,  1.42it/s]\r 62%|██████▎   | 20/32 [00:13\u003c00:08,  1.42it/s]\r 66%|██████▌   | 21/32 [00:14\u003c00:07,  1.42it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:07,  1.42it/s]\r 72%|███████▏  | 23/32 [00:15\u003c00:06,  1.42it/s]\r 75%|███████▌  | 24/32 [00:16\u003c00:05,  1.41it/s]\r 78%|███████▊  | 25/32 [00:17\u003c00:04,  1.41it/s]\r 81%|████████▏ | 26/32 [00:17\u003c00:04,  1.41it/s]\r 84%|████████▍ | 27/32 [00:18\u003c00:03,  1.41it/s]\r 88%|████████▊ | 28/32 [00:19\u003c00:02,  1.41it/s]\r 91%|█████████ | 29/32 [00:19\u003c00:02,  1.41it/s]\r 94%|█████████▍| 30/32 [00:20\u003c00:01,  1.41it/s]\r 97%|█████████▋| 31/32 [00:21\u003c00:00,  1.41it/s]\r100%|██████████| 32/32 [00:22\u003c00:00,  1.41it/s]\r100%|██████████| 32/32 [00:22\u003c00:00,  1.45it/s]\n"}
+,{"stream_name":"stderr","time":209.992359892,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":210.134767703,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":213.670188537,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] ✔ done:  scene_04 (25.8s)\n"}
+,{"stream_name":"stdout","time":213.670224681,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] ▶ start: scene_05\n"}
+,{"stream_name":"stdout","time":213.670291636,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] txt2img 05_extreme_action.png: 832x1024 seed=47 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":213.680115718,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['bars naturally with five fingers , water droplets glistening on his sun - kissed muscular forearms and shirtless torso , looking at the camera with an effortless smile , no sunglasses , bright natural daylight , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":213.690444352,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['bars naturally with five fingers , water droplets glistening on his sun - kissed muscular forearms and shirtless torso , looking at the camera with an effortless smile , no sunglasses , bright natural daylight , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":235.239403434,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  2.97it/s]\r  6%|▋         | 2/32 [00:01\u003c00:16,  1.82it/s]\r  9%|▉         | 3/32 [00:01\u003c00:17,  1.62it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:18,  1.55it/s]\r 16%|█▌        | 5/32 [00:03\u003c00:17,  1.51it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:17,  1.49it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:16,  1.48it/s]\r 25%|██▌       | 8/32 [00:05\u003c00:16,  1.47it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:15,  1.47it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:15,  1.46it/s]\r 34%|███▍      | 11/32 [00:07\u003c00:14,  1.46it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.46it/s]\r 41%|████      | 13/32 [00:08\u003c00:13,  1.46it/s]\r 44%|████▍     | 14/32 [00:09\u003c00:12,  1.46it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:11,  1.46it/s]\r 50%|█████     | 16/32 [00:10\u003c00:10,  1.46it/s]\r 53%|█████▎    | 17/32 [00:11\u003c00:10,  1.46it/s]\r 56%|█████▋    | 18/32 [00:12\u003c00:09,  1.46it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:08,  1.47it/s]\r 62%|██████▎   | 20/32 [00:13\u003c00:08,  1.47it/s]\r 66%|██████▌   | 21/32 [00:14\u003c00:07,  1.47it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:06,  1.47it/s]\r 72%|███████▏  | 23/32 [00:15\u003c00:06,  1.47it/s]\r 75%|███████▌  | 24/32 [00:16\u003c00:05,  1.47it/s]\r 78%|███████▊  | 25/32 [00:16\u003c00:04,  1.47it/s]\r 81%|████████▏ | 26/32 [00:17\u003c00:04,  1.47it/s]\r 84%|████████▍ | 27/32 [00:18\u003c00:03,  1.48it/s]\r 88%|████████▊ | 28/32 [00:18\u003c00:02,  1.47it/s]\r 91%|█████████ | 29/32 [00:19\u003c00:02,  1.48it/s]\r 94%|█████████▍| 30/32 [00:20\u003c00:01,  1.48it/s]\r 97%|█████████▋| 31/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:21\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:21\u003c00:00,  1.49it/s]\n"}
+,{"stream_name":"stderr","time":235.240449464,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":235.373623215,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":238.815462459,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ✔ done:  scene_05 (25.1s)\n"}
+,{"stream_name":"stdout","time":238.815493223,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ▶ start: write_01\n"}
+,{"stream_name":"stdout","time":239.557015673,"data":"[2026-11-26T23:41:01Z] [INFO ] wrote 01_luca_master.png (1682 KB) + luca_slide_01.jpg (259 KB)\n"}
+,{"stream_name":"stdout","time":239.557041173,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ✔ done:  write_01 (0.7s)\n"}
+,{"stream_name":"stdout","time":239.988400801,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] ▶ start: load_insightface\n"}
+,{"stream_name":"stdout","time":239.98843211,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] onnxruntime providers: available=['AzureExecutionProvider', 'CPUExecutionProvider'] → using=['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":239.988442626,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] providers: ['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":241.293532634,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ✔ done:  load_insightface (1.3s)\n"}
+,{"stream_name":"stdout","time":241.293567753,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ▶ start: check_inswapper\n"}
+,{"stream_name":"stdout","time":241.293607371,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] inswapper_128.onnx present (529 MB)\n"}
+,{"stream_name":"stdout","time":241.293615903,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ✔ done:  check_inswapper (0.0s)\n"}
+,{"stream_name":"stdout","time":242.226970685,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] master face locked: bbox=[319, 124, 657, 614]\n"}
+,{"stream_name":"stdout","time":242.237627798,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ▶ start: build_img2img\n"}
+,{"stream_name":"stdout","time":242.238403692,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] img2img pipeline built from shared components\n"}
+,{"stream_name":"stdout","time":242.23841422,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ✔ done:  build_img2img (0.0s)\n"}
+,{"stream_name":"stdout","time":242.238467117,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] attaching IP-Adapter-Plus-Face @ 0.6\n"}
+,{"stream_name":"stdout","time":242.238472117,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":265.870010583,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  10%|█         | 52/520 [00:00\u003c00:00, 519.91it/s]\rLoading weights:  28%|██▊       | 143/520 [00:00\u003c00:00, 749.19it/s]\rLoading weights:  42%|████▏     | 218/520 [00:00\u003c00:00, 668.24it/s]\rLoading weights:  55%|█████▌    | 286/520 [00:00\u003c00:00, 565.67it/s]\rLoading weights:  66%|██████▋   | 345/520 [00:00\u003c00:00, 553.81it/s]\rLoading weights:  79%|███████▊  | 409/520 [00:00\u003c00:00, 556.76it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 650.02it/s]\n"}
+,{"stream_name":"stderr","time":265.903354167,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":265.903391809,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":265.90339684,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":265.903400439,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903409524,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903412371,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903414981,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903417359,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903419781,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903422221,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903424643,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903426981,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903429404,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903431742,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903434376,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903436737,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903439086,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903441437,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903444491,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.90344693,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903449411,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903451787,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903454216,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903456561,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.90345905,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903461442,"data":"\n"}
+,{"stream_name":"stderr","time":265.903463647,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":265.903466775,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":266.208872066,"data":"[2026-11-26T23:41:28Z] [INFO ] [gpu0] ✔ done:  load_clip_vision (24.0s)\n"}
+,{"stream_name":"stdout","time":266.208927706,"data":"[2026-11-26T23:41:28Z] [INFO ] [gpu0] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stderr","time":272.45637131,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":272.709804099,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] ✔ done:  load_ip_adapter (6.5s)\n"}
+,{"stream_name":"stdout","time":272.709835403,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] adetailer adapter ready\n"}
+,{"stream_name":"stdout","time":272.711343039,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] ▶ start: swap_02\n"}
+,{"stream_name":"stdout","time":273.302356268,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] onnxruntime providers: available=['AzureExecutionProvider', 'CPUExecutionProvider'] → using=['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":276.666928434,"data":"inswapper-shape: [1, 3, 128, 128]\n"}
+,{"stream_name":"stdout","time":276.666967475,"data":"[2026-11-26T23:41:38Z] [INFO ] [gpu0] inswapper model: INSwapper\n"}
+,{"stream_name":"stdout","time":278.196425273,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] inswapper → male idx=1 bbox=(122, 10, 499, 387) genders=['F', 'M']\n"}
+,{"stream_name":"stdout","time":278.196461781,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] ✔ done:  swap_02 (5.5s)\n"}
+,{"stream_name":"stdout","time":278.196467059,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] ▶ start: adetailer_02\n"}
+,{"stream_name":"stderr","time":278.228750853,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":278.238872427,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":278.302219594,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":279.013596418,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":280.434919632,"data":"[2026-11-26T23:41:42Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":280.438026173,"data":"[2026-11-26T23:41:42Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":280.438042125,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":280.438046588,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":280.438049938,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":280.438053198,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":280.438057241,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":280.438060633,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438065522,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":280.438101703,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":280.438121392,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":280.438125629,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":280.43812899,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":280.438132226,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":280.438135681,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":280.438139053,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438142343,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":280.438146282,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":280.43814972,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":280.438153035,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":280.438156352,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":280.438159745,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438162984,"data":"    ^\n"}
+,{"stream_name":"stdout","time":280.438166167,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":280.438174866,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":280.438177382,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":280.43818003,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":280.438183092,"data":"\n"}
+,{"stream_name":"stdout","time":280.438198085,"data":"[2026-11-26T23:41:42Z] [INFO ] [gpu0] ✔ done:  adetailer_02 (2.2s)\n"}
+,{"stream_name":"stdout","time":281.067964769,"data":"[2026-11-26T23:41:43Z] [INFO ] [gpu0] identity 02_monaco_yacht_date.png: cosine=0.7188 (MATCH)\n"}
+,{"stream_name":"stdout","time":281.067993582,"data":"[2026-11-26T23:41:43Z] [INFO ] [gpu0] ▶ start: write_02\n"}
+,{"stream_name":"stdout","time":281.764519999,"data":"[2026-11-26T23:41:44Z] [INFO ] wrote 02_monaco_yacht_date.png (1154 KB) + luca_slide_02.jpg (159 KB)\n"}
+,{"stream_name":"stdout","time":281.764553292,"data":"[2026-11-26T23:41:44Z] [INFO ] [gpu0] ✔ done:  write_02 (0.7s)\n"}
+,{"stream_name":"stdout","time":281.765692464,"data":"[2026-11-26T23:41:44Z] [INFO ] [gpu0] ▶ start: swap_03\n"}
+,{"stream_name":"stdout","time":283.967378198,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(0, 0, 605, 604) genders=['M', 'F']\n"}
+,{"stream_name":"stdout","time":283.96742123,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] ✔ done:  swap_03 (2.2s)\n"}
+,{"stream_name":"stdout","time":283.96747037,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] ▶ start: adetailer_03\n"}
+,{"stream_name":"stderr","time":284.0016998,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":284.01095179,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":284.070532501,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":284.083043474,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":286.17677057,"data":"[2026-11-26T23:41:48Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":286.178191137,"data":"[2026-11-26T23:41:48Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":286.178203768,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":286.178208178,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":286.17821162,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":286.178215114,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":286.178221002,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":286.178224964,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178229797,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":286.178234047,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":286.178237856,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":286.178242309,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":286.17824609,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":286.178250019,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":286.178253489,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":286.178256797,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178260014,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":286.178264594,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":286.178268872,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":286.178272429,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":286.178276419,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":286.17828053,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178284241,"data":"    ^\n"}
+,{"stream_name":"stdout","time":286.178287644,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":286.178291945,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":286.178295434,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":286.178312354,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":286.178321184,"data":"\n"}
+,{"stream_name":"stdout","time":286.178327064,"data":"[2026-11-26T23:41:48Z] [INFO ] [gpu0] ✔ done:  adetailer_03 (2.2s)\n"}
+,{"stream_name":"stdout","time":286.810207467,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] identity 03_vip_party_flash.png: cosine=0.8670 (MATCH)\n"}
+,{"stream_name":"stdout","time":286.81027906,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ▶ start: write_03\n"}
+,{"stream_name":"stdout","time":287.39525515,"data":"[2026-11-26T23:41:49Z] [INFO ] wrote 03_vip_party_flash.png (1204 KB) + luca_slide_03.jpg (170 KB)\n"}
+,{"stream_name":"stdout","time":287.395280479,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ✔ done:  write_03 (0.6s)\n"}
+,{"stream_name":"stdout","time":287.396501879,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ▶ start: swap_04\n"}
+,{"stream_name":"stdout","time":289.280751149,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(118, 22, 626, 530) genders=['M']\n"}
+,{"stream_name":"stdout","time":289.280796715,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] ✔ done:  swap_04 (1.9s)\n"}
+,{"stream_name":"stdout","time":289.280802761,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] ▶ start: adetailer_04\n"}
+,{"stream_name":"stderr","time":289.312887915,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":289.322305832,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":289.380665272,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":289.393809199,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":291.466429935,"data":"[2026-11-26T23:41:53Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":291.467710283,"data":"[2026-11-26T23:41:53Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":291.467727774,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":291.467731191,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":291.467733664,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":291.467736049,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":291.467738673,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":291.467741092,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467743416,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":291.467746031,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":291.4677484,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":291.467751082,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":291.467777287,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":291.467781736,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":291.467785714,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":291.467789539,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467792971,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":291.467797634,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":291.467801481,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":291.467805558,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":291.46780977,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":291.467813664,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467817421,"data":"    ^\n"}
+,{"stream_name":"stdout","time":291.467820981,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":291.467824673,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":291.467827841,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":291.467831985,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":291.467835716,"data":"\n"}
+,{"stream_name":"stdout","time":291.467840657,"data":"[2026-11-26T23:41:53Z] [INFO ] [gpu0] ✔ done:  adetailer_04 (2.2s)\n"}
+,{"stream_name":"stdout","time":291.898577,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] identity 04_porsche_gt3_pov.png: cosine=0.8828 (MATCH)\n"}
+,{"stream_name":"stdout","time":291.898634049,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ▶ start: write_04\n"}
+,{"stream_name":"stdout","time":292.50814469,"data":"[2026-11-26T23:41:54Z] [INFO ] wrote 04_porsche_gt3_pov.png (1191 KB) + luca_slide_04.jpg (167 KB)\n"}
+,{"stream_name":"stdout","time":292.508173373,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ✔ done:  write_04 (0.6s)\n"}
+,{"stream_name":"stdout","time":292.509403163,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ▶ start: swap_05\n"}
+,{"stream_name":"stdout","time":294.416146771,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(358, 95, 570, 307) genders=['M']\n"}
+,{"stream_name":"stdout","time":294.416192934,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] ✔ done:  swap_05 (1.9s)\n"}
+,{"stream_name":"stdout","time":294.416199433,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] ▶ start: adetailer_05\n"}
+,{"stream_name":"stderr","time":294.44417157,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":294.453762333,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":294.511812308,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":294.523778891,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":296.631963339,"data":"[2026-11-26T23:41:58Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":296.633283807,"data":"[2026-11-26T23:41:58Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":296.633304246,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":296.633308905,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":296.633312206,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":296.633315466,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":296.633319074,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":296.633322411,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633325982,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":296.633329684,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":296.633333902,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":296.633337613,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":296.633342069,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":296.633347152,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":296.633352374,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":296.633356957,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633361455,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":296.633366464,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":296.63337128,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":296.633375977,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":296.633380714,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":296.633385168,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633389896,"data":"    ^\n"}
+,{"stream_name":"stdout","time":296.63339508399997,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":296.633400187,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":296.633404589,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":296.633409584,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":296.633414289,"data":"\n"}
+,{"stream_name":"stdout","time":296.633426937,"data":"[2026-11-26T23:41:58Z] [INFO ] [gpu0] ✔ done:  adetailer_05 (2.2s)\n"}
+,{"stream_name":"stdout","time":297.06969429,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] identity 05_extreme_action.png: cosine=0.8332 (MATCH)\n"}
+,{"stream_name":"stdout","time":297.069805354,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ▶ start: write_05\n"}
+,{"stream_name":"stdout","time":297.605201277,"data":"[2026-11-26T23:41:59Z] [INFO ] wrote 05_extreme_action.png (1318 KB) + luca_slide_05.jpg (209 KB)\n"}
+,{"stream_name":"stdout","time":297.605230129,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ✔ done:  write_05 (0.5s)\n"}
+,{"stream_name":"stdout","time":297.605516016,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ▶ start: carousel_sheet\n"}
+,{"stream_name":"stdout","time":298.921055205,"data":"[2026-11-26T23:42:01Z] [INFO ] wrote luca_carousel_sheet.png (1993 KB)\n"}
+,{"stream_name":"stdout","time":298.921112345,"data":"[2026-11-26T23:42:01Z] [INFO ] [gpu0] ✔ done:  carousel_sheet (1.3s)\n"}
+,{"stream_name":"stderr","time":299.970555177,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":300.187464099,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":301.423645781,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":306.626060976,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":306.782598165,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stdout","time":1074.160156666,"data":"[2026-11-26T23:54:56Z] [ERROR] [main] carousel worker exceeded 1020s — terminating\n"}
+,{"stream_name":"stdout","time":1075.12403144,"data":"[2026-11-26T23:54:57Z] [INFO ] [main] carousel worker exited with code -15\n"}
+,{"stream_name":"stdout","time":1075.124311417,"data":"[2026-11-26T23:54:57Z] [INFO ] [main] reel worker exited with code 1\n"}
+,{"stream_name":"stdout","time":1075.124451998,"data":"[2026-11-26T23:54:57Z] [INFO ] ✔ done:  parallel_gpu_workers (1021.0s)\n"}
+,{"stream_name":"stdout","time":1075.125476399,"data":"[2026-11-26T23:54:57Z] [ERROR] FATAL — RuntimeError: carousel artifacts missing: ['luca_metrics.json']\n"}
+,{"stream_name":"stdout","time":1075.126910388,"data":"[2026-11-26T23:54:57Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":1075.126943783,"data":"  File \"/kaggle/src/script.py\", line 2504, in main\n"}
+,{"stream_name":"stdout","time":1075.126949518,"data":"    raise RuntimeError(f\"carousel artifacts missing: {missing}\")\n"}
+,{"stream_name":"stdout","time":1075.126953297,"data":"RuntimeError: carousel artifacts missing: ['luca_metrics.json']\n"}
+,{"stream_name":"stdout","time":1075.126956868,"data":"\n"}
+,{"stream_name":"stdout","time":1075.127753562,"data":"[2026-11-26T23:54:57Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1075.127764658,"data":"[2026-11-26T23:54:57Z] [INFO ] status: failed · total 1073.7s\n"}
+,{"stream_name":"stdout","time":1075.12789138,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 01_luca_master.png (1682 KB)\n"}
+,{"stream_name":"stdout","time":1075.128103538,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 02_monaco_yacht_date.png (1154 KB)\n"}
+,{"stream_name":"stdout","time":1075.128114893,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 03_vip_party_flash.png (1204 KB)\n"}
+,{"stream_name":"stdout","time":1075.128118571,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 04_porsche_gt3_pov.png (1191 KB)\n"}
+,{"stream_name":"stdout","time":1075.128166857,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 05_extreme_action.png (1318 KB)\n"}
+,{"stream_name":"stdout","time":1075.12825449,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ build.log (3 KB)\n"}
+,{"stream_name":"stdout","time":1075.128311036,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_carousel_sheet.png (1993 KB)\n"}
+,{"stream_name":"stdout","time":1075.128386999,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_metrics.json (6 KB)\n"}
+,{"stream_name":"stdout","time":1075.128443713,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_01.jpg (259 KB)\n"}
+,{"stream_name":"stdout","time":1075.128501961,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_02.jpg (159 KB)\n"}
+,{"stream_name":"stdout","time":1075.128576846,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_03.jpg (170 KB)\n"}
+,{"stream_name":"stdout","time":1075.128637026,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_04.jpg (167 KB)\n"}
+,{"stream_name":"stdout","time":1075.128703524,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_05.jpg (209 KB)\n"}
+,{"stream_name":"stdout","time":1075.128772242,"data":"[2026-11-26T23:54:57Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stderr","time":1080.770616023,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":1080.770642737,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":1080.980366312,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":1080.980390652,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":1081.787492047,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":1083.135975937,"data":"[NbConvertApp] Writing 814497 bytes to __results__.html\n"}
+]
+[2026-11-26 23:55:28Z] [INFO ] appended kaggle kernels logs → outputs/build.log (66688 chars)
+
+===== kernel log file stoic-luca-studio.log · fetched 2026-11-26 23:55:28Z =====
+[{"stream_name":"stdout","time":1.424765767,"data":"[2026-11-26T23:37:03Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.424801239,"data":"[2026-11-26T23:37:03Z] [INFO ] stoic-ai-studio · PHASE 3.1 · LUCA MORETTI · dual-GPU upgrade\n"}
+,{"stream_name":"stdout","time":1.42481042,"data":"[2026-11-26T23:37:03Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.424814268,"data":"[2026-11-26T23:37:03Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.932227943,"data":"[2026-11-26T23:37:04Z] [INFO ] [deps] installing: ['onnxruntime-gpu', 'edge-tts', 'insightface\u003e=2.1']\n"}
+,{"stream_name":"stdout","time":1.9322553230000001,"data":"[2026-11-26T23:37:04Z] [INFO ] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":13.578409898,"data":"[2026-11-26T23:37:15Z] [INFO ] [deps] installed: onnxruntime-gpu edge-tts insightface\u003e=2.1\n"}
+,{"stream_name":"stdout","time":13.578444686,"data":"[2026-11-26T23:37:15Z] [INFO ] ✔ done:  pip_install_deps (11.6s)\n"}
+,{"stream_name":"stdout","time":33.38291794,"data":"[2026-11-26T23:37:35Z] [INFO ] [deps] diffusers 0.42.0\n"}
+,{"stream_name":"stdout","time":46.332316713,"data":"[2026-11-26T23:37:48Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\", \"onnxruntime\": \"1.32.0\", \"insightface\": \"2.1\", \"cv2\": \"4.14.0\", \"edge_tts\": \"7.3.1\"}\n"}
+,{"stream_name":"stdout","time":46.332469513,"data":"[2026-11-26T23:37:48Z] [INFO ] [face] ▶ start: fetch_buffalo_l\n"}
+,{"stream_name":"stdout","time":49.56184488,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ 1k3d68.onnx (143.6 MB)\n"}
+,{"stream_name":"stdout","time":49.561892674,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ genderage.onnx (1.3 MB)\n"}
+,{"stream_name":"stdout","time":49.561972567,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ det_10g.onnx (16.9 MB)\n"}
+,{"stream_name":"stdout","time":49.562037576,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ w600k_r50.onnx (174.4 MB)\n"}
+,{"stream_name":"stdout","time":49.562102203,"data":"[2026-11-26T23:37:51Z] [INFO ] [face]   ✓ 2d106det.onnx (5.0 MB)\n"}
+,{"stream_name":"stdout","time":49.562355318,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] buffalo_l models: ['1k3d68.onnx', '2d106det.onnx', 'det_10g.onnx', 'genderage.onnx', 'w600k_r50.onnx']\n"}
+,{"stream_name":"stdout","time":49.562394366,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] ✔ done:  fetch_buffalo_l (3.2s)\n"}
+,{"stream_name":"stdout","time":49.56246098,"data":"[2026-11-26T23:37:51Z] [INFO ] [face] ▶ start: fetch_inswapper\n"}
+,{"stream_name":"stderr","time":49.665200292,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":54.156758061,"data":"[2026-11-26T23:37:56Z] [INFO ] [face]   ✓ inswapper from ezioruan/inswapper_128.onnx (554.3 MB)\n"}
+,{"stream_name":"stdout","time":54.156787729,"data":"[2026-11-26T23:37:56Z] [INFO ] [face] ✔ done:  fetch_inswapper (4.6s)\n"}
+,{"stream_name":"stdout","time":54.156820329,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] GPUs visible: 2\n"}
+,{"stream_name":"stdout","time":54.157810681,"data":"[2026-11-26T23:37:56Z] [INFO ] ▶ start: parallel_gpu_workers\n"}
+,{"stream_name":"stdout","time":54.161805234,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] started carousel worker (gpu0-carousel)\n"}
+,{"stream_name":"stdout","time":54.164214626,"data":"[2026-11-26T23:37:56Z] [INFO ] [main] started reel worker (gpu1-reel)\n"}
+,{"stream_name":"stderr","time":54.395392579,"data":"Process gpu1-reel:\n"}
+,{"stream_name":"stderr","time":54.399432237,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":54.399934614,"data":"  File \"/usr/lib/python3.13/multiprocessing/process.py\", line 313, in _bootstrap\n"}
+,{"stream_name":"stderr","time":54.399963774,"data":"    self.run()\n"}
+,{"stream_name":"stderr","time":54.399968519,"data":"    ~~~~~~~~^^\n"}
+,{"stream_name":"stderr","time":54.399972383,"data":"  File \"/usr/lib/python3.13/multiprocessing/process.py\", line 108, in run\n"}
+,{"stream_name":"stderr","time":54.399977194,"data":"    self._target(*self._args, **self._kwargs)\n"}
+,{"stream_name":"stderr","time":54.399995994,"data":"    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":54.400000846,"data":"TypeError: _worker_reel() takes 4 positional arguments but 7 were given\n"}
+,{"stream_name":"stdout","time":66.437446795,"data":"[2026-11-26T23:38:08Z] [INFO ] [gpu0] ▶ start: load_sdxl\n"}
+,{"stream_name":"stdout","time":66.437476755,"data":"[2026-11-26T23:38:08Z] [INFO ] [gpu0] loading SG161222/RealVisXL_V5.0 (['variant', 'torch_dtype', 'use_safetensors'])\n"}
+,{"stream_name":"stderr","time":66.437706545,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":66.437717187,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":66.581854587,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":103.253514212,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 60.86it/s]\rFetching 18 files:  83%|████████▎ | 15/18 [00:01\u003c00:00,  7.65it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00,  7.65it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:30\u003c00:02,  2.75s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:36\u003c00:00,  3.09s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:36\u003c00:00,  2.03s/it]\n"}
+,{"stream_name":"stderr","time":105.399174887,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:01\u003c00:11,  1.88s/it]\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.86it/s]\n"}
+,{"stream_name":"stderr","time":105.47155259,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2744.30it/s]\n"}
+,{"stream_name":"stderr","time":105.617711819,"data":"\rLoading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:01,  2.37it/s]\n"}
+,{"stream_name":"stderr","time":105.71795773,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":105.809837167,"data":"\rLoading weights:  52%|█████▏    | 271/517 [00:00\u003c00:00, 2708.30it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2694.55it/s]\n"}
+,{"stream_name":"stderr","time":105.875305384,"data":"\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.36it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.67it/s]\n"}
+,{"stream_name":"stdout","time":105.875983995,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] ✔ done:  load_sdxl (39.4s)\n"}
+,{"stream_name":"stdout","time":105.875996827,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] ▶ start: configure_pipeline\n"}
+,{"stream_name":"stdout","time":105.894227072,"data":"[2026-11-26T23:38:48Z] [INFO ] [gpu0] scheduler: DPM++ SDE Karras (singlestep, sde-dpmsolver++)\n"}
+,{"stream_name":"stdout","time":107.928692891,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":107.928736968,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] attention slicing disabled (needed by Stage-3 IP-Adapter)\n"}
+,{"stream_name":"stderr","time":107.928839909,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":107.931499715,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] ✔ done:  configure_pipeline (2.1s)\n"}
+,{"stream_name":"stdout","time":107.931515842,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] ▶ start: scene_01\n"}
+,{"stream_name":"stdout","time":107.93159337,"data":"[2026-11-26T23:38:50Z] [INFO ] [gpu0] txt2img 01_luca_master.png: 1024x1024 seed=42 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":107.94251245,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (132 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":107.94765717,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":107.947676323,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['deck in monaco harbour , natural mediterranean afternoon sunlight , visible skin pores , unretouched , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":109.041469588,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (132 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":109.04410766,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['deck in monaco harbour , natural mediterranean afternoon sunlight , visible skin pores , unretouched , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":109.158831825,"data":" `last_sigmas_type='zero'` is not supported for `lower_order_final=False`. Changing scheduler {self.config} to have `lower_order_final` set to True.\n"}
+,{"stream_name":"stderr","time":135.242060269,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:03\u003c01:51,  3.59s/it]\r  6%|▋         | 2/32 [00:03\u003c00:50,  1.68s/it]\r  9%|▉         | 3/32 [00:04\u003c00:36,  1.24s/it]\r 12%|█▎        | 4/32 [00:05\u003c00:29,  1.04s/it]\r 16%|█▌        | 5/32 [00:06\u003c00:25,  1.08it/s]\r 19%|█▉        | 6/32 [00:06\u003c00:22,  1.17it/s]\r 22%|██▏       | 7/32 [00:07\u003c00:20,  1.23it/s]\r 25%|██▌       | 8/32 [00:08\u003c00:18,  1.27it/s]\r 28%|██▊       | 9/32 [00:09\u003c00:17,  1.30it/s]\r 31%|███▏      | 10/32 [00:09\u003c00:16,  1.32it/s]\r 34%|███▍      | 11/32 [00:10\u003c00:15,  1.34it/s]\r 38%|███▊      | 12/32 [00:11\u003c00:14,  1.35it/s]\r 41%|████      | 13/32 [00:11\u003c00:14,  1.35it/s]\r 44%|████▍     | 14/32 [00:12\u003c00:13,  1.35it/s]\r 47%|████▋     | 15/32 [00:13\u003c00:12,  1.36it/s]\r 50%|█████     | 16/32 [00:14\u003c00:11,  1.35it/s]\r 53%|█████▎    | 17/32 [00:14\u003c00:11,  1.36it/s]\r 56%|█████▋    | 18/32 [00:15\u003c00:10,  1.35it/s]\r 59%|█████▉    | 19/32 [00:16\u003c00:09,  1.35it/s]\r 62%|██████▎   | 20/32 [00:17\u003c00:08,  1.35it/s]\r 66%|██████▌   | 21/32 [00:17\u003c00:08,  1.35it/s]\r 69%|██████▉   | 22/32 [00:18\u003c00:07,  1.35it/s]\r 72%|███████▏  | 23/32 [00:19\u003c00:06,  1.35it/s]\r 75%|███████▌  | 24/32 [00:20\u003c00:05,  1.35it/s]\r 78%|███████▊  | 25/32 [00:20\u003c00:05,  1.35it/s]\r 81%|████████▏ | 26/32 [00:21\u003c00:04,  1.34it/s]\r 84%|████████▍ | 27/32 [00:22\u003c00:03,  1.34it/s]\r 88%|████████▊ | 28/32 [00:23\u003c00:02,  1.34it/s]\r 91%|█████████ | 29/32 [00:23\u003c00:02,  1.34it/s]\r 94%|█████████▍| 30/32 [00:24\u003c00:01,  1.34it/s]\r 97%|█████████▋| 31/32 [00:25\u003c00:00,  1.33it/s]\r100%|██████████| 32/32 [00:26\u003c00:00,  1.33it/s]\r100%|██████████| 32/32 [00:26\u003c00:00,  1.23it/s]\n"}
+,{"stream_name":"stderr","time":135.243402365,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":135.243422858,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":135.243555719,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":137.631238541,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":139.512387936,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] ✔ done:  scene_01 (31.6s)\n"}
+,{"stream_name":"stdout","time":139.512436566,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] ▶ start: scene_02\n"}
+,{"stream_name":"stdout","time":139.512465218,"data":"[2026-11-26T23:39:21Z] [INFO ] [gpu0] txt2img 02_monaco_yacht_date.png: 832x1024 seed=44 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":139.522684135,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['resting naturally on the teak backrest and his left hand holding a chilled champagne flute by the stem with five natural fingers , looking at the camera with a confident smirk , clear blue - green eyes , no sunglasses , warm sunset light , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":139.534056634,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['resting naturally on the teak backrest and his left hand holding a chilled champagne flute by the stem with five natural fingers , looking at the camera with a confident smirk , clear blue - green eyes , no sunglasses , warm sunset light , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":159.79286198,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  3.04it/s]\r  6%|▋         | 2/32 [00:00\u003c00:15,  1.97it/s]\r  9%|▉         | 3/32 [00:01\u003c00:16,  1.77it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:16,  1.69it/s]\r 16%|█▌        | 5/32 [00:02\u003c00:16,  1.65it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:16,  1.62it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:15,  1.61it/s]\r 25%|██▌       | 8/32 [00:04\u003c00:15,  1.60it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:14,  1.59it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:13,  1.59it/s]\r 34%|███▍      | 11/32 [00:06\u003c00:13,  1.58it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:12,  1.58it/s]\r 41%|████      | 13/32 [00:07\u003c00:12,  1.57it/s]\r 44%|████▍     | 14/32 [00:08\u003c00:11,  1.57it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:10,  1.57it/s]\r 50%|█████     | 16/32 [00:09\u003c00:10,  1.57it/s]\r 53%|█████▎    | 17/32 [00:10\u003c00:09,  1.56it/s]\r 56%|█████▋    | 18/32 [00:11\u003c00:08,  1.56it/s]\r 59%|█████▉    | 19/32 [00:11\u003c00:08,  1.56it/s]\r 62%|██████▎   | 20/32 [00:12\u003c00:07,  1.56it/s]\r 66%|██████▌   | 21/32 [00:13\u003c00:07,  1.55it/s]\r 69%|██████▉   | 22/32 [00:13\u003c00:06,  1.55it/s]\r 72%|███████▏  | 23/32 [00:14\u003c00:05,  1.55it/s]\r 75%|███████▌  | 24/32 [00:15\u003c00:05,  1.55it/s]\r 78%|███████▊  | 25/32 [00:15\u003c00:04,  1.55it/s]\r 81%|████████▏ | 26/32 [00:16\u003c00:03,  1.54it/s]\r 84%|████████▍ | 27/32 [00:16\u003c00:03,  1.54it/s]\r 88%|████████▊ | 28/32 [00:17\u003c00:02,  1.54it/s]\r 91%|█████████ | 29/32 [00:18\u003c00:01,  1.54it/s]\r 94%|█████████▍| 30/32 [00:18\u003c00:01,  1.54it/s]\r 97%|█████████▋| 31/32 [00:19\u003c00:00,  1.54it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.55it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.58it/s]\n"}
+,{"stream_name":"stderr","time":159.793913788,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":159.918627623,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":163.278618817,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] ✔ done:  scene_02 (23.8s)\n"}
+,{"stream_name":"stdout","time":163.278667325,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] ▶ start: scene_03\n"}
+,{"stream_name":"stdout","time":163.278683431,"data":"[2026-11-26T23:39:45Z] [INFO ] [gpu0] txt2img 03_vip_party_flash.png: 832x1024 seed=45 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":163.289339597,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['on the right , one hand resting naturally on the vip table holding a crystal rocks glass with ice and amber whiskey with five natural fingers , looking at the camera with a confident smirk , clear eyes , no sunglasses , dark night sky bokeh background with no extra faces between them , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":163.300063107,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['on the right , one hand resting naturally on the vip table holding a crystal rocks glass with ice and amber whiskey with five natural fingers , looking at the camera with a confident smirk , clear eyes , no sunglasses , dark night sky bokeh background with no extra faces between them , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":184.250182506,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:09,  3.19it/s]\r  6%|▋         | 2/32 [00:00\u003c00:15,  1.96it/s]\r  9%|▉         | 3/32 [00:01\u003c00:16,  1.74it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:16,  1.65it/s]\r 16%|█▌        | 5/32 [00:02\u003c00:16,  1.61it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:16,  1.58it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:15,  1.56it/s]\r 25%|██▌       | 8/32 [00:04\u003c00:15,  1.55it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:14,  1.54it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:14,  1.53it/s]\r 34%|███▍      | 11/32 [00:06\u003c00:13,  1.53it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.52it/s]\r 41%|████      | 13/32 [00:08\u003c00:12,  1.52it/s]\r 44%|████▍     | 14/32 [00:08\u003c00:11,  1.52it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:11,  1.51it/s]\r 50%|█████     | 16/32 [00:10\u003c00:10,  1.51it/s]\r 53%|█████▎    | 17/32 [00:10\u003c00:09,  1.51it/s]\r 56%|█████▋    | 18/32 [00:11\u003c00:09,  1.51it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:08,  1.50it/s]\r 62%|██████▎   | 20/32 [00:12\u003c00:07,  1.50it/s]\r 66%|██████▌   | 21/32 [00:13\u003c00:07,  1.50it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:06,  1.50it/s]\r 72%|███████▏  | 23/32 [00:14\u003c00:05,  1.50it/s]\r 75%|███████▌  | 24/32 [00:15\u003c00:05,  1.50it/s]\r 78%|███████▊  | 25/32 [00:16\u003c00:04,  1.50it/s]\r 81%|████████▏ | 26/32 [00:16\u003c00:04,  1.49it/s]\r 84%|████████▍ | 27/32 [00:17\u003c00:03,  1.49it/s]\r 88%|████████▊ | 28/32 [00:18\u003c00:02,  1.49it/s]\r 91%|█████████ | 29/32 [00:18\u003c00:02,  1.49it/s]\r 94%|█████████▍| 30/32 [00:19\u003c00:01,  1.48it/s]\r 97%|█████████▋| 31/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:20\u003c00:00,  1.53it/s]\n"}
+,{"stream_name":"stderr","time":184.251034599,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":184.385518601,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":187.850703229,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] ✔ done:  scene_03 (24.6s)\n"}
+,{"stream_name":"stdout","time":187.850761335,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] ▶ start: scene_04\n"}
+,{"stream_name":"stdout","time":187.850766876,"data":"[2026-11-26T23:40:10Z] [INFO ] [gpu0] txt2img 04_porsche_gt3_pov.png: 832x1024 seed=46 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":187.863230234,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [\"of a parked white porsche 9 1 1 gt 3 rs , one hand resting flat and naturally with five fingers on the car 's sleek front fender and the other hand relaxed by his pocket , looking directly at the camera with a confident smirk , no sunglasses , mediterranean sea cliffs in background , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy\"]\n"}
+,{"stream_name":"stderr","time":187.875252384,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [\"of a parked white porsche 9 1 1 gt 3 rs , one hand resting flat and naturally with five fingers on the car 's sleek front fender and the other hand relaxed by his pocket , looking directly at the camera with a confident smirk , no sunglasses , mediterranean sea cliffs in background , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy\"]\n"}
+,{"stream_name":"stderr","time":209.991328116,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  3.00it/s]\r  6%|▋         | 2/32 [00:01\u003c00:16,  1.84it/s]\r  9%|▉         | 3/32 [00:01\u003c00:17,  1.64it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:17,  1.56it/s]\r 16%|█▌        | 5/32 [00:03\u003c00:17,  1.52it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:17,  1.50it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:16,  1.48it/s]\r 25%|██▌       | 8/32 [00:05\u003c00:16,  1.47it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:15,  1.46it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:15,  1.45it/s]\r 34%|███▍      | 11/32 [00:07\u003c00:14,  1.45it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.44it/s]\r 41%|████      | 13/32 [00:08\u003c00:13,  1.44it/s]\r 44%|████▍     | 14/32 [00:09\u003c00:12,  1.44it/s]\r 47%|████▋     | 15/32 [00:10\u003c00:11,  1.44it/s]\r 50%|█████     | 16/32 [00:10\u003c00:11,  1.43it/s]\r 53%|█████▎    | 17/32 [00:11\u003c00:10,  1.43it/s]\r 56%|█████▋    | 18/32 [00:12\u003c00:09,  1.42it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:09,  1.42it/s]\r 62%|██████▎   | 20/32 [00:13\u003c00:08,  1.42it/s]\r 66%|██████▌   | 21/32 [00:14\u003c00:07,  1.42it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:07,  1.42it/s]\r 72%|███████▏  | 23/32 [00:15\u003c00:06,  1.42it/s]\r 75%|███████▌  | 24/32 [00:16\u003c00:05,  1.41it/s]\r 78%|███████▊  | 25/32 [00:17\u003c00:04,  1.41it/s]\r 81%|████████▏ | 26/32 [00:17\u003c00:04,  1.41it/s]\r 84%|████████▍ | 27/32 [00:18\u003c00:03,  1.41it/s]\r 88%|████████▊ | 28/32 [00:19\u003c00:02,  1.41it/s]\r 91%|█████████ | 29/32 [00:19\u003c00:02,  1.41it/s]\r 94%|█████████▍| 30/32 [00:20\u003c00:01,  1.41it/s]\r 97%|█████████▋| 31/32 [00:21\u003c00:00,  1.41it/s]\r100%|██████████| 32/32 [00:22\u003c00:00,  1.41it/s]\r100%|██████████| 32/32 [00:22\u003c00:00,  1.45it/s]\n"}
+,{"stream_name":"stderr","time":209.992359892,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":210.134767703,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":213.670188537,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] ✔ done:  scene_04 (25.8s)\n"}
+,{"stream_name":"stdout","time":213.670224681,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] ▶ start: scene_05\n"}
+,{"stream_name":"stdout","time":213.670291636,"data":"[2026-11-26T23:40:35Z] [INFO ] [gpu0] txt2img 05_extreme_action.png: 832x1024 seed=47 steps=32 cfg=5.0 ip_adapter=OFF\n"}
+,{"stream_name":"stderr","time":213.680115718,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['bars naturally with five fingers , water droplets glistening on his sun - kissed muscular forearms and shirtless torso , looking at the camera with an effortless smile , no sunglasses , bright natural daylight , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":213.690444352,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['bars naturally with five fingers , water droplets glistening on his sun - kissed muscular forearms and shirtless torso , looking at the camera with an effortless smile , no sunglasses , bright natural daylight , candid iphone 1 6 pro photo , authentic smartphone sensor look , visible skin pores and fine skin texture , true - to - life colour , unretouched , natural available light , realistic anatomy']\n"}
+,{"stream_name":"stderr","time":235.239403434,"data":"\r  0%|          | 0/32 [00:00\u003c?, ?it/s]\r  3%|▎         | 1/32 [00:00\u003c00:10,  2.97it/s]\r  6%|▋         | 2/32 [00:01\u003c00:16,  1.82it/s]\r  9%|▉         | 3/32 [00:01\u003c00:17,  1.62it/s]\r 12%|█▎        | 4/32 [00:02\u003c00:18,  1.55it/s]\r 16%|█▌        | 5/32 [00:03\u003c00:17,  1.51it/s]\r 19%|█▉        | 6/32 [00:03\u003c00:17,  1.49it/s]\r 22%|██▏       | 7/32 [00:04\u003c00:16,  1.48it/s]\r 25%|██▌       | 8/32 [00:05\u003c00:16,  1.47it/s]\r 28%|██▊       | 9/32 [00:05\u003c00:15,  1.47it/s]\r 31%|███▏      | 10/32 [00:06\u003c00:15,  1.46it/s]\r 34%|███▍      | 11/32 [00:07\u003c00:14,  1.46it/s]\r 38%|███▊      | 12/32 [00:07\u003c00:13,  1.46it/s]\r 41%|████      | 13/32 [00:08\u003c00:13,  1.46it/s]\r 44%|████▍     | 14/32 [00:09\u003c00:12,  1.46it/s]\r 47%|████▋     | 15/32 [00:09\u003c00:11,  1.46it/s]\r 50%|█████     | 16/32 [00:10\u003c00:10,  1.46it/s]\r 53%|█████▎    | 17/32 [00:11\u003c00:10,  1.46it/s]\r 56%|█████▋    | 18/32 [00:12\u003c00:09,  1.46it/s]\r 59%|█████▉    | 19/32 [00:12\u003c00:08,  1.47it/s]\r 62%|██████▎   | 20/32 [00:13\u003c00:08,  1.47it/s]\r 66%|██████▌   | 21/32 [00:14\u003c00:07,  1.47it/s]\r 69%|██████▉   | 22/32 [00:14\u003c00:06,  1.47it/s]\r 72%|███████▏  | 23/32 [00:15\u003c00:06,  1.47it/s]\r 75%|███████▌  | 24/32 [00:16\u003c00:05,  1.47it/s]\r 78%|███████▊  | 25/32 [00:16\u003c00:04,  1.47it/s]\r 81%|████████▏ | 26/32 [00:17\u003c00:04,  1.47it/s]\r 84%|████████▍ | 27/32 [00:18\u003c00:03,  1.48it/s]\r 88%|████████▊ | 28/32 [00:18\u003c00:02,  1.47it/s]\r 91%|█████████ | 29/32 [00:19\u003c00:02,  1.48it/s]\r 94%|█████████▍| 30/32 [00:20\u003c00:01,  1.48it/s]\r 97%|█████████▋| 31/32 [00:20\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:21\u003c00:00,  1.48it/s]\r100%|██████████| 32/32 [00:21\u003c00:00,  1.49it/s]\n"}
+,{"stream_name":"stderr","time":235.240449464,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":235.373623215,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":238.815462459,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ✔ done:  scene_05 (25.1s)\n"}
+,{"stream_name":"stdout","time":238.815493223,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ▶ start: write_01\n"}
+,{"stream_name":"stdout","time":239.557015673,"data":"[2026-11-26T23:41:01Z] [INFO ] wrote 01_luca_master.png (1682 KB) + luca_slide_01.jpg (259 KB)\n"}
+,{"stream_name":"stdout","time":239.557041173,"data":"[2026-11-26T23:41:01Z] [INFO ] [gpu0] ✔ done:  write_01 (0.7s)\n"}
+,{"stream_name":"stdout","time":239.988400801,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] ▶ start: load_insightface\n"}
+,{"stream_name":"stdout","time":239.98843211,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] onnxruntime providers: available=['AzureExecutionProvider', 'CPUExecutionProvider'] → using=['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":239.988442626,"data":"[2026-11-26T23:41:02Z] [INFO ] [gpu0] providers: ['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":241.293532634,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ✔ done:  load_insightface (1.3s)\n"}
+,{"stream_name":"stdout","time":241.293567753,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ▶ start: check_inswapper\n"}
+,{"stream_name":"stdout","time":241.293607371,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] inswapper_128.onnx present (529 MB)\n"}
+,{"stream_name":"stdout","time":241.293615903,"data":"[2026-11-26T23:41:03Z] [INFO ] [gpu0] ✔ done:  check_inswapper (0.0s)\n"}
+,{"stream_name":"stdout","time":242.226970685,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] master face locked: bbox=[319, 124, 657, 614]\n"}
+,{"stream_name":"stdout","time":242.237627798,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ▶ start: build_img2img\n"}
+,{"stream_name":"stdout","time":242.238403692,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] img2img pipeline built from shared components\n"}
+,{"stream_name":"stdout","time":242.23841422,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ✔ done:  build_img2img (0.0s)\n"}
+,{"stream_name":"stdout","time":242.238467117,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] attaching IP-Adapter-Plus-Face @ 0.6\n"}
+,{"stream_name":"stdout","time":242.238472117,"data":"[2026-11-26T23:41:04Z] [INFO ] [gpu0] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":265.870010583,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  10%|█         | 52/520 [00:00\u003c00:00, 519.91it/s]\rLoading weights:  28%|██▊       | 143/520 [00:00\u003c00:00, 749.19it/s]\rLoading weights:  42%|████▏     | 218/520 [00:00\u003c00:00, 668.24it/s]\rLoading weights:  55%|█████▌    | 286/520 [00:00\u003c00:00, 565.67it/s]\rLoading weights:  66%|██████▋   | 345/520 [00:00\u003c00:00, 553.81it/s]\rLoading weights:  79%|███████▊  | 409/520 [00:00\u003c00:00, 556.76it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 650.02it/s]\n"}
+,{"stream_name":"stderr","time":265.903354167,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":265.903391809,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":265.90339684,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":265.903400439,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903409524,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903412371,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903414981,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903417359,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903419781,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903422221,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903424643,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903426981,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903429404,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903431742,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903434376,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903436737,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903439086,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903441437,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903444491,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.90344693,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903449411,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903451787,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903454216,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903456561,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.90345905,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":265.903461442,"data":"\n"}
+,{"stream_name":"stderr","time":265.903463647,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":265.903466775,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":266.208872066,"data":"[2026-11-26T23:41:28Z] [INFO ] [gpu0] ✔ done:  load_clip_vision (24.0s)\n"}
+,{"stream_name":"stdout","time":266.208927706,"data":"[2026-11-26T23:41:28Z] [INFO ] [gpu0] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stderr","time":272.45637131,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":272.709804099,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] ✔ done:  load_ip_adapter (6.5s)\n"}
+,{"stream_name":"stdout","time":272.709835403,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] adetailer adapter ready\n"}
+,{"stream_name":"stdout","time":272.711343039,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] ▶ start: swap_02\n"}
+,{"stream_name":"stdout","time":273.302356268,"data":"[2026-11-26T23:41:35Z] [INFO ] [gpu0] onnxruntime providers: available=['AzureExecutionProvider', 'CPUExecutionProvider'] → using=['CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":276.666928434,"data":"inswapper-shape: [1, 3, 128, 128]\n"}
+,{"stream_name":"stdout","time":276.666967475,"data":"[2026-11-26T23:41:38Z] [INFO ] [gpu0] inswapper model: INSwapper\n"}
+,{"stream_name":"stdout","time":278.196425273,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] inswapper → male idx=1 bbox=(122, 10, 499, 387) genders=['F', 'M']\n"}
+,{"stream_name":"stdout","time":278.196461781,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] ✔ done:  swap_02 (5.5s)\n"}
+,{"stream_name":"stdout","time":278.196467059,"data":"[2026-11-26T23:41:40Z] [INFO ] [gpu0] ▶ start: adetailer_02\n"}
+,{"stream_name":"stderr","time":278.228750853,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":278.238872427,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":278.302219594,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":279.013596418,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":280.434919632,"data":"[2026-11-26T23:41:42Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":280.438026173,"data":"[2026-11-26T23:41:42Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":280.438042125,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":280.438046588,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":280.438049938,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":280.438053198,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":280.438057241,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":280.438060633,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438065522,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":280.438101703,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":280.438121392,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":280.438125629,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":280.43812899,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":280.438132226,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":280.438135681,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":280.438139053,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438142343,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":280.438146282,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":280.43814972,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":280.438153035,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":280.438156352,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":280.438159745,"data":"    )\n"}
+,{"stream_name":"stdout","time":280.438162984,"data":"    ^\n"}
+,{"stream_name":"stdout","time":280.438166167,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":280.438174866,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":280.438177382,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":280.43818003,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":280.438183092,"data":"\n"}
+,{"stream_name":"stdout","time":280.438198085,"data":"[2026-11-26T23:41:42Z] [INFO ] [gpu0] ✔ done:  adetailer_02 (2.2s)\n"}
+,{"stream_name":"stdout","time":281.067964769,"data":"[2026-11-26T23:41:43Z] [INFO ] [gpu0] identity 02_monaco_yacht_date.png: cosine=0.7188 (MATCH)\n"}
+,{"stream_name":"stdout","time":281.067993582,"data":"[2026-11-26T23:41:43Z] [INFO ] [gpu0] ▶ start: write_02\n"}
+,{"stream_name":"stdout","time":281.764519999,"data":"[2026-11-26T23:41:44Z] [INFO ] wrote 02_monaco_yacht_date.png (1154 KB) + luca_slide_02.jpg (159 KB)\n"}
+,{"stream_name":"stdout","time":281.764553292,"data":"[2026-11-26T23:41:44Z] [INFO ] [gpu0] ✔ done:  write_02 (0.7s)\n"}
+,{"stream_name":"stdout","time":281.765692464,"data":"[2026-11-26T23:41:44Z] [INFO ] [gpu0] ▶ start: swap_03\n"}
+,{"stream_name":"stdout","time":283.967378198,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(0, 0, 605, 604) genders=['M', 'F']\n"}
+,{"stream_name":"stdout","time":283.96742123,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] ✔ done:  swap_03 (2.2s)\n"}
+,{"stream_name":"stdout","time":283.96747037,"data":"[2026-11-26T23:41:46Z] [INFO ] [gpu0] ▶ start: adetailer_03\n"}
+,{"stream_name":"stderr","time":284.0016998,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":284.01095179,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":284.070532501,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":284.083043474,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":286.17677057,"data":"[2026-11-26T23:41:48Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":286.178191137,"data":"[2026-11-26T23:41:48Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":286.178203768,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":286.178208178,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":286.17821162,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":286.178215114,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":286.178221002,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":286.178224964,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178229797,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":286.178234047,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":286.178237856,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":286.178242309,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":286.17824609,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":286.178250019,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":286.178253489,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":286.178256797,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178260014,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":286.178264594,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":286.178268872,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":286.178272429,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":286.178276419,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":286.17828053,"data":"    )\n"}
+,{"stream_name":"stdout","time":286.178284241,"data":"    ^\n"}
+,{"stream_name":"stdout","time":286.178287644,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":286.178291945,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":286.178295434,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":286.178312354,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":286.178321184,"data":"\n"}
+,{"stream_name":"stdout","time":286.178327064,"data":"[2026-11-26T23:41:48Z] [INFO ] [gpu0] ✔ done:  adetailer_03 (2.2s)\n"}
+,{"stream_name":"stdout","time":286.810207467,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] identity 03_vip_party_flash.png: cosine=0.8670 (MATCH)\n"}
+,{"stream_name":"stdout","time":286.81027906,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ▶ start: write_03\n"}
+,{"stream_name":"stdout","time":287.39525515,"data":"[2026-11-26T23:41:49Z] [INFO ] wrote 03_vip_party_flash.png (1204 KB) + luca_slide_03.jpg (170 KB)\n"}
+,{"stream_name":"stdout","time":287.395280479,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ✔ done:  write_03 (0.6s)\n"}
+,{"stream_name":"stdout","time":287.396501879,"data":"[2026-11-26T23:41:49Z] [INFO ] [gpu0] ▶ start: swap_04\n"}
+,{"stream_name":"stdout","time":289.280751149,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(118, 22, 626, 530) genders=['M']\n"}
+,{"stream_name":"stdout","time":289.280796715,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] ✔ done:  swap_04 (1.9s)\n"}
+,{"stream_name":"stdout","time":289.280802761,"data":"[2026-11-26T23:41:51Z] [INFO ] [gpu0] ▶ start: adetailer_04\n"}
+,{"stream_name":"stderr","time":289.312887915,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":289.322305832,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":289.380665272,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":289.393809199,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":291.466429935,"data":"[2026-11-26T23:41:53Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":291.467710283,"data":"[2026-11-26T23:41:53Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":291.467727774,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":291.467731191,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":291.467733664,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":291.467736049,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":291.467738673,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":291.467741092,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467743416,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":291.467746031,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":291.4677484,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":291.467751082,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":291.467777287,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":291.467781736,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":291.467785714,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":291.467789539,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467792971,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":291.467797634,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":291.467801481,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":291.467805558,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":291.46780977,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":291.467813664,"data":"    )\n"}
+,{"stream_name":"stdout","time":291.467817421,"data":"    ^\n"}
+,{"stream_name":"stdout","time":291.467820981,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":291.467824673,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":291.467827841,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":291.467831985,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":291.467835716,"data":"\n"}
+,{"stream_name":"stdout","time":291.467840657,"data":"[2026-11-26T23:41:53Z] [INFO ] [gpu0] ✔ done:  adetailer_04 (2.2s)\n"}
+,{"stream_name":"stdout","time":291.898577,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] identity 04_porsche_gt3_pov.png: cosine=0.8828 (MATCH)\n"}
+,{"stream_name":"stdout","time":291.898634049,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ▶ start: write_04\n"}
+,{"stream_name":"stdout","time":292.50814469,"data":"[2026-11-26T23:41:54Z] [INFO ] wrote 04_porsche_gt3_pov.png (1191 KB) + luca_slide_04.jpg (167 KB)\n"}
+,{"stream_name":"stdout","time":292.508173373,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ✔ done:  write_04 (0.6s)\n"}
+,{"stream_name":"stdout","time":292.509403163,"data":"[2026-11-26T23:41:54Z] [INFO ] [gpu0] ▶ start: swap_05\n"}
+,{"stream_name":"stdout","time":294.416146771,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] inswapper → male idx=0 bbox=(358, 95, 570, 307) genders=['M']\n"}
+,{"stream_name":"stdout","time":294.416192934,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] ✔ done:  swap_05 (1.9s)\n"}
+,{"stream_name":"stdout","time":294.416199433,"data":"[2026-11-26T23:41:56Z] [INFO ] [gpu0] ▶ start: adetailer_05\n"}
+,{"stream_name":"stderr","time":294.44417157,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":294.453762333,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['skin tone , photorealistic , unretouched iphone 1 6 pro portrait']\n"}
+,{"stream_name":"stderr","time":294.511812308,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":294.523778891,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":296.631963339,"data":"[2026-11-26T23:41:58Z] [ERROR] [gpu0] adetailer sample FAILED (AttributeError: 'NoneType' object has no attribute 'parameters')\n"}
+,{"stream_name":"stdout","time":296.633283807,"data":"[2026-11-26T23:41:58Z] [ERROR] [gpu0] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":296.633304246,"data":"  File \"/kaggle/src/script.py\", line 992, in adetailer_face\n"}
+,{"stream_name":"stdout","time":296.633308905,"data":"    result = img2img(\n"}
+,{"stream_name":"stdout","time":296.633312206,"data":"        prompt=(\n"}
+,{"stream_name":"stdout","time":296.633315466,"data":"    ...\u003c11 lines\u003e...\n"}
+,{"stream_name":"stdout","time":296.633319074,"data":"        generator=torch.Generator(device=device).manual_seed(seed + 1000),\n"}
+,{"stream_name":"stdout","time":296.633322411,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633325982,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":296.633329684,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":296.633333902,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 1343, in __call__\n"}
+,{"stream_name":"stdout","time":296.633337613,"data":"    image_embeds = self.prepare_ip_adapter_image_embeds(\n"}
+,{"stream_name":"stdout","time":296.633342069,"data":"        ip_adapter_image,\n"}
+,{"stream_name":"stdout","time":296.633347152,"data":"    ...\u003c3 lines\u003e...\n"}
+,{"stream_name":"stdout","time":296.633352374,"data":"        self.do_classifier_free_guidance,\n"}
+,{"stream_name":"stdout","time":296.633356957,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633361455,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 819, in prepare_ip_adapter_image_embeds\n"}
+,{"stream_name":"stdout","time":296.633366464,"data":"    single_image_embeds, single_negative_image_embeds = self.encode_image(\n"}
+,{"stream_name":"stdout","time":296.63337128,"data":"                                                        ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":296.633375977,"data":"        single_ip_adapter_image, device, 1, output_hidden_state\n"}
+,{"stream_name":"stdout","time":296.633380714,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":296.633385168,"data":"    )\n"}
+,{"stream_name":"stdout","time":296.633389896,"data":"    ^\n"}
+,{"stream_name":"stdout","time":296.63339508399997,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl_img2img.py\", line 776, in encode_image\n"}
+,{"stream_name":"stdout","time":296.633400187,"data":"    dtype = next(self.image_encoder.parameters()).dtype\n"}
+,{"stream_name":"stdout","time":296.633404589,"data":"                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":296.633409584,"data":"AttributeError: 'NoneType' object has no attribute 'parameters'\n"}
+,{"stream_name":"stdout","time":296.633414289,"data":"\n"}
+,{"stream_name":"stdout","time":296.633426937,"data":"[2026-11-26T23:41:58Z] [INFO ] [gpu0] ✔ done:  adetailer_05 (2.2s)\n"}
+,{"stream_name":"stdout","time":297.06969429,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] identity 05_extreme_action.png: cosine=0.8332 (MATCH)\n"}
+,{"stream_name":"stdout","time":297.069805354,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ▶ start: write_05\n"}
+,{"stream_name":"stdout","time":297.605201277,"data":"[2026-11-26T23:41:59Z] [INFO ] wrote 05_extreme_action.png (1318 KB) + luca_slide_05.jpg (209 KB)\n"}
+,{"stream_name":"stdout","time":297.605230129,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ✔ done:  write_05 (0.5s)\n"}
+,{"stream_name":"stdout","time":297.605516016,"data":"[2026-11-26T23:41:59Z] [INFO ] [gpu0] ▶ start: carousel_sheet\n"}
+,{"stream_name":"stdout","time":298.921055205,"data":"[2026-11-26T23:42:01Z] [INFO ] wrote luca_carousel_sheet.png (1993 KB)\n"}
+,{"stream_name":"stdout","time":298.921112345,"data":"[2026-11-26T23:42:01Z] [INFO ] [gpu0] ✔ done:  carousel_sheet (1.3s)\n"}
+,{"stream_name":"stderr","time":299.970555177,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":300.187464099,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":301.423645781,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":306.626060976,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stderr","time":306.782598165,"data":"Pipelines loaded with `dtype=torch.float16` cannot run with `cpu` device. It is not recommended to move them to `cpu` as running them will fail. Please make sure to use an accelerator to run the pipeline in inference, due to the lack of support for`float16` operations on this device in PyTorch. Please, remove the `dtype=torch.float16` argument, or use another device for inference.\n"}
+,{"stream_name":"stdout","time":1074.160156666,"data":"[2026-11-26T23:54:56Z] [ERROR] [main] carousel worker exceeded 1020s — terminating\n"}
+,{"stream_name":"stdout","time":1075.12403144,"data":"[2026-11-26T23:54:57Z] [INFO ] [main] carousel worker exited with code -15\n"}
+,{"stream_name":"stdout","time":1075.124311417,"data":"[2026-11-26T23:54:57Z] [INFO ] [main] reel worker exited with code 1\n"}
+,{"stream_name":"stdout","time":1075.124451998,"data":"[2026-11-26T23:54:57Z] [INFO ] ✔ done:  parallel_gpu_workers (1021.0s)\n"}
+,{"stream_name":"stdout","time":1075.125476399,"data":"[2026-11-26T23:54:57Z] [ERROR] FATAL — RuntimeError: carousel artifacts missing: ['luca_metrics.json']\n"}
+,{"stream_name":"stdout","time":1075.126910388,"data":"[2026-11-26T23:54:57Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":1075.126943783,"data":"  File \"/kaggle/src/script.py\", line 2504, in main\n"}
+,{"stream_name":"stdout","time":1075.126949518,"data":"    raise RuntimeError(f\"carousel artifacts missing: {missing}\")\n"}
+,{"stream_name":"stdout","time":1075.126953297,"data":"RuntimeError: carousel artifacts missing: ['luca_metrics.json']\n"}
+,{"stream_name":"stdout","time":1075.126956868,"data":"\n"}
+,{"stream_name":"stdout","time":1075.127753562,"data":"[2026-11-26T23:54:57Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1075.127764658,"data":"[2026-11-26T23:54:57Z] [INFO ] status: failed · total 1073.7s\n"}
+,{"stream_name":"stdout","time":1075.12789138,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 01_luca_master.png (1682 KB)\n"}
+,{"stream_name":"stdout","time":1075.128103538,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 02_monaco_yacht_date.png (1154 KB)\n"}
+,{"stream_name":"stdout","time":1075.128114893,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 03_vip_party_flash.png (1204 KB)\n"}
+,{"stream_name":"stdout","time":1075.128118571,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 04_porsche_gt3_pov.png (1191 KB)\n"}
+,{"stream_name":"stdout","time":1075.128166857,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ 05_extreme_action.png (1318 KB)\n"}
+,{"stream_name":"stdout","time":1075.12825449,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ build.log (3 KB)\n"}
+,{"stream_name":"stdout","time":1075.128311036,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_carousel_sheet.png (1993 KB)\n"}
+,{"stream_name":"stdout","time":1075.128386999,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_metrics.json (6 KB)\n"}
+,{"stream_name":"stdout","time":1075.128443713,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_01.jpg (259 KB)\n"}
+,{"stream_name":"stdout","time":1075.128501961,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_02.jpg (159 KB)\n"}
+,{"stream_name":"stdout","time":1075.128576846,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_03.jpg (170 KB)\n"}
+,{"stream_name":"stdout","time":1075.128637026,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_04.jpg (167 KB)\n"}
+,{"stream_name":"stdout","time":1075.128703524,"data":"[2026-11-26T23:54:57Z] [INFO ]   ✓ luca_slide_05.jpg (209 KB)\n"}
+,{"stream_name":"stdout","time":1075.128772242,"data":"[2026-11-26T23:54:57Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stderr","time":1080.770616023,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":1080.770642737,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":1080.980366312,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":1080.980390652,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":1081.787492047,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":1083.135975937,"data":"[NbConvertApp] Writing 814497 bytes to __results__.html\n"}
+]
+[2026-11-26 23:55:28Z] [INFO ] appended kernel log file stoic-luca-studio.log → outputs/build.log (66688 chars)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_carousel_sheet.png (1993 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_slide_01.jpg (259 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_slide_02.jpg (159 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_slide_03.jpg (170 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_slide_04.jpg (167 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_slide_05.jpg (209 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ luca_metrics.json (6 KB)
+[2026-11-26 23:55:28Z] [WARN ] artifact ✘ luca_reel_clip.mp4 (missing)
+[2026-11-26 23:55:28Z] [WARN ] artifact ✘ luca_voice.mp3 (missing)
+[2026-11-26 23:55:28Z] [WARN ] artifact ✘ luca_video_sheet.png (missing)
+[2026-11-26 23:55:28Z] [WARN ] artifact ✘ luca_voice.wav (missing)
+[2026-11-26 23:55:28Z] [INFO ] artifact ✔ 01_luca_master.png (1682 KB)
+[2026-11-26 23:55:28Z] [INFO ] artifact ○ 01_luca_master.png (1682 KB, optional)
+[2026-11-26 23:55:28Z] [WARN ] kernel ended error but a complete carousel is on disk (metrics status: failed) — salvaging the slide pack
+[2026-11-26 23:55:28Z] [WARN ] missing artifacts: luca_reel_clip.mp4, luca_voice.mp3, luca_video_sheet.png, luca_voice.wav
+[2026-11-26 23:55:28Z] [INFO ] ✔ salvaged carousel + reel from a kernel that over-ran its budget
+[2026-11-26 23:55:28Z] [INFO ] carousel: 5/5 slides · 4 biometric swaps · 0 1024px adetailer passes
+[2026-11-26 23:55:28Z] [INFO ]   01_luca_master.png: people=1 genders=None swapped=None adetailer=None identity=None
+[2026-11-26 23:55:28Z] [INFO ]   02_monaco_yacht_date.png: people=2 genders=['F', 'M'] swapped=True adetailer=False identity=0.7188
+[2026-11-26 23:55:28Z] [INFO ]   03_vip_party_flash.png: people=2 genders=['M', 'F'] swapped=True adetailer=False identity=0.867
+[2026-11-26 23:55:28Z] [INFO ]   04_porsche_gt3_pov.png: people=1 genders=['M'] swapped=True adetailer=False identity=0.8828
+[2026-11-26 23:55:28Z] [INFO ]   05_extreme_action.png: people=1 genders=['M'] swapped=True adetailer=False identity=0.8332
+[2026-11-26 23:55:28Z] [INFO ] identity verdicts (cosine ≥ 0.45 = MATCH): []
+[2026-11-26 23:55:28Z] [INFO ] voice: Nones @ None Hz · None None · peak None dBFS
+[2026-11-26 23:55:28Z] [INFO ] reel audio: Nones · None BPM bed · None
+[2026-11-26 23:55:28Z] [INFO ] video: None frames @ None fps · Nones · shots=None · boundaries=None · ping_pong=None cross_fade=None
+[2026-11-26 23:55:28Z] [INFO ] mouth articulation: None of frames active · mean None · band None Hz
+[2026-11-26 23:55:28Z] [INFO ] banned techniques — procedural_animation=None · wsola=None · biquad_eq=None
+[2026-11-26 23:55:28Z] [INFO ] kernel total: 1074s
+[2026-11-26 23:55:28Z] [WARN ] kernel error: {'worker': 'carousel', 'error': 'timeout'}
+[2026-11-26 23:55:28Z] [WARN ] kernel error: {'worker': 'carousel', 'exitcode': -15}
+[2026-11-26 23:55:28Z] [WARN ] kernel error: {'worker': 'reel', 'exitcode': 1}
+[2026-11-26 23:55:28Z] [WARN ] kernel error: {'stage': 'fatal', 'error': "RuntimeError: carousel artifacts missing: ['luca_metrics.json']"}

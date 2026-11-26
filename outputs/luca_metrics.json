@@ -1,50 +1,46 @@
 {
-  "phase": "phase-3-luca-moretti",
+  "phase": "phase-3.1-luca-moretti",
   "character": "Luca Moretti \u00b7 27 \u00b7 young-millionaire playboy",
-  "started_at": "2026-11-26T21:30:16.492732+00:00",
-  "status": "success",
+  "started_at": "2026-11-26T23:37:03.716259+00:00",
+  "status": "failed",
   "config": {
-    "model_id": "SG161222/RealVisXL_V5.0",
-    "clip_vision_id": "laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
-    "ip_adapter_weight": "ip-adapter-plus-face_sdxl_vit-h.safetensors",
-    "ip_adapter_scale": 0.65,
-    "anti_bleed": "spatial attention masking (cross_attention_kwargs.ip_adapter_masks)",
-    "base_seed": 777,
-    "master": {
-      "size": [
-        1024,
-        1024
-      ],
-      "steps": 30,
-      "cfg": 5.5
+    "stage1": {
+      "model": "SG161222/RealVisXL_V5.0",
+      "scheduler": "DPM++ SDE Karras",
+      "algorithm": "sde-dpmsolver++",
+      "steps": 32,
+      "cfg": 5.0,
+      "ip_adapter": false
     },
-    "slides": {
-      "size": [
-        832,
-        1024
-      ],
-      "steps": 30,
-      "cfg": 5.5,
-      "jpeg_quality": 92
+    "stage2": {
+      "detector": "insightface buffalo_l",
+      "swapper": "inswapper_128.onnx",
+      "target": "male face only"
     },
-    "svd": {
-      "model_id": "stabilityai/stable-video-diffusion-img2vid-xt",
-      "num_frames": 25,
-      "steps": 25,
-      "motion_bucket_id": 127,
+    "stage3": {
+      "pipeline": "SDXL img2img + IP-Adapter-Plus-Face",
+      "scale": 0.6,
+      "strength": 0.27,
+      "size": 1024,
+      "steps": 22
+    },
+    "video": {
+      "hook": "KwaiVGI/LivePortrait",
+      "hook_frames": 60,
+      "broll": "stable-video-diffusion-img2vid-xt",
+      "broll_frames": 30,
       "fps": 25,
-      "source_slide": "04"
+      "ping_pong": false,
+      "cross_fade": false
     },
-    "voice": {
-      "engine": "kokoro-onnx",
-      "voice": "am_adam",
-      "speed": 1.0
+    "audio": {
+      "engine": "edge-tts",
+      "voice": "en-US-AndrewMultilingualNeural",
+      "bed_bpm": 120,
+      "wsola": false,
+      "biquad_eq": false
     },
-    "dtype": "float16",
-    "device": "cuda:0",
-    "procedural_animation": false,
-    "wsola_time_stretch": false,
-    "custom_biquad_filters": false
+    "parallelism": "cuda:0 carousel \u2016 cuda:1 reel"
   },
   "artifacts": [
     "01_luca_master.png",
@@ -55,148 +51,36 @@
     "build.log",
     "luca_carousel_sheet.png",
     "luca_metrics.json",
-    "luca_reel_clip.mp4",
     "luca_slide_01.jpg",
     "luca_slide_02.jpg",
     "luca_slide_03.jpg",
     "luca_slide_04.jpg",
-    "luca_slide_05.jpg",
-    "luca_video_sheet.png",
-    "luca_voice.mp3",
-    "luca_voice.wav"
+    "luca_slide_05.jpg"
   ],
   "timings_seconds": {
-    "pip_install_deps": 14.86,
-    "load_sdxl_pipeline": 37.533,
-    "configure_scheduler_and_vram": 2.379,
-    "generate_master": 32.538,
-    "load_clip_vision": 24.629,
-    "load_ip_adapter": 10.387,
-    "generate_slide_02": 26.235,
-    "generate_slide_03": 27.444,
-    "generate_slide_04": 30.684,
-    "generate_slide_05": 30.66,
-    "build_carousel_sheet": 1.439,
-    "download_kokoro_assets": 3.139,
-    "load_kokoro": 1.568,
-    "synthesize_speech": 2.323,
-    "normalize_peak": 0.0,
-    "write_audio": 0.799,
-    "load_svd_pipeline": 25.48,
-    "configure_svd_vram": 0.065,
-    "svd_generate_f25_c4": 435.973,
-    "encode_video": 2.567,
-    "build_video_sheet": 1.17,
-    "probe_outputs": 0.139
+    "pip_install_deps": 11.646,
+    "face/fetch_buffalo_l": 3.23,
+    "face/fetch_inswapper": 4.594,
+    "parallel_gpu_workers": 1020.967
   },
-  "slides": [
+  "errors": [
     {
-      "filename": "01_luca_master.png",
-      "role": "identity master",
-      "status": "ok",
-      "seed": 777,
-      "steps": 30,
-      "cfg": 5.5,
-      "size": [
-        1024,
-        1024
-      ],
-      "ip_adapter_image": false,
-      "ip_mask": null,
-      "masked_ip_adapter": false,
-      "unmasked_retry": false,
-      "peak_vram_gb": 9.73
+      "worker": "carousel",
+      "error": "timeout"
     },
     {
-      "index": 2,
-      "filename": "02_monaco_yacht_date.png",
-      "jpeg": "luca_slide_02.jpg",
-      "title": "02 \u00b7 MONACO \u00b7 YACHT",
-      "mask": "right",
-      "expected_people": 2,
-      "status": "ok",
-      "seed": 779,
-      "steps": 30,
-      "cfg": 5.5,
-      "size": [
-        832,
-        1024
-      ],
-      "ip_adapter_image": true,
-      "ip_mask": "right",
-      "masked_ip_adapter": true,
-      "unmasked_retry": false,
-      "peak_vram_gb": 11.15,
-      "jpeg_kb": 166.5
+      "worker": "carousel",
+      "exitcode": -15
     },
     {
-      "index": 3,
-      "filename": "03_vip_party_flash.png",
-      "jpeg": "luca_slide_03.jpg",
-      "title": "03 \u00b7 IBIZA \u00b7 VIP",
-      "mask": "right",
-      "expected_people": 2,
-      "status": "ok",
-      "seed": 780,
-      "steps": 30,
-      "cfg": 5.5,
-      "size": [
-        832,
-        1024
-      ],
-      "ip_adapter_image": true,
-      "ip_mask": "right",
-      "masked_ip_adapter": true,
-      "unmasked_retry": false,
-      "peak_vram_gb": 11.15,
-      "jpeg_kb": 186.4
+      "worker": "reel",
+      "exitcode": 1
     },
     {
-      "index": 4,
-      "filename": "04_porsche_gt3_pov.png",
-      "jpeg": "luca_slide_04.jpg",
-      "title": "04 \u00b7 AMALFI \u00b7 GT3",
-      "mask": "full",
-      "expected_people": 1,
-      "status": "ok",
-      "seed": 781,
-      "steps": 30,
-      "cfg": 5.5,
-      "size": [
-        832,
-        1024
-      ],
-      "ip_adapter_image": true,
-      "ip_mask": "full",
-      "masked_ip_adapter": false,
-      "unmasked_retry": false,
-      "peak_vram_gb": 11.15,
-      "jpeg_kb": 186.7
-    },
-    {
-      "index": 5,
-      "filename": "05_extreme_action.png",
-      "jpeg": "luca_slide_05.jpg",
-      "title": "05 \u00b7 EXTREME",
-      "mask": "full",
-      "expected_people": 1,
-      "status": "ok",
-      "seed": 782,
-      "steps": 30,
-      "cfg": 5.5,
-      "size": [
-        832,
-        1024
-      ],
-      "ip_adapter_image": true,
-      "ip_mask": "full",
-      "masked_ip_adapter": false,
-      "unmasked_retry": false,
-      "peak_vram_gb": 11.15,
-      "jpeg_kb": 150.1
+      "stage": "fatal",
+      "error": "RuntimeError: carousel artifacts missing: ['luca_metrics.json']"
     }
   ],
-  "errors": [],
   "environment": {
     "python": "3.13.16",
     "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
@@ -207,67 +91,192 @@
       "Tesla T4",
       "Tesla T4"
     ],
-    "gpu_total_vram_gb": [
-      14.56,
-      14.56
-    ],
     "diffusers": "0.42.0",
     "transformers": "5.20.2",
     "accelerate": "1.15.0",
     "safetensors": "0.8.0",
     "PIL": "13.0.0",
-    "onnxruntime": "1.32.0"
+    "onnxruntime": "1.32.0",
+    "insightface": "2.1",
+    "cv2": "4.14.0",
+    "edge_tts": "7.3.1"
   },
-  "ip_adapter_active": true,
-  "voice": {
-    "text": "They told me to slow down and play it safe. Look where that got them.",
-    "voice": "am_adam",
-    "voice_style_tensor_shape": [
-      510,
-      1,
-      256
-    ],
-    "speed": 1.0,
-    "sample_rate": 24000,
-    "duration_s": 3.627,
-    "peak_dbfs": -1.41,
-    "processing": "linear peak normalisation only",
-    "wsola_time_stretch": false,
-    "biquad_or_parametric_eq": false
+  "face_models": {
+    "buffalo_l": "/tmp/stoic_face_models/models/buffalo_l",
+    "inswapper": "/tmp/stoic_face_models/inswapper_128.onnx"
   },
-  "video": {
-    "backend": "stable-video-diffusion-img2vid-xt",
-    "num_frames": 25,
-    "num_inference_steps": 25,
-    "motion_bucket_id": 127,
-    "noise_aug_strength": 0.02,
-    "decode_chunk_size": 4,
-    "native_size": [
-      576,
-      1024
-    ],
-    "source_fps": 7,
-    "attempt": 1,
-    "fps": 25,
-    "ping_pong_cycle": 48,
-    "looped_frames": 91,
-    "duration_s": 3.64,
-    "loop_mode": "ping-pong",
-    "retime": "cross-fade temporal upsampling 7\u219225 fps (speed preserved)",
-    "audio_duration_s": 3.627,
-    "motion_source": "100% Stable Video Diffusion (no procedural animation)",
-    "probe": {
-      "size_bytes": 1270742,
-      "duration": "00:00:03.63",
-      "video_codec": "h264 (High) (avc1 / 0x31637661)",
-      "pix_fmt": "yuv420p(progressive)",
-      "resolution": "576x1024",
-      "fps": "25",
-      "audio_codec": "aac (LC) (mp4a / 0x6134706D)",
-      "sample_rate": "24000",
-      "audio_layout": "mono"
+  "gpu_count": 2,
+  "slides": [
+    {
+      "index": 1,
+      "filename": "01_luca_master.png",
+      "title": "01 \u00b7 MASTER",
+      "seed": 42,
+      "size": [
+        1024,
+        1024
+      ],
+      "expected_people": 1,
+      "stage1": "ok",
+      "ip_adapter_during_txt2img": false
+    },
+    {
+      "index": 2,
+      "filename": "02_monaco_yacht_date.png",
+      "title": "02 \u00b7 MONACO \u00b7 YACHT",
+      "seed": 44,
+      "size": [
+        832,
+        1024
+      ],
+      "expected_people": 2,
+      "stage1": "ok",
+      "ip_adapter_during_txt2img": false,
+      "stage2": {
+        "faces_detected": 2,
+        "genders": [
+          "F",
+          "M"
+        ],
+        "male_index": 1,
+        "swapped": true,
+        "male_bbox": [
+          122,
+          10,
+          499,
+          387
+        ]
+      },
+      "stage3": {
+        "adetailer": false,
+        "reason": "AttributeError"
+      },
+      "polish": {
+        "colour": "warm cast reduced 5% (blue \u00d71.05)",
+        "grain_sigma": 1.3
+      },
+      "identity_cosine": 0.7188
+    },
+    {
+      "index": 3,
+      "filename": "03_vip_party_flash.png",
+      "title": "03 \u00b7 IBIZA \u00b7 VIP",
+      "seed": 45,
+      "size": [
+        832,
+        1024
+      ],
+      "expected_people": 2,
+      "stage1": "ok",
+      "ip_adapter_during_txt2img": false,
+      "stage2": {
+        "faces_detected": 2,
+        "genders": [
+          "M",
+          "F"
+        ],
+        "male_index": 0,
+        "swapped": true,
+        "male_bbox": [
+          0,
+          0,
+          605,
+          604
+        ]
+      },
+      "stage3": {
+        "adetailer": false,
+        "reason": "AttributeError"
+      },
+      "polish": {
+        "colour": "warm cast reduced 5% (blue \u00d71.05)",
+        "grain_sigma": 1.3
+      },
+      "identity_cosine": 0.867
+    },
+    {
+      "index": 4,
+      "filename": "04_porsche_gt3_pov.png",
+      "title": "04 \u00b7 AMALFI \u00b7 GT3",
+      "seed": 46,
+      "size": [
+        832,
+        1024
+      ],
+      "expected_people": 1,
+      "stage1": "ok",
+      "ip_adapter_during_txt2img": false,
+      "stage2": {
+        "faces_detected": 1,
+        "genders": [
+          "M"
+        ],
+        "male_index": 0,
+        "swapped": true,
+        "male_bbox": [
+          118,
+          22,
+          626,
+          530
+        ]
+      },
+      "stage3": {
+        "adetailer": false,
+        "reason": "AttributeError"
+      },
+      "polish": {
+        "colour": "warm cast reduced 5% (blue \u00d71.05)",
+        "grain_sigma": 1.3
+      },
+      "identity_cosine": 0.8828
+    },
+    {
+      "index": 5,
+      "filename": "05_extreme_action.png",
+      "title": "05 \u00b7 EXTREME",
+      "seed": 47,
+      "size": [
+        832,
+        1024
+      ],
+      "expected_people": 1,
+      "stage1": "ok",
+      "ip_adapter_during_txt2img": false,
+      "stage2": {
+        "faces_detected": 1,
+        "genders": [
+          "M"
+        ],
+        "male_index": 0,
+        "swapped": true,
+        "male_bbox": [
+          358,
+          95,
+          570,
+          307
+        ]
+      },
+      "stage3": {
+        "adetailer": false,
+        "reason": "AttributeError"
+      },
+      "polish": {
+        "colour": "warm cast reduced 5% (blue \u00d71.05)",
+        "grain_sigma": 1.3
+      },
+      "identity_cosine": 0.8332
     }
+  ],
+  "identity_cosine": {
+    "02_monaco_yacht_date.png": 0.7188,
+    "03_vip_party_flash.png": 0.867,
+    "04_porsche_gt3_pov.png": 0.8828,
+    "05_extreme_action.png": 0.8332
   },
-  "total_seconds": 759.9,
-  "finished_at": "2026-11-26T21:42:56.359279+00:00"
+  "adetailer_adapter": true,
+  "missing_slides": [
+    "luca_metrics.json"
+  ],
+  "total_seconds": 1073.7,
+  "finished_at": "2026-11-26T23:54:57.419269+00:00"
 }
