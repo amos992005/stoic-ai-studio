@@ -1,0 +1,5 @@
+# Dependencies for the GitHub Actions orchestrator (CPU only).
+# The GPU-side dependencies live on Kaggle and are pinned inside
+# kaggle_kernel/character_forge.py's loader.
+kaggle>=1.6.17
+pillow>=10.0.0
