@@ -1,0 +1,272 @@
+[2026-11-26T19:54:53Z] [INFO ] ==============================================================================
+[2026-11-26T19:54:53Z] [INFO ] stoic-ai-studio · VOICE & TALKING AVATAR · Micro-Pilot 2
+[2026-11-26T19:54:53Z] [INFO ] output dir: /kaggle/working
+[2026-11-26T19:54:53Z] [INFO ] ==============================================================================
+[2026-11-26T19:54:53Z] [WARN ] installing missing deps: ['kokoro-onnx', 'onnxruntime-gpu']
+[2026-11-26T19:54:53Z] [INFO ] ▶ start: pip_install_deps
+[2026-11-26T19:55:08Z] [INFO ] ✔ done:  pip_install_deps (15.6s)
+[2026-11-26T19:55:09Z] [INFO ] ▶ start: load_portrait
+[2026-11-26T19:55:09Z] [INFO ] portrait: /kaggle/input/stoic-ai-studio-portrait/julian_portrait_1024.png (1024, 1024, 3)
+[2026-11-26T19:55:09Z] [INFO ] ✔ done:  load_portrait (0.4s)
+[2026-11-26T19:55:09Z] [INFO ] ▶ start: download_kokoro_assets
+[2026-11-26T19:55:09Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+[2026-11-26T19:55:12Z] [INFO ] saved kokoro-v1.0.onnx (310.5 MB)
+[2026-11-26T19:55:12Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+[2026-11-26T19:55:12Z] [INFO ] saved voices-v1.0.bin (26.9 MB)
+[2026-11-26T19:55:12Z] [INFO ] ✔ done:  download_kokoro_assets (3.1s)
+[2026-11-26T19:55:12Z] [INFO ] ▶ start: load_kokoro
+[2026-11-26T19:55:13Z] [INFO ] kokoro running on CPU (no CUDA provider installed)
+[2026-11-26T19:55:13Z] [INFO ] kokoro voices available: ['af_alloy', 'af_aoede', 'af_bella', 'af_heart', 'af_jessica', 'af_kore', 'af_nicole', 'af_nova', 'af_river', 'af_sarah', 'af_sky', 'am_adam']… total=54
+[2026-11-26T19:55:13Z] [INFO ] ✔ done:  load_kokoro (1.0s)
+[2026-11-26T19:55:13Z] [INFO ] ▶ start: blend_voice_styles
+[2026-11-26T19:55:13Z] [INFO ] blended style matrix: (510, 1, 256) from bm_george=0.6, am_michael=0.4
+[2026-11-26T19:55:13Z] [INFO ] ✔ done:  blend_voice_styles (0.0s)
+[2026-11-26T19:55:13Z] [INFO ] ▶ start: synthesize_speech
+[2026-11-26T19:55:17Z] [INFO ] raw speech: 6.53s @ 24000 Hz, 0 phoneme timings
+[2026-11-26T19:55:17Z] [INFO ] ✔ done:  synthesize_speech (3.5s)
+[2026-11-26T19:55:17Z] [INFO ] raw peak: -5.9 dBFS
+[2026-11-26T19:55:17Z] [INFO ] ▶ start: master_audio
+[2026-11-26T19:55:18Z] [INFO ] mastered: peak -1.50 dBFS, 6.53s
+[2026-11-26T19:55:18Z] [INFO ] ✔ done:  master_audio (0.8s)
+[2026-11-26T19:55:18Z] [INFO ] ▶ start: write_audio
+[2026-11-26T19:55:19Z] [INFO ] wrote julian_voice.wav and julian_voice.mp3
+[2026-11-26T19:55:19Z] [INFO ] ✔ done:  write_audio (1.3s)
+[2026-11-26T19:55:19Z] [INFO ] probing lip-sync model instant-high/wav2lip-onnx-96/wav2lip.onnx
+[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-1fb5876f27774264432f681c;17d3bc37-00e7-4709-a557-f374ef3236fc)
+
+Repositor)
+[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model Nekochu/Wav2Lip/wav2lip.onnx
+[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-023fcf2f12b9fa6e3cdcd3b8;72764fb2-d83f-4e08-a295-f5011297cde2)
+
+Entry Not)
+[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model camenduru/Wav2Lip/wav2lip.onnx
+[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-71061b2e0e9290ca3eb242e8;0a49cea3-ad13-47db-9f54-52a9e687e6a2)
+
+Entry Not)
+[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model vinthony/wav2lip/wav2lip_gan.onnx
+[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-25cc4dfc718301d050fdca41;daee2e05-9c7c-4722-8c28-1aa08f416f87)
+
+Repositor)
+[2026-11-26T19:55:20Z] [WARN ] no Wav2Lip ONNX weights reachable — using viseme synthesiser
+[2026-11-26T19:55:20Z] [INFO ] rendering 150 frames @ 25 fps (6.00s)
+[2026-11-26T19:55:20Z] [INFO ] output 832x1024, mouth box (330, 646, 462, 742)
+[2026-11-26T19:55:20Z] [WARN ] no phoneme timings — mouth driven by the acoustic envelope only
+[2026-11-26T19:55:20Z] [INFO ] ▶ start: render_frames
+[2026-11-26T19:55:48Z] [INFO ] ✔ done:  render_frames (27.3s)
+[2026-11-26T19:55:48Z] [INFO ] ▶ start: encode_video
+[2026-11-26T19:55:52Z] [INFO ] ✔ done:  encode_video (4.8s)
+[2026-11-26T19:55:52Z] [INFO ] encoded pilot_talking.mp4 (1475 KB)
+[2026-11-26T19:55:52Z] [INFO ] ▶ start: build_contact_sheet
+[2026-11-26T19:55:54Z] [INFO ] saved talking_contact_sheet.png (2226x870, 1259 KB)
+[2026-11-26T19:55:54Z] [INFO ] ✔ done:  build_contact_sheet (1.2s)
+[2026-11-26T19:55:54Z] [INFO ] lip-openness vs audio-RMS correlation: 1.000
+[2026-11-26T19:55:54Z] [INFO ] MICRO-PILOT 2 COMPLETE ✔
+[2026-11-26T19:55:54Z] [INFO ] total wall clock: 60.959s
+    | Downloading build.log to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/build.log
+    | Downloading julian_portrait_1024.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/julian_portrait_1024.png
+    | Downloading julian_voice.mp3 to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/julian_voice.mp3
+    | Downloading julian_voice.wav to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/julian_voice.wav
+    | Downloading pilot_talking.mp4 to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/pilot_talking.mp4
+    | Downloading talking_contact_sheet.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/talking_contact_sheet.png
+    | Downloading talking_metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/talking_metrics.json
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-talking-pilot.log 
+    ! 
+    !   0%|          | 0.00/4.67k [00:00<?, ?B/s]
+    ! 100%|██████████| 4.67k/4.67k [00:00<00:00, 14.8MB/s]
+    ! 
+    !   0%|          | 0.00/1.39M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.39M/1.39M [00:00<00:00, 79.1MB/s]
+    ! 
+    !   0%|          | 0.00/129k [00:00<?, ?B/s]
+    ! 100%|██████████| 129k/129k [00:00<00:00, 26.8MB/s]
+    ! 
+    !   0%|          | 0.00/306k [00:00<?, ?B/s]
+    ! 100%|██████████| 306k/306k [00:00<00:00, 31.6MB/s]
+    ! 
+    !   0%|          | 0.00/1.44M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.44M/1.44M [00:00<00:00, 101MB/s]
+    ! 
+    !   0%|          | 0.00/1.23M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.23M/1.23M [00:00<00:00, 83.2MB/s]
+    ! 
+    !   0%|          | 0.00/2.13k [00:00<?, ?B/s]
+    ! 100%|██████████| 2.13k/2.13k [00:00<00:00, 14.2MB/s]
+[2026-11-26 19:56:27Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-26 19:56:27Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-talking-pilot
+
+===== kaggle kernels logs · fetched 2026-11-26 19:56:27Z =====
+[{"stream_name":"stdout","time":2.076025242,"data":"[2026-11-26T19:54:53Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":2.076080802,"data":"[2026-11-26T19:54:53Z] [INFO ] stoic-ai-studio · VOICE \u0026 TALKING AVATAR · Micro-Pilot 2\n"}
+,{"stream_name":"stdout","time":2.0760889,"data":"[2026-11-26T19:54:53Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":2.076093674,"data":"[2026-11-26T19:54:53Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":2.193177697,"data":"[2026-11-26T19:54:53Z] [WARN ] installing missing deps: ['kokoro-onnx', 'onnxruntime-gpu']\n"}
+,{"stream_name":"stdout","time":2.1932116,"data":"[2026-11-26T19:54:53Z] [INFO ] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":17.774308688,"data":"[2026-11-26T19:55:08Z] [INFO ] ✔ done:  pip_install_deps (15.6s)\n"}
+,{"stream_name":"stdout","time":18.204366799,"data":"[2026-11-26T19:55:09Z] [INFO ] ▶ start: load_portrait\n"}
+,{"stream_name":"stdout","time":18.582191588,"data":"[2026-11-26T19:55:09Z] [INFO ] portrait: /kaggle/input/stoic-ai-studio-portrait/julian_portrait_1024.png (1024, 1024, 3)\n"}
+,{"stream_name":"stdout","time":18.584066559,"data":"[2026-11-26T19:55:09Z] [INFO ] ✔ done:  load_portrait (0.4s)\n"}
+,{"stream_name":"stdout","time":18.584513155,"data":"[2026-11-26T19:55:09Z] [INFO ] ▶ start: download_kokoro_assets\n"}
+,{"stream_name":"stdout","time":18.601734198,"data":"[2026-11-26T19:55:09Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx\n"}
+,{"stream_name":"stdout","time":21.252295806,"data":"[2026-11-26T19:55:12Z] [INFO ] saved kokoro-v1.0.onnx (310.5 MB)\n"}
+,{"stream_name":"stdout","time":21.252489563,"data":"[2026-11-26T19:55:12Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin\n"}
+,{"stream_name":"stdout","time":21.635077973,"data":"[2026-11-26T19:55:12Z] [INFO ] saved voices-v1.0.bin (26.9 MB)\n"}
+,{"stream_name":"stdout","time":21.635102936,"data":"[2026-11-26T19:55:12Z] [INFO ] ✔ done:  download_kokoro_assets (3.1s)\n"}
+,{"stream_name":"stdout","time":21.635107331,"data":"[2026-11-26T19:55:12Z] [INFO ] ▶ start: load_kokoro\n"}
+,{"stream_name":"stdout","time":22.649293267,"data":"[2026-11-26T19:55:13Z] [INFO ] kokoro running on CPU (no CUDA provider installed)\n"}
+,{"stream_name":"stdout","time":22.649322458,"data":"[2026-11-26T19:55:13Z] [INFO ] kokoro voices available: ['af_alloy', 'af_aoede', 'af_bella', 'af_heart', 'af_jessica', 'af_kore', 'af_nicole', 'af_nova', 'af_river', 'af_sarah', 'af_sky', 'am_adam']… total=54\n"}
+,{"stream_name":"stdout","time":22.649381151,"data":"[2026-11-26T19:55:13Z] [INFO ] ✔ done:  load_kokoro (1.0s)\n"}
+,{"stream_name":"stdout","time":22.649442776,"data":"[2026-11-26T19:55:13Z] [INFO ] ▶ start: blend_voice_styles\n"}
+,{"stream_name":"stdout","time":22.662225086,"data":"[2026-11-26T19:55:13Z] [INFO ] blended style matrix: (510, 1, 256) from bm_george=0.6, am_michael=0.4\n"}
+,{"stream_name":"stdout","time":22.662303528,"data":"[2026-11-26T19:55:13Z] [INFO ] ✔ done:  blend_voice_styles (0.0s)\n"}
+,{"stream_name":"stdout","time":22.662318608,"data":"[2026-11-26T19:55:13Z] [INFO ] ▶ start: synthesize_speech\n"}
+,{"stream_name":"stdout","time":26.1368051,"data":"[2026-11-26T19:55:17Z] [INFO ] raw speech: 6.53s @ 24000 Hz, 0 phoneme timings\n"}
+,{"stream_name":"stdout","time":26.137030121,"data":"[2026-11-26T19:55:17Z] [INFO ] ✔ done:  synthesize_speech (3.5s)\n"}
+,{"stream_name":"stdout","time":26.137681377,"data":"[2026-11-26T19:55:17Z] [INFO ] raw peak: -5.9 dBFS\n"}
+,{"stream_name":"stdout","time":26.13775505,"data":"[2026-11-26T19:55:17Z] [INFO ] ▶ start: master_audio\n"}
+,{"stream_name":"stdout","time":26.935943874,"data":"[2026-11-26T19:55:18Z] [INFO ] mastered: peak -1.50 dBFS, 6.53s\n"}
+,{"stream_name":"stdout","time":26.935981281,"data":"[2026-11-26T19:55:18Z] [INFO ] ✔ done:  master_audio (0.8s)\n"}
+,{"stream_name":"stdout","time":26.936130151,"data":"[2026-11-26T19:55:18Z] [INFO ] ▶ start: write_audio\n"}
+,{"stream_name":"stdout","time":28.189149793,"data":"[2026-11-26T19:55:19Z] [INFO ] wrote julian_voice.wav and julian_voice.mp3\n"}
+,{"stream_name":"stdout","time":28.189179319,"data":"[2026-11-26T19:55:19Z] [INFO ] ✔ done:  write_audio (1.3s)\n"}
+,{"stream_name":"stdout","time":28.749558007,"data":"[2026-11-26T19:55:19Z] [INFO ] probing lip-sync model instant-high/wav2lip-onnx-96/wav2lip.onnx\n"}
+,{"stream_name":"stdout","time":29.282700433,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-1fb5876f27774264432f681c;17d3bc37-00e7-4709-a557-f374ef3236fc)\n"}
+,{"stream_name":"stdout","time":29.282728813,"data":"\n"}
+,{"stream_name":"stdout","time":29.282733144,"data":"Repositor)\n"}
+,{"stream_name":"stdout","time":29.282736638,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model Nekochu/Wav2Lip/wav2lip.onnx\n"}
+,{"stream_name":"stdout","time":29.385324235,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-023fcf2f12b9fa6e3cdcd3b8;72764fb2-d83f-4e08-a295-f5011297cde2)\n"}
+,{"stream_name":"stdout","time":29.385360528,"data":"\n"}
+,{"stream_name":"stdout","time":29.385370373,"data":"Entry Not)\n"}
+,{"stream_name":"stdout","time":29.38537293,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model camenduru/Wav2Lip/wav2lip.onnx\n"}
+,{"stream_name":"stderr","time":29.485217737,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":29.485856934,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-71061b2e0e9290ca3eb242e8;0a49cea3-ad13-47db-9f54-52a9e687e6a2)\n"}
+,{"stream_name":"stdout","time":29.485869575,"data":"\n"}
+,{"stream_name":"stdout","time":29.485873512,"data":"Entry Not)\n"}
+,{"stream_name":"stdout","time":29.485877108,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model vinthony/wav2lip/wav2lip_gan.onnx\n"}
+,{"stream_name":"stdout","time":29.584761854,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-25cc4dfc718301d050fdca41;daee2e05-9c7c-4722-8c28-1aa08f416f87)\n"}
+,{"stream_name":"stdout","time":29.584786569,"data":"\n"}
+,{"stream_name":"stdout","time":29.584791022,"data":"Repositor)\n"}
+,{"stream_name":"stdout","time":29.584794419,"data":"[2026-11-26T19:55:20Z] [WARN ] no Wav2Lip ONNX weights reachable — using viseme synthesiser\n"}
+,{"stream_name":"stdout","time":29.584945189,"data":"[2026-11-26T19:55:20Z] [INFO ] rendering 150 frames @ 25 fps (6.00s)\n"}
+,{"stream_name":"stdout","time":29.603091096,"data":"[2026-11-26T19:55:20Z] [INFO ] output 832x1024, mouth box (330, 646, 462, 742)\n"}
+,{"stream_name":"stdout","time":29.606999158,"data":"[2026-11-26T19:55:20Z] [WARN ] no phoneme timings — mouth driven by the acoustic envelope only\n"}
+,{"stream_name":"stdout","time":29.66911115,"data":"[2026-11-26T19:55:20Z] [INFO ] ▶ start: render_frames\n"}
+,{"stream_name":"stdout","time":56.947715393,"data":"[2026-11-26T19:55:48Z] [INFO ] ✔ done:  render_frames (27.3s)\n"}
+,{"stream_name":"stdout","time":57.064276568,"data":"[2026-11-26T19:55:48Z] [INFO ] ▶ start: encode_video\n"}
+,{"stream_name":"stdout","time":61.853449162,"data":"[2026-11-26T19:55:52Z] [INFO ] ✔ done:  encode_video (4.8s)\n"}
+,{"stream_name":"stdout","time":61.853693715,"data":"[2026-11-26T19:55:52Z] [INFO ] encoded pilot_talking.mp4 (1475 KB)\n"}
+,{"stream_name":"stdout","time":61.853951766,"data":"[2026-11-26T19:55:52Z] [INFO ] ▶ start: build_contact_sheet\n"}
+,{"stream_name":"stdout","time":63.025934849,"data":"[2026-11-26T19:55:54Z] [INFO ] saved talking_contact_sheet.png (2226x870, 1259 KB)\n"}
+,{"stream_name":"stdout","time":63.026014468,"data":"[2026-11-26T19:55:54Z] [INFO ] ✔ done:  build_contact_sheet (1.2s)\n"}
+,{"stream_name":"stdout","time":63.031758184,"data":"[2026-11-26T19:55:54Z] [INFO ] lip-openness vs audio-RMS correlation: 1.000\n"}
+,{"stream_name":"stdout","time":63.031774068,"data":"[2026-11-26T19:55:54Z] [INFO ] MICRO-PILOT 2 COMPLETE ✔\n"}
+,{"stream_name":"stdout","time":63.031847635,"data":"[2026-11-26T19:55:54Z] [INFO ] total wall clock: 60.959s\n"}
+,{"stream_name":"stderr","time":65.671918406,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":65.671943314,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":66.054031377,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":66.054056308,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":67.245126945,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":68.894133741,"data":"[NbConvertApp] Writing 576199 bytes to __results__.html\n"}
+]
+[2026-11-26 19:56:27Z] [INFO ] appended kaggle kernels logs → outputs/build.log (9364 chars)
+
+===== kernel log file stoic-talking-pilot.log · fetched 2026-11-26 19:56:27Z =====
+[{"stream_name":"stdout","time":2.076025242,"data":"[2026-11-26T19:54:53Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":2.076080802,"data":"[2026-11-26T19:54:53Z] [INFO ] stoic-ai-studio · VOICE \u0026 TALKING AVATAR · Micro-Pilot 2\n"}
+,{"stream_name":"stdout","time":2.0760889,"data":"[2026-11-26T19:54:53Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":2.076093674,"data":"[2026-11-26T19:54:53Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":2.193177697,"data":"[2026-11-26T19:54:53Z] [WARN ] installing missing deps: ['kokoro-onnx', 'onnxruntime-gpu']\n"}
+,{"stream_name":"stdout","time":2.1932116,"data":"[2026-11-26T19:54:53Z] [INFO ] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":17.774308688,"data":"[2026-11-26T19:55:08Z] [INFO ] ✔ done:  pip_install_deps (15.6s)\n"}
+,{"stream_name":"stdout","time":18.204366799,"data":"[2026-11-26T19:55:09Z] [INFO ] ▶ start: load_portrait\n"}
+,{"stream_name":"stdout","time":18.582191588,"data":"[2026-11-26T19:55:09Z] [INFO ] portrait: /kaggle/input/stoic-ai-studio-portrait/julian_portrait_1024.png (1024, 1024, 3)\n"}
+,{"stream_name":"stdout","time":18.584066559,"data":"[2026-11-26T19:55:09Z] [INFO ] ✔ done:  load_portrait (0.4s)\n"}
+,{"stream_name":"stdout","time":18.584513155,"data":"[2026-11-26T19:55:09Z] [INFO ] ▶ start: download_kokoro_assets\n"}
+,{"stream_name":"stdout","time":18.601734198,"data":"[2026-11-26T19:55:09Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx\n"}
+,{"stream_name":"stdout","time":21.252295806,"data":"[2026-11-26T19:55:12Z] [INFO ] saved kokoro-v1.0.onnx (310.5 MB)\n"}
+,{"stream_name":"stdout","time":21.252489563,"data":"[2026-11-26T19:55:12Z] [INFO ] downloading https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin\n"}
+,{"stream_name":"stdout","time":21.635077973,"data":"[2026-11-26T19:55:12Z] [INFO ] saved voices-v1.0.bin (26.9 MB)\n"}
+,{"stream_name":"stdout","time":21.635102936,"data":"[2026-11-26T19:55:12Z] [INFO ] ✔ done:  download_kokoro_assets (3.1s)\n"}
+,{"stream_name":"stdout","time":21.635107331,"data":"[2026-11-26T19:55:12Z] [INFO ] ▶ start: load_kokoro\n"}
+,{"stream_name":"stdout","time":22.649293267,"data":"[2026-11-26T19:55:13Z] [INFO ] kokoro running on CPU (no CUDA provider installed)\n"}
+,{"stream_name":"stdout","time":22.649322458,"data":"[2026-11-26T19:55:13Z] [INFO ] kokoro voices available: ['af_alloy', 'af_aoede', 'af_bella', 'af_heart', 'af_jessica', 'af_kore', 'af_nicole', 'af_nova', 'af_river', 'af_sarah', 'af_sky', 'am_adam']… total=54\n"}
+,{"stream_name":"stdout","time":22.649381151,"data":"[2026-11-26T19:55:13Z] [INFO ] ✔ done:  load_kokoro (1.0s)\n"}
+,{"stream_name":"stdout","time":22.649442776,"data":"[2026-11-26T19:55:13Z] [INFO ] ▶ start: blend_voice_styles\n"}
+,{"stream_name":"stdout","time":22.662225086,"data":"[2026-11-26T19:55:13Z] [INFO ] blended style matrix: (510, 1, 256) from bm_george=0.6, am_michael=0.4\n"}
+,{"stream_name":"stdout","time":22.662303528,"data":"[2026-11-26T19:55:13Z] [INFO ] ✔ done:  blend_voice_styles (0.0s)\n"}
+,{"stream_name":"stdout","time":22.662318608,"data":"[2026-11-26T19:55:13Z] [INFO ] ▶ start: synthesize_speech\n"}
+,{"stream_name":"stdout","time":26.1368051,"data":"[2026-11-26T19:55:17Z] [INFO ] raw speech: 6.53s @ 24000 Hz, 0 phoneme timings\n"}
+,{"stream_name":"stdout","time":26.137030121,"data":"[2026-11-26T19:55:17Z] [INFO ] ✔ done:  synthesize_speech (3.5s)\n"}
+,{"stream_name":"stdout","time":26.137681377,"data":"[2026-11-26T19:55:17Z] [INFO ] raw peak: -5.9 dBFS\n"}
+,{"stream_name":"stdout","time":26.13775505,"data":"[2026-11-26T19:55:17Z] [INFO ] ▶ start: master_audio\n"}
+,{"stream_name":"stdout","time":26.935943874,"data":"[2026-11-26T19:55:18Z] [INFO ] mastered: peak -1.50 dBFS, 6.53s\n"}
+,{"stream_name":"stdout","time":26.935981281,"data":"[2026-11-26T19:55:18Z] [INFO ] ✔ done:  master_audio (0.8s)\n"}
+,{"stream_name":"stdout","time":26.936130151,"data":"[2026-11-26T19:55:18Z] [INFO ] ▶ start: write_audio\n"}
+,{"stream_name":"stdout","time":28.189149793,"data":"[2026-11-26T19:55:19Z] [INFO ] wrote julian_voice.wav and julian_voice.mp3\n"}
+,{"stream_name":"stdout","time":28.189179319,"data":"[2026-11-26T19:55:19Z] [INFO ] ✔ done:  write_audio (1.3s)\n"}
+,{"stream_name":"stdout","time":28.749558007,"data":"[2026-11-26T19:55:19Z] [INFO ] probing lip-sync model instant-high/wav2lip-onnx-96/wav2lip.onnx\n"}
+,{"stream_name":"stdout","time":29.282700433,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-1fb5876f27774264432f681c;17d3bc37-00e7-4709-a557-f374ef3236fc)\n"}
+,{"stream_name":"stdout","time":29.282728813,"data":"\n"}
+,{"stream_name":"stdout","time":29.282733144,"data":"Repositor)\n"}
+,{"stream_name":"stdout","time":29.282736638,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model Nekochu/Wav2Lip/wav2lip.onnx\n"}
+,{"stream_name":"stdout","time":29.385324235,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-023fcf2f12b9fa6e3cdcd3b8;72764fb2-d83f-4e08-a295-f5011297cde2)\n"}
+,{"stream_name":"stdout","time":29.385360528,"data":"\n"}
+,{"stream_name":"stdout","time":29.385370373,"data":"Entry Not)\n"}
+,{"stream_name":"stdout","time":29.38537293,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model camenduru/Wav2Lip/wav2lip.onnx\n"}
+,{"stream_name":"stderr","time":29.485217737,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":29.485856934,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RemoteEntryNotFoundError: 404 Client Error. (Request ID: Root=1-6b088ea8-71061b2e0e9290ca3eb242e8;0a49cea3-ad13-47db-9f54-52a9e687e6a2)\n"}
+,{"stream_name":"stdout","time":29.485869575,"data":"\n"}
+,{"stream_name":"stdout","time":29.485873512,"data":"Entry Not)\n"}
+,{"stream_name":"stdout","time":29.485877108,"data":"[2026-11-26T19:55:20Z] [INFO ] probing lip-sync model vinthony/wav2lip/wav2lip_gan.onnx\n"}
+,{"stream_name":"stdout","time":29.584761854,"data":"[2026-11-26T19:55:20Z] [WARN ]   miss (RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6b088ea8-25cc4dfc718301d050fdca41;daee2e05-9c7c-4722-8c28-1aa08f416f87)\n"}
+,{"stream_name":"stdout","time":29.584786569,"data":"\n"}
+,{"stream_name":"stdout","time":29.584791022,"data":"Repositor)\n"}
+,{"stream_name":"stdout","time":29.584794419,"data":"[2026-11-26T19:55:20Z] [WARN ] no Wav2Lip ONNX weights reachable — using viseme synthesiser\n"}
+,{"stream_name":"stdout","time":29.584945189,"data":"[2026-11-26T19:55:20Z] [INFO ] rendering 150 frames @ 25 fps (6.00s)\n"}
+,{"stream_name":"stdout","time":29.603091096,"data":"[2026-11-26T19:55:20Z] [INFO ] output 832x1024, mouth box (330, 646, 462, 742)\n"}
+,{"stream_name":"stdout","time":29.606999158,"data":"[2026-11-26T19:55:20Z] [WARN ] no phoneme timings — mouth driven by the acoustic envelope only\n"}
+,{"stream_name":"stdout","time":29.66911115,"data":"[2026-11-26T19:55:20Z] [INFO ] ▶ start: render_frames\n"}
+,{"stream_name":"stdout","time":56.947715393,"data":"[2026-11-26T19:55:48Z] [INFO ] ✔ done:  render_frames (27.3s)\n"}
+,{"stream_name":"stdout","time":57.064276568,"data":"[2026-11-26T19:55:48Z] [INFO ] ▶ start: encode_video\n"}
+,{"stream_name":"stdout","time":61.853449162,"data":"[2026-11-26T19:55:52Z] [INFO ] ✔ done:  encode_video (4.8s)\n"}
+,{"stream_name":"stdout","time":61.853693715,"data":"[2026-11-26T19:55:52Z] [INFO ] encoded pilot_talking.mp4 (1475 KB)\n"}
+,{"stream_name":"stdout","time":61.853951766,"data":"[2026-11-26T19:55:52Z] [INFO ] ▶ start: build_contact_sheet\n"}
+,{"stream_name":"stdout","time":63.025934849,"data":"[2026-11-26T19:55:54Z] [INFO ] saved talking_contact_sheet.png (2226x870, 1259 KB)\n"}
+,{"stream_name":"stdout","time":63.026014468,"data":"[2026-11-26T19:55:54Z] [INFO ] ✔ done:  build_contact_sheet (1.2s)\n"}
+,{"stream_name":"stdout","time":63.031758184,"data":"[2026-11-26T19:55:54Z] [INFO ] lip-openness vs audio-RMS correlation: 1.000\n"}
+,{"stream_name":"stdout","time":63.031774068,"data":"[2026-11-26T19:55:54Z] [INFO ] MICRO-PILOT 2 COMPLETE ✔\n"}
+,{"stream_name":"stdout","time":63.031847635,"data":"[2026-11-26T19:55:54Z] [INFO ] total wall clock: 60.959s\n"}
+,{"stream_name":"stderr","time":65.671918406,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":65.671943314,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":66.054031377,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":66.054056308,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":67.245126945,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":68.894133741,"data":"[NbConvertApp] Writing 576199 bytes to __results__.html\n"}
+]
+[2026-11-26 19:56:27Z] [INFO ] appended kernel log file stoic-talking-pilot.log → outputs/build.log (9364 chars)
+[2026-11-26 19:56:27Z] [INFO ] artifact ✔ pilot_talking.mp4 (1475 KB)
+[2026-11-26 19:56:27Z] [INFO ] artifact ✔ julian_voice.mp3 (129 KB)
+[2026-11-26 19:56:27Z] [INFO ] artifact ✔ talking_contact_sheet.png (1259 KB)
+[2026-11-26 19:56:27Z] [INFO ] artifact ✔ talking_metrics.json (2 KB)
+[2026-11-26 19:56:27Z] [INFO ] artifact ○ julian_voice.wav (306 KB, optional)
+[2026-11-26 19:56:27Z] [INFO ] ✔ artifacts for stoic-talking-pilot are ready in ./outputs
+[2026-11-26 19:56:27Z] [INFO ]    pilot_talking.mp4: 1475 KB
+[2026-11-26 19:56:27Z] [INFO ] pilot: 150 frames @ 25 fps · 6.0s · lip/RMS corr 1.0 · backend viseme-synthesiser · kernel 61s
+[2026-11-26 19:56:27Z] [INFO ]   julian_voice.wav: 0.3 MB
+[2026-11-26 19:56:27Z] [INFO ]   julian_voice.mp3: 0.13 MB
+[2026-11-26 19:56:27Z] [INFO ]   pilot_talking.mp4: 1.44 MB
+[2026-11-26 19:56:27Z] [INFO ]   talking_contact_sheet.png: 1.23 MB

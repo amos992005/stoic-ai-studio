@@ -1,0 +1,84 @@
+{
+  "phase": "phase-2-micro-pilot-2",
+  "pilot": "voice-and-talking-avatar",
+  "started_at": "2026-11-26T19:54:53.154518+00:00",
+  "status": "success",
+  "config": {
+    "script": "Most men are ruled by their impulses. The moment you master your silence, you master the room.",
+    "voice_blend": {
+      "bm_george": 0.6,
+      "am_michael": 0.4
+    },
+    "speed": 0.92,
+    "fps": 25,
+    "resolution": [
+      832,
+      1024
+    ],
+    "max_seconds": 6.0,
+    "tts": "kokoro-onnx (onnxruntime)"
+  },
+  "timings_seconds": {
+    "pip_install_deps": 15.581,
+    "load_portrait": 0.38,
+    "download_kokoro_assets": 3.051,
+    "load_kokoro": 1.014,
+    "blend_voice_styles": 0.013,
+    "synthesize_speech": 3.474,
+    "master_audio": 0.798,
+    "write_audio": 1.253,
+    "render_frames": 27.278,
+    "encode_video": 4.789,
+    "build_contact_sheet": 1.172,
+    "total": 60.959
+  },
+  "errors": [],
+  "voice": {
+    "text": "Most men are ruled by their impulses. The moment you master your silence, you master the room.",
+    "voice_blend": {
+      "bm_george": 0.6,
+      "am_michael": 0.4
+    },
+    "speed": 0.92,
+    "sample_rate": 24000,
+    "duration_s": 6.528,
+    "peak_dbfs": -1.5,
+    "phoneme_timings": []
+  },
+  "lipsync_backend": "viseme-synthesiser",
+  "lipsync_model": null,
+  "lipsync_fallback_reason": "neural weights unavailable or failed validation \u2014 used the viseme/envelope synthesiser (probe details in build.log)",
+  "duration_s": 6.0,
+  "fps": 25,
+  "frame_count": 150,
+  "resolution": [
+    832,
+    1024
+  ],
+  "mouth_open_vs_audio_rms_correlation": 1.0,
+  "realistic_motion": {
+    "head_micro_motion": "speech-envelope driven yaw/pitch/roll + sway",
+    "breathing": "4.2 s sine on pitch",
+    "blinks": 2,
+    "mouth_sharpening": "feathered unsharp mask on mouth region"
+  },
+  "files": {
+    "julian_voice.wav": {
+      "bytes": 313388,
+      "mb": 0.3
+    },
+    "julian_voice.mp3": {
+      "bytes": 132045,
+      "mb": 0.13
+    },
+    "pilot_talking.mp4": {
+      "bytes": 1510436,
+      "mb": 1.44
+    },
+    "talking_contact_sheet.png": {
+      "bytes": 1289680,
+      "mb": 1.23
+    }
+  },
+  "finished_at": "2026-11-26T19:55:54.112928+00:00"
+}
