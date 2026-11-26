@@ -1,0 +1,269 @@
+{
+  "phase": "phase-3-luca-moretti",
+  "character": "Luca Moretti \u00b7 27 \u00b7 young-millionaire playboy",
+  "started_at": "2026-11-26T20:33:54.588417+00:00",
+  "status": "success",
+  "config": {
+    "model_id": "SG161222/RealVisXL_V5.0",
+    "clip_vision_id": "laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
+    "ip_adapter_weight": "ip-adapter-plus-face_sdxl_vit-h.safetensors",
+    "ip_adapter_scale": 0.65,
+    "anti_bleed": "spatial attention masking (cross_attention_kwargs.ip_adapter_masks)",
+    "base_seed": 777,
+    "master": {
+      "size": [
+        1024,
+        1024
+      ],
+      "steps": 30,
+      "cfg": 5.5
+    },
+    "slides": {
+      "size": [
+        832,
+        1024
+      ],
+      "steps": 30,
+      "cfg": 5.5,
+      "jpeg_quality": 92
+    },
+    "svd": {
+      "model_id": "stabilityai/stable-video-diffusion-img2vid-xt",
+      "num_frames": 25,
+      "steps": 25,
+      "motion_bucket_id": 127,
+      "fps": 25,
+      "source_slide": "04"
+    },
+    "voice": {
+      "engine": "kokoro-onnx",
+      "voice": "am_adam",
+      "speed": 1.0
+    },
+    "dtype": "float16",
+    "device": "cuda:0",
+    "procedural_animation": false,
+    "wsola_time_stretch": false,
+    "custom_biquad_filters": false
+  },
+  "artifacts": [
+    "01_luca_master.png",
+    "02_monaco_yacht_date.png",
+    "03_vip_party_flash.png",
+    "04_porsche_gt3_pov.png",
+    "05_extreme_action.png",
+    "build.log",
+    "luca_carousel_sheet.png",
+    "luca_metrics.json",
+    "luca_reel_clip.mp4",
+    "luca_slide_01.jpg",
+    "luca_slide_02.jpg",
+    "luca_slide_03.jpg",
+    "luca_slide_04.jpg",
+    "luca_slide_05.jpg",
+    "luca_video_sheet.png",
+    "luca_voice.mp3",
+    "luca_voice.wav"
+  ],
+  "timings_seconds": {
+    "pip_install_deps": 11.975,
+    "load_sdxl_pipeline": 40.524,
+    "configure_scheduler_and_vram": 2.331,
+    "generate_master": 32.934,
+    "load_clip_vision": 26.458,
+    "load_ip_adapter": 9.352,
+    "generate_slide_02": 25.103,
+    "generate_slide_03": 25.99,
+    "generate_slide_04": 26.82,
+    "generate_slide_05": 25.962,
+    "build_carousel_sheet": 1.305,
+    "download_kokoro_assets": 2.563,
+    "load_kokoro": 1.047,
+    "synthesize_speech": 2.573,
+    "normalize_peak": 0.0,
+    "write_audio": 1.464,
+    "load_svd_pipeline": 26.488,
+    "configure_svd_vram": 0.066,
+    "svd_generate_f25_c4": 373.739,
+    "encode_video": 2.592,
+    "build_video_sheet": 1.148,
+    "probe_outputs": 0.137
+  },
+  "slides": [
+    {
+      "filename": "01_luca_master.png",
+      "role": "identity master",
+      "status": "ok",
+      "seed": 777,
+      "steps": 30,
+      "cfg": 5.5,
+      "size": [
+        1024,
+        1024
+      ],
+      "ip_adapter_image": false,
+      "ip_mask": null,
+      "masked_ip_adapter": false,
+      "unmasked_retry": false,
+      "peak_vram_gb": 9.73
+    },
+    {
+      "index": 2,
+      "filename": "02_monaco_yacht_date.png",
+      "jpeg": "luca_slide_02.jpg",
+      "title": "02 \u00b7 MONACO \u00b7 YACHT",
+      "mask": "left",
+      "status": "ok",
+      "seed": 779,
+      "steps": 30,
+      "cfg": 5.5,
+      "size": [
+        832,
+        1024
+      ],
+      "ip_adapter_image": true,
+      "ip_mask": "left",
+      "masked_ip_adapter": true,
+      "unmasked_retry": false,
+      "peak_vram_gb": 11.15,
+      "jpeg_kb": 191.7
+    },
+    {
+      "index": 3,
+      "filename": "03_vip_party_flash.png",
+      "jpeg": "luca_slide_03.jpg",
+      "title": "03 \u00b7 IBIZA \u00b7 VIP",
+      "mask": "left",
+      "status": "ok",
+      "seed": 780,
+      "steps": 30,
+      "cfg": 5.5,
+      "size": [
+        832,
+        1024
+      ],
+      "ip_adapter_image": true,
+      "ip_mask": "left",
+      "masked_ip_adapter": true,
+      "unmasked_retry": false,
+      "peak_vram_gb": 11.15,
+      "jpeg_kb": 168.7
+    },
+    {
+      "index": 4,
+      "filename": "04_porsche_gt3_pov.png",
+      "jpeg": "luca_slide_04.jpg",
+      "title": "04 \u00b7 AMALFI \u00b7 GT3",
+      "mask": "full",
+      "status": "ok",
+      "seed": 781,
+      "steps": 30,
+      "cfg": 5.5,
+      "size": [
+        832,
+        1024
+      ],
+      "ip_adapter_image": true,
+      "ip_mask": "full",
+      "masked_ip_adapter": false,
+      "unmasked_retry": false,
+      "peak_vram_gb": 11.15,
+      "jpeg_kb": 186.7
+    },
+    {
+      "index": 5,
+      "filename": "05_extreme_action.png",
+      "jpeg": "luca_slide_05.jpg",
+      "title": "05 \u00b7 EXTREME",
+      "mask": "full",
+      "status": "ok",
+      "seed": 782,
+      "steps": 30,
+      "cfg": 5.5,
+      "size": [
+        832,
+        1024
+      ],
+      "ip_adapter_image": true,
+      "ip_mask": "full",
+      "masked_ip_adapter": false,
+      "unmasked_retry": false,
+      "peak_vram_gb": 11.15,
+      "jpeg_kb": 150.1
+    }
+  ],
+  "errors": [],
+  "environment": {
+    "python": "3.13.16",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "torch": "2.11.0+cu130",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_names": [
+      "Tesla T4",
+      "Tesla T4"
+    ],
+    "gpu_total_vram_gb": [
+      14.56,
+      14.56
+    ],
+    "diffusers": "0.42.0",
+    "transformers": "5.20.2",
+    "accelerate": "1.15.0",
+    "safetensors": "0.8.0",
+    "PIL": "13.0.0",
+    "onnxruntime": "1.32.0"
+  },
+  "ip_adapter_active": true,
+  "voice": {
+    "text": "They told me to slow down and play it safe. Look where that got them.",
+    "voice": "am_adam",
+    "voice_style_tensor_shape": [
+      510,
+      1,
+      256
+    ],
+    "speed": 1.0,
+    "sample_rate": 24000,
+    "duration_s": 3.627,
+    "peak_dbfs": -1.41,
+    "processing": "linear peak normalisation only",
+    "wsola_time_stretch": false,
+    "biquad_or_parametric_eq": false
+  },
+  "video": {
+    "backend": "stable-video-diffusion-img2vid-xt",
+    "num_frames": 25,
+    "num_inference_steps": 25,
+    "motion_bucket_id": 127,
+    "noise_aug_strength": 0.02,
+    "decode_chunk_size": 4,
+    "native_size": [
+      576,
+      1024
+    ],
+    "source_fps": 7,
+    "attempt": 1,
+    "fps": 25,
+    "ping_pong_cycle": 48,
+    "looped_frames": 91,
+    "duration_s": 3.64,
+    "loop_mode": "ping-pong",
+    "retime": "cross-fade temporal upsampling 7\u219225 fps (speed preserved)",
+    "audio_duration_s": 3.627,
+    "motion_source": "100% Stable Video Diffusion (no procedural animation)",
+    "probe": {
+      "size_bytes": 1270742,
+      "duration": "00:00:03.63",
+      "video_codec": "h264 (High) (avc1 / 0x31637661)",
+      "pix_fmt": "yuv420p(progressive)",
+      "resolution": "576x1024",
+      "fps": "25",
+      "audio_codec": "aac (LC) (mp4a / 0x6134706D)",
+      "sample_rate": "24000",
+      "audio_layout": "mono"
+    }
+  },
+  "total_seconds": 693.1,
+  "finished_at": "2026-11-26T20:45:27.651024+00:00"
+}
