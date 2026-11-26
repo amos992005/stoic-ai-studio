@@ -1,0 +1,30 @@
+{
+  "phase": "phase-2-micro-pilot-2",
+  "pilot": "voice-and-talking-avatar",
+  "started_at": "2026-11-26T19:49:41.174510+00:00",
+  "status": "error",
+  "config": {
+    "script": "Most men are ruled by their impulses. The moment you master your silence, you master the room.",
+    "voice_blend": {
+      "bm_george": 0.6,
+      "am_michael": 0.4
+    },
+    "speed": 0.92,
+    "fps": 25,
+    "resolution": [
+      832,
+      1024
+    ],
+    "max_seconds": 6.0,
+    "tts": "kokoro-onnx (onnxruntime)"
+  },
+  "timings_seconds": {
+    "pip_install_deps": 13.004,
+    "load_portrait": 0.0,
+    "total": 13.367
+  },
+  "errors": [
+    "FileNotFoundError: portrait not found; expected one of: /kaggle/src/portrait.png, /kaggle/src/portrait.png, /kaggle/working/portrait.png, /kaggle/working/assets/julian_master_face.png, /kaggle/assets/julian_master_face.png"
+  ],
+  "finished_at": "2026-11-26T19:49:54.541472+00:00"
+}
