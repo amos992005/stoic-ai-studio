@@ -1,0 +1,8 @@
+===== stoic-ai-studio · orchestrator run · 2026-11-26 17:03:09Z =====
+===== (previous log was 0 bytes and has been rotated) =====
+[2026-11-26 17:03:09Z] [INFO ] rotated outputs/build.log (previous size: 0 bytes)
+[2026-11-26 17:03:09Z] [INFO ] ==============================================================================
+[2026-11-26 17:03:09Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-26 17:03:09Z] [INFO ] ==============================================================================
+::error::KAGGLE_USERNAME and/or KAGGLE_KEY are missing. Add them as repository secrets (Settings → Secrets and variables → Actions).
+[2026-11-26 17:03:09Z] [ERROR] missing Kaggle credentials in environment
