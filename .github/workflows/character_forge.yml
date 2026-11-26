@@ -140,11 +140,42 @@ jobs:
           touch outputs/build.log
 
           # Sync with the remote first (best effort; never block publishing).
+          # Generated artifacts are now committed, so any rebase onto another
+          # branch's run conflicts on them — those we resolve by taking *our*
+          # (newer) copy. Anything else aborts the rebase so the run always
+          # publishes its own results.
           git fetch origin "$BRANCH" || true
-          git pull --rebase --autostash origin "$BRANCH" || {
-            echo "::warning::git pull --rebase failed; aborting rebase and continuing"
-            git rebase --abort || true
+          git config merge.conflictStyle merge
+
+          stash_artifacts() {
+            mkdir -p /tmp/artifact_keep
+            cp -f outputs/contact_sheet.png /tmp/artifact_keep/ 2>/dev/null || true
+            cp -f outputs/metrics.json      /tmp/artifact_keep/ 2>/dev/null || true
+            cp -f outputs/build.log         /tmp/artifact_keep/ 2>/dev/null || true
           }
+
+          restore_artifacts() {
+            for f in contact_sheet.png metrics.json build.log; do
+              [ -f "/tmp/artifact_keep/$f" ] && cp -f "/tmp/artifact_keep/$f" "outputs/$f"
+            done
+          }
+
+          stash_artifacts
+          if git pull --rebase --autostash origin "$BRANCH"; then
+            restore_artifacts   # rebase may have swapped in the other run's files
+          else
+            echo "::warning::rebase onto $BRANCH conflicted; resolving artifact conflicts in our favour"
+            for f in outputs/contact_sheet.png outputs/metrics.json outputs/build.log; do
+              git checkout --ours -- "$f" 2>/dev/null && git add -f "$f" || true
+            done
+            if git rebase --continue --no-edit >/dev/null 2>&1; then
+              restore_artifacts
+            else
+              echo "::warning::could not complete the rebase; aborting it and pushing our results"
+              git rebase --abort || true
+              restore_artifacts
+            fi
+          fi
 
           # Stage only lightweight, reviewable artifacts (5 MB ceiling per file).
           for f in outputs/contact_sheet.png outputs/metrics.json outputs/build.log; do

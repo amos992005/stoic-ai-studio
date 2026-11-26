@@ -1,8 +1,8 @@
 {
   "phase": "phase-1-micro-pilot-1",
   "pilot": "the-character-forge",
-  "started_at": "2026-11-26T17:21:26.771855+00:00",
-  "status": "error",
+  "started_at": "2026-11-26T17:33:52.069063+00:00",
+  "status": "success",
   "config": {
     "model_id": "SG161222/RealVisXL_V5.0",
     "clip_vision_id": "laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
@@ -31,15 +31,51 @@
     "dtype": "float16",
     "device": "cuda:0"
   },
-  "artifacts": [],
-  "timings_seconds": {
-    "load_sdxl_pipeline": 39.076,
-    "configure_scheduler_and_vram": 2.332,
-    "total": 75.826
-  },
-  "errors": [
-    "AttributeError: 'StableDiffusionXLPipeline' object has no attribute 'enable_vae_slicing'"
+  "artifacts": [
+    {
+      "filename": "01_master_face.png",
+      "bytes": 1442908,
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "filename": "02_library_scene.png",
+      "bytes": 1033573,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "filename": "03_rainy_street.png",
+      "bytes": 1206146,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "filename": "04_podcast_studio.png",
+      "bytes": 1071840,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "filename": "contact_sheet.png",
+      "bytes": 3762794,
+      "width": 2889,
+      "height": 1220
+    }
   ],
+  "timings_seconds": {
+    "load_sdxl_pipeline": 38.385,
+    "configure_scheduler_and_vram": 2.334,
+    "generate_master_face": 32.533,
+    "load_clip_vision": 24.125,
+    "load_ip_adapter": 8.777,
+    "generate_02_library_scene": 30.764,
+    "generate_03_rainy_street": 32.508,
+    "generate_04_podcast_studio": 33.076,
+    "build_contact_sheet": 4.727,
+    "total": 246.539
+  },
+  "errors": [],
   "environment": {
     "python": "3.13.16",
     "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
@@ -60,5 +96,24 @@
     "safetensors": "0.8.0",
     "PIL": "13.0.0"
   },
-  "finished_at": "2026-11-26T17:22:42.597354+00:00"
+  "ip_adapter_active": true,
+  "scenes": [
+    {
+      "filename": "02_library_scene.png",
+      "seed": 43,
+      "status": "ok"
+    },
+    {
+      "filename": "03_rainy_street.png",
+      "seed": 44,
+      "status": "ok"
+    },
+    {
+      "filename": "04_podcast_studio.png",
+      "seed": 45,
+      "status": "ok"
+    }
+  ],
+  "face_locked": true,
+  "finished_at": "2026-11-26T17:37:58.607459+00:00"
 }
