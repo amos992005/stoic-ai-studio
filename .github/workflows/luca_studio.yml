@@ -144,6 +144,24 @@ jobs:
               "workers must be wall-clock bounded"
           assert "_load_slides" in src, "the reel must read published slides from disk"
           assert "no reel frames were produced" in src, "the reel must fail loudly, not silently"
+
+          # CLIP truncates at 77 tokens: prompt bloat silently dropped the
+          # Porsche and the hands, so budget every prompt explicitly.
+          import re
+          def _tokens(text):
+              n = 0
+              for w in re.findall(r"\w+|[^\w\s]", text):
+                  n += 1 if (not w.isalnum() or len(w) <= 6) else (1.5 if len(w) <= 12 else 2)
+              return round(n)
+          prompts = re.findall(r'prompt": \((.*?)\n        \),', src, re.S)
+          assert len(prompts) == 5, f"expected 5 prompts, found {len(prompts)}"
+          for i, raw in enumerate(prompts, 1):
+              text = " ".join(re.findall(r'"([^"]*)"', raw))
+              text = re.sub(r"\{PHOTOREAL\}|\{LUCA\}",
+                            "unretouched, visible skin pores, photorealistic", text)
+              n = _tokens(text)
+              assert n <= 80, (f"slide {i} prompt is ~{n} CLIP tokens — "
+                               f"anything past 77 is silently discarded")
           print("phase 4 static checks passed")
           PY
           ls -la kaggle_kernel_luca/

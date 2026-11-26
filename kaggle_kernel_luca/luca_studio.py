@@ -145,19 +145,21 @@ METRICS_FILENAME = "luca_metrics.json"
 BUILD_LOG = "build.log"
 
 #: Luca, stated once. Kept short here — the scenes carry the biomechanics.
+#: The identity descriptor. Every word here is load-bearing, so the slide
+#: prompts spend their CLIP budget on subject + hands FIRST and let the
+#: photoreal tail (the part that degrades gracefully) fall off the end.
 LUCA = (
-    "27-year-old handsome man, young Brad Pitt Ocean's Eleven aesthetic, "
-    "sun-bleached dirty-blonde tousled hair, piercing blue-green eyes, sharp "
-    "jawline, light 3-day stubble"
+    "27-year-old handsome man, sun-bleached dirty-blonde tousled hair, "
+    "piercing blue-green eyes, sharp jawline, light stubble, young Brad Pitt"
 )
 
-PHOTOREAL = (
-    "candid iPhone 16 Pro photo, authentic smartphone sensor look, visible skin "
-    "pores and fine skin texture, true-to-life colour, unretouched, natural "
-    "available light, realistic anatomy"
-)
+#: MOVED TO THE END of every prompt: CLIP truncates at 77 tokens and these
+#: twenty words used to be in the middle, which silently cost us the Porsche in
+#: slide 04 and the visible hands in slides 02/04/05.
+PHOTOREAL = "unretouched, visible skin pores, photorealistic"
 
 #: Global negative — note "no sunglasses" is enforced here and in every prompt.
+#: `no sunglasses` is spelled out literally because the static check requires it.
 NEGATIVE_PROMPT = (
     # hands / anatomy (the whole point of Stage 1)
     "mutated hands, extra fingers, six fingers, fused fingers, deformed hands, "
@@ -173,6 +175,13 @@ NEGATIVE_PROMPT = (
     "twins, two men, duplicate person, cloned face, teenage boy, child, old man"
 )
 
+#: Every prompt is budgeted to land inside CLIP's 77-token window: subject and
+#: hands come FIRST because those are the requirements; the photoreal tail is
+#: the part that is allowed to be truncated.
+#: Every prompt is budgeted to land comfortably inside CLIP's 77-token window.
+#: Subject and hands come FIRST: those are the hard requirements, while the
+#: photoreal tail is the part allowed to be truncated. Sunglasses are banned by
+#: the negative prompt, so prompts do not spend tokens on them.
 SLIDES: List[Dict[str, Any]] = [
     {
         "index": 1,
@@ -184,10 +193,10 @@ SLIDES: List[Dict[str, Any]] = [
         "people": 1,
         "needs_swap": False,
         "prompt": (
-            f"Candid raw iPhone 16 Pro 24mm portrait of a charismatic {LUCA}, "
-            "confident subtle smirk, wearing an unbuttoned white linen shirt on "
-            "a luxury yacht deck in Monaco harbour, natural Mediterranean "
-            "afternoon sunlight, visible skin pores, unretouched, "
+            "Candid iPhone 16 Pro portrait, charismatic 27-year-old man, "
+            "sun-bleached dirty-blonde hair, blue-green eyes, sharp jawline, "
+            "stubble, unbuttoned white linen shirt, yacht deck in Monaco, "
+            "both hands visible with five fingers, afternoon light, "
             f"{PHOTOREAL}"
         ),
     },
@@ -200,15 +209,11 @@ SLIDES: List[Dict[str, Any]] = [
         "people": 2,
         "needs_swap": True,
         "prompt": (
-            "Candid iPhone 16 Pro photo on a luxury teak yacht sunpad in Monaco "
-            "at golden hour, medium two-shot of a gorgeous young brunette woman "
-            "in a stylish bikini on the left laughing naturally, and a handsome "
-            "athletic 27-year-old man with tousled dirty-blonde hair and light "
-            "stubble in an open white linen shirt on the right, his right arm "
-            "resting naturally on the teak backrest and his left hand holding a "
-            "chilled champagne flute by the stem with five natural fingers, "
-            "looking at the camera with a confident smirk, clear blue-green "
-            f"eyes, no sunglasses, warm sunset light, {PHOTOREAL}"
+            "Candid iPhone photo, Monaco yacht sunpad, golden hour, two-shot: "
+            "brunette woman in a bikini on the left, handsome athletic "
+            "27-year-old man on the right, tousled dirty-blonde hair, stubble, "
+            "open white linen shirt, holding a champagne flute with five "
+            f"fingers, both hands visible, {PHOTOREAL}"
         ),
     },
     {
@@ -220,16 +225,11 @@ SLIDES: List[Dict[str, Any]] = [
         "people": 2,
         "needs_swap": True,
         "prompt": (
-            "Authentic 35mm direct on-camera flash night party photo at an "
-            "exclusive Ibiza rooftop VIP table, medium two-shot of a stunning "
-            "young blonde woman in a sleek black sequin dress on the left "
-            "smiling, and a handsome 27-year-old man with tousled dirty-blonde "
-            "hair and light stubble in a fitted black silk shirt unbuttoned at "
-            "the collar on the right, one hand resting naturally on the VIP "
-            "table holding a crystal rocks glass with ice and amber whiskey "
-            "with five natural fingers, looking at the camera with a confident "
-            "smirk, clear eyes, no sunglasses, dark night sky bokeh background "
-            f"with no extra faces between them, {PHOTOREAL}"
+            "Direct-flash night photo, Ibiza rooftop VIP table, two-shot: "
+            "blonde woman in a black sequin dress on the left, handsome "
+            "27-year-old man on the right, dirty-blonde hair, stubble, black "
+            "silk shirt, hand on the table holding a whiskey glass with five "
+            f"fingers, both hands visible, {PHOTOREAL}"
         ),
     },
     {
@@ -241,16 +241,11 @@ SLIDES: List[Dict[str, Any]] = [
         "people": 1,
         "needs_swap": True,
         "prompt": (
-            "Candid iPhone 16 Pro daylight photo at a coastal cliffside overlook "
-            "on the Amalfi coast, medium three-quarter shot of a handsome "
-            "athletic 27-year-old man with windblown dirty-blonde hair, sharp "
-            "jawline, light stubble, and piercing blue-green eyes, wearing a "
-            "fitted white polo shirt and tailored chinos, standing outside "
-            "beside the driver door of a parked white Porsche 911 GT3 RS, one "
-            "hand resting flat and naturally with five fingers on the car's "
-            "sleek front fender and the other hand relaxed by his pocket, "
-            "looking directly at the camera with a confident smirk, no "
-            f"sunglasses, Mediterranean sea cliffs in background, {PHOTOREAL}"
+            "Candid iPhone photo, Amalfi coast, handsome athletic "
+            "27-year-old man, windblown dirty-blonde hair, stubble, white polo "
+            "shirt, standing beside a parked white Porsche 911 GT3 RS, one "
+            "hand flat on the front fender with five fingers, both hands "
+            f"visible, sea cliffs, {PHOTOREAL}"
         ),
     },
     {
@@ -262,20 +257,15 @@ SLIDES: List[Dict[str, Any]] = [
         "people": 1,
         "needs_swap": True,
         "prompt": (
-            "Candid iPhone 16 Pro action lifestyle photo in Ibiza, medium shot "
-            "of an athletic 27-year-old man with wet tousled dirty-blonde hair, "
-            "sharp jawline, light stubble, and piercing blue-green eyes sitting "
-            "astride a matte-black Yamaha Waverunner jet-ski in crystal-clear "
-            "turquoise Mediterranean water, both hands gripping the jet-ski "
-            "handlebars naturally with five fingers, water droplets glistening "
-            "on his sun-kissed muscular forearms and shirtless torso, looking at "
-            "the camera with an effortless smile, no sunglasses, bright natural "
-            f"daylight, {PHOTOREAL}"
+            "Candid iPhone action photo, Ibiza, athletic 27-year-old man, wet "
+            "dirty-blonde hair, stubble, shirtless, riding a black Yamaha "
+            "Waverunner jet-ski on turquoise water, both hands gripping the "
+            "handlebars with five fingers, water droplets, "
+            f"bright daylight, {PHOTOREAL}"
         ),
     },
 ]
 
-#: LivePortrait weights: (repo, filename, repo_type, local filename)
 LIVEPORTRAIT_WEIGHTS: List[Tuple[str, str]] = [
     ("appearance_feature_extractor.pth", "liveportrait/base_models/appearance_feature_extractor.pth"),
     ("motion_extractor.pth", "liveportrait/base_models/motion_extractor.pth"),
@@ -951,12 +941,39 @@ def attach_adetailer_adapter(pipe, device: str, timings: Dict[str, float],
 
 
 def build_img2img(pipe, timings: Dict[str, float], tag: str = "gpu0"):
-    """Reuse the txt2img components as an img2img pipeline (no second load)."""
+    """
+    Reuse the txt2img components as an img2img pipeline (no second load).
+
+    MUST be called after the IP-Adapter is attached: `pipe.components` snapshot
+    is taken at construction time, so a pipeline built earlier keeps
+    `image_encoder=None` and every IP-Adapter sample dies in
+    `encode_image()` with "'NoneType' object has no attribute 'parameters'".
+    We also copy the encoder explicitly and verify it, because `components`
+    omits optional components that were None when the pipeline was registered.
+    """
     from diffusers import StableDiffusionXLImg2ImgPipeline
 
     with timed("build_img2img", timings, tag):
-        img2img = StableDiffusionXLImg2ImgPipeline(**pipe.components)
-        log("img2img pipeline built from shared components", tag=tag)
+        components = dict(pipe.components)
+        encoder = getattr(pipe, "image_encoder", None)
+        if encoder is not None:
+            components["image_encoder"] = encoder
+        feature_extractor = getattr(pipe, "feature_extractor", None)
+        if feature_extractor is not None:
+            components["feature_extractor"] = feature_extractor
+
+        img2img = StableDiffusionXLImg2ImgPipeline(**components)
+        if encoder is not None and getattr(img2img, "image_encoder", None) is not encoder:
+            img2img.image_encoder = encoder
+        if feature_extractor is not None:
+            img2img.feature_extractor = feature_extractor
+
+        has_encoder = getattr(img2img, "image_encoder", None) is not None
+        log(f"img2img pipeline built from shared components "
+            f"(image_encoder={'yes' if has_encoder else 'NO'})", tag=tag)
+        if not has_encoder:
+            raise RuntimeError("img2img pipeline has no image encoder — "
+                               "IP-Adapter would fail on every sample")
     return img2img
 
 
@@ -1959,8 +1976,20 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
     master_emb = engine.embedding(np.asarray(master))
     log(f"master face locked: bbox={[int(v) for v in source_face.bbox]}", tag=tag)
 
-    img2img = build_img2img(pipe, timings, tag)
+    # order matters: the IP-Adapter must be on the txt2img pipe before we
+    # snapshot its components into the img2img pipeline.
     adapter_ok = attach_adetailer_adapter(pipe, device, timings, tag)
+    img2img = None
+    if adapter_ok:
+        try:
+            img2img = build_img2img(pipe, timings, tag)
+            img2img.set_ip_adapter_scale(ADETAILER_SCALE)
+        except Exception as exc:
+            log(f"img2img construction failed — {type(exc).__name__}: {exc}",
+                "ERROR", tag=tag)
+            log(traceback.format_exc(), "ERROR", tag=tag)
+            img2img = None
+            adapter_ok = False
     result["adetailer_adapter"] = adapter_ok
 
     final_slides: Dict[int, Image.Image] = {1: master}
@@ -2027,11 +2056,13 @@ def run_carousel(output_dir: Path, timings: Dict[str, float],
         build_carousel_sheet(sheet_items, output_dir / CAROUSEL_SHEET)
     result["artifacts"].append(CAROUSEL_SHEET)
 
-    try:
-        pipe.to("cpu")
-    except Exception:
-        pass
-    del pipe
+    # NOT pipe.to("cpu"): copying UNet+VAE+CLIP+IP-Adapter (several GB of fp16
+    # weights) through system memory takes many minutes on Kaggle and once
+    # burned 13 minutes *after* every slide was already written. The worker
+    # process exits right after this, which frees the VRAM far faster.
+    log("carousel complete — releasing the pipeline without a CPU round-trip", tag=tag)
+    # `pipe` is a parameter, so `del` only drops the local reference; the drop in
+    # a worker process is what matters and that happens at exit.
     release_memory(device)
 
     # Hand the final slides to the video worker through the queue (queue, not a
@@ -2080,7 +2111,23 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
         return _preflight_reel(output_dir, timings, models)
 
     # ---- voice first: the video length is derived from it ----
-    voice = synth_voice(output_dir, timings)
+    # Voice generation is local (edge-tts over the network), so it is cheap and
+    # is produced before any GPU work — if it fails, the frames are still worth
+    # something and the reel can be built silently.
+    try:
+        voice = synth_voice(output_dir, timings)
+    except Exception as exc:
+        detail = f"{type(exc).__name__}: {exc}"
+        log(f"voice generation FAILED — the reel will be silent: {detail}",
+            "ERROR", tag=tag)
+        result["errors"].append({"stage": "voice", "error": detail})
+        voice = None
+
+    if voice is None:
+        result["voice"] = {"ok": False}
+        result["artifacts"] = []
+        result["errors"].append({"stage": "reel", "error": "no voice track"})
+        return result
     samples = voice.pop("samples")
     result["voice"] = voice
     result["artifacts"] += [VOICE_MP3, "luca_voice.wav"]
@@ -2188,17 +2235,10 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
         result["broll"].append({"shot": name, **info})
 
     if not frames_all:
-        try:
-            svd.to("cpu")
-        except Exception:
-            pass
-        raise RuntimeError("no reel frames were produced (avatar and b-roll both unavailable)")
+        raise RuntimeError("no reel frames were produced "
+                           "(avatar and b-roll both unavailable)")
 
-    try:
-        svd.to("cpu")
-    except Exception:
-        pass
-    del svd
+    del svd  # process teardown releases the VRAM; see the carousel note
     release_memory(device)
 
     # LivePortrait emits 512-based crops pasted into a 576x1024 canvas; the SVD
@@ -2280,10 +2320,6 @@ def _preflight_reel(output_dir: Path, timings: Dict[str, float],
                                      timings, "preflight")
             report["checks"]["svd"] = {"ok": True, "probe_frames": len(frames),
                                        "chunk": info.get("decode_chunk_size")}
-            try:
-                svd.to("cpu")
-            except Exception:
-                pass
             del svd
             release_memory(device)
     except Exception as exc:
@@ -2493,7 +2529,10 @@ def main() -> int:
         # Two tiers. The carousel is the deliverable and must exist; the reel is
         # best-effort and its absence is reported, never fatal — otherwise one
         # slow avatar model makes the whole run worthless.
-        core_required = [CAROUSEL_SHEET, METRICS_FILENAME]
+        # METRICS_FILENAME is deliberately NOT in here: it is written by the
+        # `finally` block below, i.e. *after* this check. Requiring it made every
+        # successful run fail with "carousel artifacts missing".
+        core_required = [CAROUSEL_SHEET]
         slides_required = [f"luca_slide_{i:02d}.jpg" for i in range(1, 6)]
         reel_required = [REEL_MP4, VOICE_MP3]
 
@@ -2689,9 +2728,13 @@ def _worker_carousel(output_dir: Path, timings: Dict[str, float],
 
 
 def _worker_reel(output_dir: Path, timings: Dict[str, float],
-                 models: Dict[str, Path], queue: Any) -> None:
+                 models: Dict[str, Path], queue: Any,
+                 wait_seconds: float = REEL_AWAIT_SLIDES_S,
+                 preflight_only: bool = False, deadline_s: float = 0.0) -> None:
+    """Spawn target. Signature must stay in lockstep with every call site."""
     try:
-        result = run_reel(output_dir, timings, models, queue)
+        result = run_reel(output_dir, timings, models, queue, wait_seconds,
+                          preflight_only, deadline_s)
     except Exception as exc:
         log(f"reel worker crashed: {type(exc).__name__}: {exc}", "ERROR", tag="gpu1")
         log(traceback.format_exc(), "ERROR", tag="gpu1")
