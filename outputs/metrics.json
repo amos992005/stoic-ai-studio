@@ -1,0 +1,67 @@
+{
+  "phase": "phase-1-micro-pilot-1",
+  "pilot": "the-character-forge",
+  "started_at": "2026-11-26T17:29:05.664870+00:00",
+  "status": "error",
+  "config": {
+    "model_id": "SG161222/RealVisXL_V5.0",
+    "clip_vision_id": "laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
+    "ip_adapter_repo": "h94/IP-Adapter",
+    "ip_adapter_weight": "ip-adapter-plus-face_sdxl_vit-h.safetensors",
+    "ip_adapter_scale": 0.65,
+    "allow_ip_adapter_fallback": false,
+    "base_seed": 42,
+    "master": {
+      "size": [
+        1024,
+        1024
+      ],
+      "steps": 30,
+      "cfg": 5.5,
+      "seed": 42
+    },
+    "scenes": {
+      "size": [
+        768,
+        1344
+      ],
+      "steps": 30,
+      "cfg": 5.5
+    },
+    "dtype": "float16",
+    "device": "cuda:0"
+  },
+  "artifacts": [],
+  "timings_seconds": {
+    "load_sdxl_pipeline": 43.935,
+    "configure_scheduler_and_vram": 2.258,
+    "generate_master_face": 40.059,
+    "load_clip_vision": 34.576,
+    "load_ip_adapter": 8.124,
+    "total": 159.793
+  },
+  "errors": [
+    "RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully)."
+  ],
+  "environment": {
+    "python": "3.13.16",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "torch": "2.11.0+cu130",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_names": [
+      "Tesla T4",
+      "Tesla T4"
+    ],
+    "gpu_total_vram_gb": [
+      14.56,
+      14.56
+    ],
+    "diffusers": "0.42.0",
+    "transformers": "5.20.2",
+    "accelerate": "1.15.0",
+    "safetensors": "0.8.0",
+    "PIL": "13.0.0"
+  },
+  "finished_at": "2026-11-26T17:31:45.457613+00:00"
+}

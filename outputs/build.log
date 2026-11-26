@@ -1,0 +1,421 @@
+[2026-11-26T17:29:05Z] [INFO ] ==============================================================================
+[2026-11-26T17:29:05Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1
+[2026-11-26T17:29:05Z] [INFO ] output dir: /kaggle/working
+[2026-11-26T17:29:05Z] [INFO ] ==============================================================================
+[2026-11-26T17:29:24Z] [INFO ] diffusers 0.42.0 detected
+[2026-11-26T17:29:36Z] [INFO ] environment: {"python": "3.13.16", "platform": "Linux-6.18.55+-x86_64-with-glibc2.39", "torch": "2.11.0+cu130", "cuda_available": true, "cuda_version": "13.0", "gpu_names": ["Tesla T4", "Tesla T4"], "gpu_total_vram_gb": [14.56, 14.56], "diffusers": "0.42.0", "transformers": "5.20.2", "accelerate": "1.15.0", "safetensors": "0.8.0", "PIL": "13.0.0"}
+[2026-11-26T17:29:36Z] [INFO ] device=cuda:0 · Tesla T4
+[2026-11-26T17:29:36Z] [INFO ] ▶ start: load_sdxl_pipeline
+[2026-11-26T17:29:36Z] [INFO ] sdxl: loading SG161222/RealVisXL_V5.0 (dtype=float16, fp16 variant)
+[2026-11-26T17:30:20Z] [INFO ] ✔ done:  load_sdxl_pipeline (43.9s)
+[2026-11-26T17:30:20Z] [INFO ] ▶ start: configure_scheduler_and_vram
+[2026-11-26T17:30:20Z] [INFO ] scheduler: DPM-Solver++ with Karras sigmas
+[2026-11-26T17:30:22Z] [INFO ] pipeline moved to cuda:0 (fp16 weights)
+[2026-11-26T17:30:22Z] [INFO ] vae slicing: applied vae.enable_slicing()
+[2026-11-26T17:30:22Z] [INFO ] vae tiling: applied vae.enable_tiling()
+[2026-11-26T17:30:22Z] [INFO ] attention slicing: applied enable_attention_slicing()
+[2026-11-26T17:30:22Z] [WARN ] resolution binning: no supported API on this diffusers build (skipped)
+[2026-11-26T17:30:22Z] [INFO ] vae kept in float16 (matches unet dtype)
+[2026-11-26T17:30:22Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.3s)
+[2026-11-26T17:30:22Z] [INFO ] ▶ start: generate_master_face
+[2026-11-26T17:30:22Z] [INFO ] sampling 01_master_face: 1024x1024 · seed=42 · steps=30 · cfg=5.5
+[2026-11-26T17:31:02Z] [INFO ] saved 01_master_face.png (1409 KB)
+[2026-11-26T17:31:02Z] [INFO ] ✔ done:  generate_master_face (40.1s)
+[2026-11-26T17:31:02Z] [INFO ] attaching IP-Adapter Face (ip-adapter-plus-face_sdxl_vit-h.safetensors) @ scale 0.65
+[2026-11-26T17:31:02Z] [INFO ] ▶ start: load_clip_vision
+[2026-11-26T17:31:37Z] [INFO ] clip vision encoder ready (ViT-H, fp16)
+[2026-11-26T17:31:37Z] [INFO ] ✔ done:  load_clip_vision (34.6s)
+[2026-11-26T17:31:37Z] [INFO ] ▶ start: load_ip_adapter
+[2026-11-26T17:31:45Z] [INFO ] ✔ done:  load_ip_adapter (8.1s)
+[2026-11-26T17:31:45Z] [ERROR] IP-Adapter setup FAILED — TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'
+[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 479, in attach_face_adapter
+    pipe.load_ip_adapter(
+    ~~~~~~~~~~~~~~~~~~~~^
+        IP_ADAPTER_REPO,
+        ^^^^^^^^^^^^^^^^
+        subfolder=IP_ADAPTER_SUBFOLDER,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        weight_name=IP_ADAPTER_WEIGHT,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py", line 245, in load_ip_adapter
+    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py", line 712, in _load_ip_adapter_weights
+    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py", line 641, in _convert_ip_adapter_attn_to_diffusers
+    attn_procs[name] = attn_processor_class()
+                       ~~~~~~~~~~~~~~~~~~~~^^
+TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'
+
+[2026-11-26T17:31:45Z] [ERROR] FATAL: RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).
+[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 479, in attach_face_adapter
+    pipe.load_ip_adapter(
+    ~~~~~~~~~~~~~~~~~~~~^
+        IP_ADAPTER_REPO,
+        ^^^^^^^^^^^^^^^^
+        subfolder=IP_ADAPTER_SUBFOLDER,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        weight_name=IP_ADAPTER_WEIGHT,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py", line 245, in load_ip_adapter
+    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py", line 712, in _load_ip_adapter_weights
+    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py", line 641, in _convert_ip_adapter_attn_to_diffusers
+    attn_procs[name] = attn_processor_class()
+                       ~~~~~~~~~~~~~~~~~~~~^^
+TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 772, in main
+    face_locked = attach_face_adapter(pipe, device, timings)
+  File "/kaggle/src/script.py", line 501, in attach_face_adapter
+    raise RuntimeError(
+    ...<2 lines>...
+    ) from exc
+RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).
+
+[2026-11-26T17:31:45Z] [INFO ] total wall clock: 159.793s
+    | Downloading 01_master_face.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/01_master_face.png
+    | Downloading build.log to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/build.log
+    | Downloading metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/metrics.json
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-character-forge.log 
+    ! 
+    !   0%|          | 0.00/1.38M [00:00<?, ?B/s]
+    !  73%|███████▎  | 1.00M/1.38M [00:00<00:00, 3.81MB/s]
+    ! 100%|██████████| 1.38M/1.38M [00:00<00:00, 4.33MB/s]
+    ! 
+    !   0%|          | 0.00/5.93k [00:00<?, ?B/s]
+    ! 100%|██████████| 5.93k/5.93k [00:00<00:00, 11.0MB/s]
+    ! 
+    !   0%|          | 0.00/1.60k [00:00<?, ?B/s]
+    ! 100%|██████████| 1.60k/1.60k [00:00<00:00, 10.0MB/s]
+[2026-11-26 17:32:14Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-26 17:32:14Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-character-forge
+
+===== kaggle kernels logs · fetched 2026-11-26 17:32:14Z =====
+[{"stream_name":"stdout","time":0.733813424,"data":"[2026-11-26T17:29:05Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":0.733845643,"data":"[2026-11-26T17:29:05Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":0.733851629,"data":"[2026-11-26T17:29:05Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":0.733855583,"data":"[2026-11-26T17:29:05Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":19.87236214,"data":"[2026-11-26T17:29:24Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":31.300156559,"data":"[2026-11-26T17:29:36Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":31.300190201,"data":"[2026-11-26T17:29:36Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":31.30031612,"data":"[2026-11-26T17:29:36Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stdout","time":31.300328318,"data":"[2026-11-26T17:29:36Z] [INFO ] sdxl: loading SG161222/RealVisXL_V5.0 (dtype=float16, fp16 variant)\n"}
+,{"stream_name":"stderr","time":32.270515829,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":72.623078743,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:01,  9.78it/s]\rFetching 18 files:  44%|████▍     | 8/18 [00:00\u003c00:00, 19.45it/s]\rFetching 18 files:  72%|███████▏  | 13/18 [00:00\u003c00:00, 27.35it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:19\u003c00:01,  1.75s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:40\u003c00:00,  3.87s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:40\u003c00:00,  2.23s/it]\n"}
+,{"stream_name":"stderr","time":74.751687173,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:01\u003c00:11,  1.84s/it]\n"}
+,{"stream_name":"stderr","time":74.851948508,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":74.945651365,"data":"\rLoading weights:  50%|█████     | 260/517 [00:00\u003c00:00, 2596.83it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2667.97it/s]\n"}
+,{"stream_name":"stderr","time":75.101497552,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.52it/s]\n"}
+,{"stream_name":"stderr","time":75.175128589,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2671.97it/s]\n"}
+,{"stream_name":"stderr","time":75.234261654,"data":"\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.33it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.68it/s]\n"}
+,{"stream_name":"stdout","time":75.23497975,"data":"[2026-11-26T17:30:20Z] [INFO ] ✔ done:  load_sdxl_pipeline (43.9s)\n"}
+,{"stream_name":"stdout","time":75.235009134,"data":"[2026-11-26T17:30:20Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stdout","time":75.252653898,"data":"[2026-11-26T17:30:20Z] [INFO ] scheduler: DPM-Solver++ with Karras sigmas\n"}
+,{"stream_name":"stdout","time":77.480878672,"data":"[2026-11-26T17:30:22Z] [INFO ] pipeline moved to cuda:0 (fp16 weights)\n"}
+,{"stream_name":"stdout","time":77.480910132,"data":"[2026-11-26T17:30:22Z] [INFO ] vae slicing: applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":77.480974691,"data":"[2026-11-26T17:30:22Z] [INFO ] vae tiling: applied vae.enable_tiling()\n"}
+,{"stream_name":"stdout","time":77.489886337,"data":"[2026-11-26T17:30:22Z] [INFO ] attention slicing: applied enable_attention_slicing()\n"}
+,{"stream_name":"stdout","time":77.489903431,"data":"[2026-11-26T17:30:22Z] [WARN ] resolution binning: no supported API on this diffusers build (skipped)\n"}
+,{"stream_name":"stderr","time":77.490068116,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":77.492700713,"data":"[2026-11-26T17:30:22Z] [INFO ] vae kept in float16 (matches unet dtype)\n"}
+,{"stream_name":"stdout","time":77.492717391,"data":"[2026-11-26T17:30:22Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.3s)\n"}
+,{"stream_name":"stdout","time":77.492724694,"data":"[2026-11-26T17:30:22Z] [INFO ] ▶ start: generate_master_face\n"}
+,{"stream_name":"stdout","time":77.492838728,"data":"[2026-11-26T17:30:22Z] [INFO ] sampling 01_master_face: 1024x1024 · seed=42 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":77.503229512,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":77.507798664,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":77.507866263,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":78.485411826,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":78.487613308,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":111.836964741,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:03\u003c01:43,  3.56s/it]\rdiffusion:   7%|▋         | 2/30 [00:04\u003c00:51,  1.86s/it]\rdiffusion:  10%|█         | 3/30 [00:05\u003c00:39,  1.47s/it]\rdiffusion:  13%|█▎        | 4/30 [00:06\u003c00:33,  1.28s/it]\rdiffusion:  17%|█▋        | 5/30 [00:07\u003c00:29,  1.18s/it]\rdiffusion:  20%|██        | 6/30 [00:08\u003c00:26,  1.12s/it]\rdiffusion:  23%|██▎       | 7/30 [00:09\u003c00:25,  1.09s/it]\rdiffusion:  27%|██▋       | 8/30 [00:10\u003c00:23,  1.06s/it]\rdiffusion:  30%|███       | 9/30 [00:11\u003c00:21,  1.05s/it]\rdiffusion:  33%|███▎      | 10/30 [00:12\u003c00:20,  1.04s/it]\rdiffusion:  37%|███▋      | 11/30 [00:13\u003c00:19,  1.03s/it]\rdiffusion:  40%|████      | 12/30 [00:14\u003c00:18,  1.03s/it]\rdiffusion:  43%|████▎     | 13/30 [00:15\u003c00:17,  1.02s/it]\rdiffusion:  47%|████▋     | 14/30 [00:16\u003c00:16,  1.02s/it]\rdiffusion:  50%|█████     | 15/30 [00:17\u003c00:15,  1.03s/it]\rdiffusion:  53%|█████▎    | 16/30 [00:18\u003c00:14,  1.03s/it]\rdiffusion:  57%|█████▋    | 17/30 [00:19\u003c00:13,  1.03s/it]\rdiffusion:  60%|██████    | 18/30 [00:20\u003c00:12,  1.03s/it]\rdiffusion:  63%|██████▎   | 19/30 [00:21\u003c00:11,  1.04s/it]\rdiffusion:  67%|██████▋   | 20/30 [00:22\u003c00:10,  1.04s/it]\rdiffusion:  70%|███████   | 21/30 [00:23\u003c00:09,  1.04s/it]\rdiffusion:  73%|███████▎  | 22/30 [00:24\u003c00:08,  1.05s/it]\rdiffusion:  77%|███████▋  | 23/30 [00:25\u003c00:07,  1.05s/it]\rdiffusion:  80%|████████  | 24/30 [00:26\u003c00:06,  1.05s/it]\rdiffusion:  83%|████████▎ | 25/30 [00:27\u003c00:05,  1.05s/it]\rdiffusion:  87%|████████▋ | 26/30 [00:28\u003c00:04,  1.06s/it]\rdiffusion:  90%|█████████ | 27/30 [00:29\u003c00:03,  1.06s/it]\rdiffusion:  93%|█████████▎| 28/30 [00:31\u003c00:02,  1.07s/it]\rdiffusion:  97%|█████████▋| 29/30 [00:32\u003c00:01,  1.07s/it]\rdiffusion: 100%|██████████| 30/30 [00:33\u003c00:00,  1.07s/it]\rdiffusion: 100%|██████████| 30/30 [00:33\u003c00:00,  1.11s/it]\n"}
+,{"stream_name":"stderr","time":111.838345799,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":111.83836731,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":111.838509879,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":114.2421234,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":117.551523982,"data":"[2026-11-26T17:31:02Z] [INFO ] saved 01_master_face.png (1409 KB)\n"}
+,{"stream_name":"stdout","time":117.551554929,"data":"[2026-11-26T17:31:02Z] [INFO ] ✔ done:  generate_master_face (40.1s)\n"}
+,{"stream_name":"stdout","time":117.551658218,"data":"[2026-11-26T17:31:02Z] [INFO ] attaching IP-Adapter Face (ip-adapter-plus-face_sdxl_vit-h.safetensors) @ scale 0.65\n"}
+,{"stream_name":"stdout","time":117.55175289,"data":"[2026-11-26T17:31:02Z] [INFO ] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":151.791611749,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  17%|█▋        | 89/520 [00:00\u003c00:00, 843.37it/s]\rLoading weights:  35%|███▌      | 182/520 [00:00\u003c00:00, 885.35it/s]\rLoading weights:  54%|█████▍    | 281/520 [00:00\u003c00:00, 884.91it/s]\rLoading weights:  72%|███████▎  | 377/520 [00:00\u003c00:00, 891.34it/s]\rLoading weights:  91%|█████████▏| 475/520 [00:00\u003c00:00, 916.53it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 922.99it/s]\n"}
+,{"stream_name":"stderr","time":151.818562105,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":151.818587278,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":151.818592788,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":151.818596893,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81860046,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818603873,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81860766,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818612744,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818619635,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818622013,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81862434,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818626691,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818628993,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818631333,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818633781,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818636067,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818638295,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818640525,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818642745,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818644965,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818647179,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81864941,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81865163,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818653852,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818666238,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.8186688,"data":"\n"}
+,{"stream_name":"stderr","time":151.818670921,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":151.818674036,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":152.127782331,"data":"[2026-11-26T17:31:37Z] [INFO ] clip vision encoder ready (ViT-H, fp16)\n"}
+,{"stream_name":"stdout","time":152.127806956,"data":"[2026-11-26T17:31:37Z] [INFO ] ✔ done:  load_clip_vision (34.6s)\n"}
+,{"stream_name":"stdout","time":152.12788987,"data":"[2026-11-26T17:31:37Z] [INFO ] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.252225438,"data":"[2026-11-26T17:31:45Z] [INFO ] ✔ done:  load_ip_adapter (8.1s)\n"}
+,{"stream_name":"stdout","time":160.252253149,"data":"[2026-11-26T17:31:45Z] [ERROR] IP-Adapter setup FAILED — TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.256232157,"data":"[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.256246671,"data":"  File \"/kaggle/src/script.py\", line 479, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.256250913,"data":"    pipe.load_ip_adapter(\n"}
+,{"stream_name":"stdout","time":160.256255907,"data":"    ~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":160.256260623,"data":"        IP_ADAPTER_REPO,\n"}
+,{"stream_name":"stdout","time":160.256264598,"data":"        ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256268075,"data":"        subfolder=IP_ADAPTER_SUBFOLDER,\n"}
+,{"stream_name":"stdout","time":160.256271711,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256275228,"data":"        weight_name=IP_ADAPTER_WEIGHT,\n"}
+,{"stream_name":"stdout","time":160.25627917,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256282814,"data":"    )\n"}
+,{"stream_name":"stdout","time":160.256286501,"data":"    ^\n"}
+,{"stream_name":"stdout","time":160.256290216,"data":"  File \"/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n"}
+,{"stream_name":"stdout","time":160.256294171,"data":"    return fn(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":160.256298053,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py\", line 245, in load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.256302569,"data":"    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.25630683,"data":"    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256311041,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 712, in _load_ip_adapter_weights\n"}
+,{"stream_name":"stdout","time":160.256315355,"data":"    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.256318983,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 641, in _convert_ip_adapter_attn_to_diffusers\n"}
+,{"stream_name":"stdout","time":160.25632275,"data":"    attn_procs[name] = attn_processor_class()\n"}
+,{"stream_name":"stdout","time":160.256326078,"data":"                       ~~~~~~~~~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stdout","time":160.256340446,"data":"TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.256348363,"data":"\n"}
+,{"stream_name":"stdout","time":160.523183983,"data":"[2026-11-26T17:31:45Z] [ERROR] FATAL: RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).\n"}
+,{"stream_name":"stdout","time":160.524874221,"data":"[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.52488786,"data":"  File \"/kaggle/src/script.py\", line 479, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.524892325,"data":"    pipe.load_ip_adapter(\n"}
+,{"stream_name":"stdout","time":160.524895663,"data":"    ~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":160.52489963,"data":"        IP_ADAPTER_REPO,\n"}
+,{"stream_name":"stdout","time":160.524903509,"data":"        ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524907375,"data":"        subfolder=IP_ADAPTER_SUBFOLDER,\n"}
+,{"stream_name":"stdout","time":160.524911277,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.52491505,"data":"        weight_name=IP_ADAPTER_WEIGHT,\n"}
+,{"stream_name":"stdout","time":160.524918553,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524927687,"data":"    )\n"}
+,{"stream_name":"stdout","time":160.52493273,"data":"    ^\n"}
+,{"stream_name":"stdout","time":160.524939471,"data":"  File \"/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n"}
+,{"stream_name":"stdout","time":160.52494239,"data":"    return fn(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":160.524944706,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py\", line 245, in load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.52494758,"data":"    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.524949897,"data":"    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524952182,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 712, in _load_ip_adapter_weights\n"}
+,{"stream_name":"stdout","time":160.524954558,"data":"    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.524956979,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 641, in _convert_ip_adapter_attn_to_diffusers\n"}
+,{"stream_name":"stdout","time":160.524959395,"data":"    attn_procs[name] = attn_processor_class()\n"}
+,{"stream_name":"stdout","time":160.524961613,"data":"                       ~~~~~~~~~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stdout","time":160.524963845,"data":"TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.524966327,"data":"\n"}
+,{"stream_name":"stdout","time":160.524968466,"data":"The above exception was the direct cause of the following exception:\n"}
+,{"stream_name":"stdout","time":160.524970768,"data":"\n"}
+,{"stream_name":"stdout","time":160.524972897,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.524975173,"data":"  File \"/kaggle/src/script.py\", line 772, in main\n"}
+,{"stream_name":"stdout","time":160.524977457,"data":"    face_locked = attach_face_adapter(pipe, device, timings)\n"}
+,{"stream_name":"stdout","time":160.524990739,"data":"  File \"/kaggle/src/script.py\", line 501, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.524993234,"data":"    raise RuntimeError(\n"}
+,{"stream_name":"stdout","time":160.524995523,"data":"    ...\u003c2 lines\u003e...\n"}
+,{"stream_name":"stdout","time":160.524998106,"data":"    ) from exc\n"}
+,{"stream_name":"stdout","time":160.525000372,"data":"RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).\n"}
+,{"stream_name":"stdout","time":160.52500273,"data":"\n"}
+,{"stream_name":"stdout","time":160.525781547,"data":"[2026-11-26T17:31:45Z] [INFO ] total wall clock: 159.793s\n"}
+,{"stream_name":"stderr","time":167.17323909,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":167.17326726,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":167.366055108,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":167.366079268,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":168.093158142,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":169.055850614,"data":"[NbConvertApp] Writing 405159 bytes to __results__.html\n"}
+]
+[2026-11-26 17:32:14Z] [INFO ] appended kaggle kernels logs → outputs/build.log (23823 chars)
+
+===== kernel log file stoic-character-forge.log · fetched 2026-11-26 17:32:14Z =====
+[{"stream_name":"stdout","time":0.733813424,"data":"[2026-11-26T17:29:05Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":0.733845643,"data":"[2026-11-26T17:29:05Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":0.733851629,"data":"[2026-11-26T17:29:05Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":0.733855583,"data":"[2026-11-26T17:29:05Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":19.87236214,"data":"[2026-11-26T17:29:24Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":31.300156559,"data":"[2026-11-26T17:29:36Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":31.300190201,"data":"[2026-11-26T17:29:36Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":31.30031612,"data":"[2026-11-26T17:29:36Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stdout","time":31.300328318,"data":"[2026-11-26T17:29:36Z] [INFO ] sdxl: loading SG161222/RealVisXL_V5.0 (dtype=float16, fp16 variant)\n"}
+,{"stream_name":"stderr","time":32.270515829,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":72.623078743,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:01,  9.78it/s]\rFetching 18 files:  44%|████▍     | 8/18 [00:00\u003c00:00, 19.45it/s]\rFetching 18 files:  72%|███████▏  | 13/18 [00:00\u003c00:00, 27.35it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:19\u003c00:01,  1.75s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:40\u003c00:00,  3.87s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:40\u003c00:00,  2.23s/it]\n"}
+,{"stream_name":"stderr","time":74.751687173,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:01\u003c00:11,  1.84s/it]\n"}
+,{"stream_name":"stderr","time":74.851948508,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":74.945651365,"data":"\rLoading weights:  50%|█████     | 260/517 [00:00\u003c00:00, 2596.83it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2667.97it/s]\n"}
+,{"stream_name":"stderr","time":75.101497552,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.52it/s]\n"}
+,{"stream_name":"stderr","time":75.175128589,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2671.97it/s]\n"}
+,{"stream_name":"stderr","time":75.234261654,"data":"\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.33it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.68it/s]\n"}
+,{"stream_name":"stdout","time":75.23497975,"data":"[2026-11-26T17:30:20Z] [INFO ] ✔ done:  load_sdxl_pipeline (43.9s)\n"}
+,{"stream_name":"stdout","time":75.235009134,"data":"[2026-11-26T17:30:20Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stdout","time":75.252653898,"data":"[2026-11-26T17:30:20Z] [INFO ] scheduler: DPM-Solver++ with Karras sigmas\n"}
+,{"stream_name":"stdout","time":77.480878672,"data":"[2026-11-26T17:30:22Z] [INFO ] pipeline moved to cuda:0 (fp16 weights)\n"}
+,{"stream_name":"stdout","time":77.480910132,"data":"[2026-11-26T17:30:22Z] [INFO ] vae slicing: applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":77.480974691,"data":"[2026-11-26T17:30:22Z] [INFO ] vae tiling: applied vae.enable_tiling()\n"}
+,{"stream_name":"stdout","time":77.489886337,"data":"[2026-11-26T17:30:22Z] [INFO ] attention slicing: applied enable_attention_slicing()\n"}
+,{"stream_name":"stdout","time":77.489903431,"data":"[2026-11-26T17:30:22Z] [WARN ] resolution binning: no supported API on this diffusers build (skipped)\n"}
+,{"stream_name":"stderr","time":77.490068116,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":77.492700713,"data":"[2026-11-26T17:30:22Z] [INFO ] vae kept in float16 (matches unet dtype)\n"}
+,{"stream_name":"stdout","time":77.492717391,"data":"[2026-11-26T17:30:22Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.3s)\n"}
+,{"stream_name":"stdout","time":77.492724694,"data":"[2026-11-26T17:30:22Z] [INFO ] ▶ start: generate_master_face\n"}
+,{"stream_name":"stdout","time":77.492838728,"data":"[2026-11-26T17:30:22Z] [INFO ] sampling 01_master_face: 1024x1024 · seed=42 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":77.503229512,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":77.507798664,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":77.507866263,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":78.485411826,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":78.487613308,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":111.836964741,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:03\u003c01:43,  3.56s/it]\rdiffusion:   7%|▋         | 2/30 [00:04\u003c00:51,  1.86s/it]\rdiffusion:  10%|█         | 3/30 [00:05\u003c00:39,  1.47s/it]\rdiffusion:  13%|█▎        | 4/30 [00:06\u003c00:33,  1.28s/it]\rdiffusion:  17%|█▋        | 5/30 [00:07\u003c00:29,  1.18s/it]\rdiffusion:  20%|██        | 6/30 [00:08\u003c00:26,  1.12s/it]\rdiffusion:  23%|██▎       | 7/30 [00:09\u003c00:25,  1.09s/it]\rdiffusion:  27%|██▋       | 8/30 [00:10\u003c00:23,  1.06s/it]\rdiffusion:  30%|███       | 9/30 [00:11\u003c00:21,  1.05s/it]\rdiffusion:  33%|███▎      | 10/30 [00:12\u003c00:20,  1.04s/it]\rdiffusion:  37%|███▋      | 11/30 [00:13\u003c00:19,  1.03s/it]\rdiffusion:  40%|████      | 12/30 [00:14\u003c00:18,  1.03s/it]\rdiffusion:  43%|████▎     | 13/30 [00:15\u003c00:17,  1.02s/it]\rdiffusion:  47%|████▋     | 14/30 [00:16\u003c00:16,  1.02s/it]\rdiffusion:  50%|█████     | 15/30 [00:17\u003c00:15,  1.03s/it]\rdiffusion:  53%|█████▎    | 16/30 [00:18\u003c00:14,  1.03s/it]\rdiffusion:  57%|█████▋    | 17/30 [00:19\u003c00:13,  1.03s/it]\rdiffusion:  60%|██████    | 18/30 [00:20\u003c00:12,  1.03s/it]\rdiffusion:  63%|██████▎   | 19/30 [00:21\u003c00:11,  1.04s/it]\rdiffusion:  67%|██████▋   | 20/30 [00:22\u003c00:10,  1.04s/it]\rdiffusion:  70%|███████   | 21/30 [00:23\u003c00:09,  1.04s/it]\rdiffusion:  73%|███████▎  | 22/30 [00:24\u003c00:08,  1.05s/it]\rdiffusion:  77%|███████▋  | 23/30 [00:25\u003c00:07,  1.05s/it]\rdiffusion:  80%|████████  | 24/30 [00:26\u003c00:06,  1.05s/it]\rdiffusion:  83%|████████▎ | 25/30 [00:27\u003c00:05,  1.05s/it]\rdiffusion:  87%|████████▋ | 26/30 [00:28\u003c00:04,  1.06s/it]\rdiffusion:  90%|█████████ | 27/30 [00:29\u003c00:03,  1.06s/it]\rdiffusion:  93%|█████████▎| 28/30 [00:31\u003c00:02,  1.07s/it]\rdiffusion:  97%|█████████▋| 29/30 [00:32\u003c00:01,  1.07s/it]\rdiffusion: 100%|██████████| 30/30 [00:33\u003c00:00,  1.07s/it]\rdiffusion: 100%|██████████| 30/30 [00:33\u003c00:00,  1.11s/it]\n"}
+,{"stream_name":"stderr","time":111.838345799,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":111.83836731,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":111.838509879,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":114.2421234,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":117.551523982,"data":"[2026-11-26T17:31:02Z] [INFO ] saved 01_master_face.png (1409 KB)\n"}
+,{"stream_name":"stdout","time":117.551554929,"data":"[2026-11-26T17:31:02Z] [INFO ] ✔ done:  generate_master_face (40.1s)\n"}
+,{"stream_name":"stdout","time":117.551658218,"data":"[2026-11-26T17:31:02Z] [INFO ] attaching IP-Adapter Face (ip-adapter-plus-face_sdxl_vit-h.safetensors) @ scale 0.65\n"}
+,{"stream_name":"stdout","time":117.55175289,"data":"[2026-11-26T17:31:02Z] [INFO ] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":151.791611749,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  17%|█▋        | 89/520 [00:00\u003c00:00, 843.37it/s]\rLoading weights:  35%|███▌      | 182/520 [00:00\u003c00:00, 885.35it/s]\rLoading weights:  54%|█████▍    | 281/520 [00:00\u003c00:00, 884.91it/s]\rLoading weights:  72%|███████▎  | 377/520 [00:00\u003c00:00, 891.34it/s]\rLoading weights:  91%|█████████▏| 475/520 [00:00\u003c00:00, 916.53it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 922.99it/s]\n"}
+,{"stream_name":"stderr","time":151.818562105,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":151.818587278,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":151.818592788,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":151.818596893,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81860046,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818603873,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81860766,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818612744,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818619635,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818622013,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81862434,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818626691,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818628993,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818631333,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818633781,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818636067,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818638295,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818640525,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818642745,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818644965,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818647179,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81864941,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.81865163,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818653852,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.818666238,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":151.8186688,"data":"\n"}
+,{"stream_name":"stderr","time":151.818670921,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":151.818674036,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":152.127782331,"data":"[2026-11-26T17:31:37Z] [INFO ] clip vision encoder ready (ViT-H, fp16)\n"}
+,{"stream_name":"stdout","time":152.127806956,"data":"[2026-11-26T17:31:37Z] [INFO ] ✔ done:  load_clip_vision (34.6s)\n"}
+,{"stream_name":"stdout","time":152.12788987,"data":"[2026-11-26T17:31:37Z] [INFO ] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.252225438,"data":"[2026-11-26T17:31:45Z] [INFO ] ✔ done:  load_ip_adapter (8.1s)\n"}
+,{"stream_name":"stdout","time":160.252253149,"data":"[2026-11-26T17:31:45Z] [ERROR] IP-Adapter setup FAILED — TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.256232157,"data":"[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.256246671,"data":"  File \"/kaggle/src/script.py\", line 479, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.256250913,"data":"    pipe.load_ip_adapter(\n"}
+,{"stream_name":"stdout","time":160.256255907,"data":"    ~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":160.256260623,"data":"        IP_ADAPTER_REPO,\n"}
+,{"stream_name":"stdout","time":160.256264598,"data":"        ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256268075,"data":"        subfolder=IP_ADAPTER_SUBFOLDER,\n"}
+,{"stream_name":"stdout","time":160.256271711,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256275228,"data":"        weight_name=IP_ADAPTER_WEIGHT,\n"}
+,{"stream_name":"stdout","time":160.25627917,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256282814,"data":"    )\n"}
+,{"stream_name":"stdout","time":160.256286501,"data":"    ^\n"}
+,{"stream_name":"stdout","time":160.256290216,"data":"  File \"/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n"}
+,{"stream_name":"stdout","time":160.256294171,"data":"    return fn(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":160.256298053,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py\", line 245, in load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.256302569,"data":"    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.25630683,"data":"    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.256311041,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 712, in _load_ip_adapter_weights\n"}
+,{"stream_name":"stdout","time":160.256315355,"data":"    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.256318983,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 641, in _convert_ip_adapter_attn_to_diffusers\n"}
+,{"stream_name":"stdout","time":160.25632275,"data":"    attn_procs[name] = attn_processor_class()\n"}
+,{"stream_name":"stdout","time":160.256326078,"data":"                       ~~~~~~~~~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stdout","time":160.256340446,"data":"TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.256348363,"data":"\n"}
+,{"stream_name":"stdout","time":160.523183983,"data":"[2026-11-26T17:31:45Z] [ERROR] FATAL: RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).\n"}
+,{"stream_name":"stdout","time":160.524874221,"data":"[2026-11-26T17:31:45Z] [ERROR] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.52488786,"data":"  File \"/kaggle/src/script.py\", line 479, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.524892325,"data":"    pipe.load_ip_adapter(\n"}
+,{"stream_name":"stdout","time":160.524895663,"data":"    ~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":160.52489963,"data":"        IP_ADAPTER_REPO,\n"}
+,{"stream_name":"stdout","time":160.524903509,"data":"        ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524907375,"data":"        subfolder=IP_ADAPTER_SUBFOLDER,\n"}
+,{"stream_name":"stdout","time":160.524911277,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.52491505,"data":"        weight_name=IP_ADAPTER_WEIGHT,\n"}
+,{"stream_name":"stdout","time":160.524918553,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524927687,"data":"    )\n"}
+,{"stream_name":"stdout","time":160.52493273,"data":"    ^\n"}
+,{"stream_name":"stdout","time":160.524939471,"data":"  File \"/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n"}
+,{"stream_name":"stdout","time":160.52494239,"data":"    return fn(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":160.524944706,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/ip_adapter.py\", line 245, in load_ip_adapter\n"}
+,{"stream_name":"stdout","time":160.52494758,"data":"    unet._load_ip_adapter_weights(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.524949897,"data":"    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":160.524952182,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 712, in _load_ip_adapter_weights\n"}
+,{"stream_name":"stdout","time":160.524954558,"data":"    attn_procs = self._convert_ip_adapter_attn_to_diffusers(state_dicts, low_cpu_mem_usage=low_cpu_mem_usage)\n"}
+,{"stream_name":"stdout","time":160.524956979,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/loaders/unet.py\", line 641, in _convert_ip_adapter_attn_to_diffusers\n"}
+,{"stream_name":"stdout","time":160.524959395,"data":"    attn_procs[name] = attn_processor_class()\n"}
+,{"stream_name":"stdout","time":160.524961613,"data":"                       ~~~~~~~~~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stdout","time":160.524963845,"data":"TypeError: SlicedAttnProcessor.__init__() missing 1 required positional argument: 'slice_size'\n"}
+,{"stream_name":"stdout","time":160.524966327,"data":"\n"}
+,{"stream_name":"stdout","time":160.524968466,"data":"The above exception was the direct cause of the following exception:\n"}
+,{"stream_name":"stdout","time":160.524970768,"data":"\n"}
+,{"stream_name":"stdout","time":160.524972897,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":160.524975173,"data":"  File \"/kaggle/src/script.py\", line 772, in main\n"}
+,{"stream_name":"stdout","time":160.524977457,"data":"    face_locked = attach_face_adapter(pipe, device, timings)\n"}
+,{"stream_name":"stdout","time":160.524990739,"data":"  File \"/kaggle/src/script.py\", line 501, in attach_face_adapter\n"}
+,{"stream_name":"stdout","time":160.524993234,"data":"    raise RuntimeError(\n"}
+,{"stream_name":"stdout","time":160.524995523,"data":"    ...\u003c2 lines\u003e...\n"}
+,{"stream_name":"stdout","time":160.524998106,"data":"    ) from exc\n"}
+,{"stream_name":"stdout","time":160.525000372,"data":"RuntimeError: Face-lock adapter is mandatory for this pilot (set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully).\n"}
+,{"stream_name":"stdout","time":160.52500273,"data":"\n"}
+,{"stream_name":"stdout","time":160.525781547,"data":"[2026-11-26T17:31:45Z] [INFO ] total wall clock: 159.793s\n"}
+,{"stream_name":"stderr","time":167.17323909,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":167.17326726,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":167.366055108,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":167.366079268,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":168.093158142,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":169.055850614,"data":"[NbConvertApp] Writing 405159 bytes to __results__.html\n"}
+]
+[2026-11-26 17:32:14Z] [INFO ] appended kernel log file stoic-character-forge.log → outputs/build.log (23823 chars)
+[2026-11-26 17:32:14Z] [WARN ] artifact ✘ contact_sheet.png (missing)
+[2026-11-26 17:32:14Z] [INFO ] artifact ✔ 01_master_face.png (1409 KB)
+[2026-11-26 17:32:14Z] [WARN ] artifact ✘ 02_library_scene.png (missing)
+[2026-11-26 17:32:14Z] [WARN ] artifact ✘ 03_rainy_street.png (missing)
+[2026-11-26 17:32:14Z] [WARN ] artifact ✘ 04_podcast_studio.png (missing)
+[2026-11-26 17:32:14Z] [INFO ] artifact ✔ metrics.json (2 KB)
+[2026-11-26 17:32:14Z] [WARN ] missing artifacts: contact_sheet.png, 02_library_scene.png, 03_rainy_street.png, 04_podcast_studio.png
+::error::character forge did not produce a complete result (status=error, downloaded=True). See outputs/build.log.
+[2026-11-26 17:32:14Z] [ERROR] ✘ job failed — inspect outputs/build.log
