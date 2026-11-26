@@ -1,8 +1,53 @@
-===== stoic-ai-studio · orchestrator run · 2026-11-26 17:03:09Z =====
-===== (previous log was 0 bytes and has been rotated) =====
-[2026-11-26 17:03:09Z] [INFO ] rotated outputs/build.log (previous size: 0 bytes)
-[2026-11-26 17:03:09Z] [INFO ] ==============================================================================
-[2026-11-26 17:03:09Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
-[2026-11-26 17:03:09Z] [INFO ] ==============================================================================
-::error::KAGGLE_USERNAME and/or KAGGLE_KEY are missing. Add them as repository secrets (Settings → Secrets and variables → Actions).
-[2026-11-26 17:03:09Z] [ERROR] missing Kaggle credentials in environment
+===== stoic-ai-studio · orchestrator run · 2026-11-26 17:03:57Z =====
+===== (previous log was 737 bytes and has been rotated) =====
+[2026-11-26 17:03:57Z] [INFO ] rotated outputs/build.log (previous size: 737 bytes)
+[2026-11-26 17:03:57Z] [INFO ] ==============================================================================
+[2026-11-26 17:03:57Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-26 17:03:57Z] [INFO ] ==============================================================================
+[2026-11-26 17:03:57Z] [INFO ] username: amosovadia
+[2026-11-26 17:03:57Z] [INFO ] key: KGAT…48 (len=37)
+[2026-11-26 17:03:57Z] [INFO ] detected KGAT_ API token style key — kaggle.json auth path is required
+[2026-11-26 17:03:57Z] [INFO ] wrote credentials to /home/runner/.kaggle/kaggle.json (mode 0o600)
+::group::kaggle CLI version
+[2026-11-26 17:03:57Z] [INFO ] $ kaggle --version
+    | Kaggle CLI 2.2.5
+::endgroup::
+[2026-11-26 17:03:58Z] [INFO ] generated kaggle_kernel/kernel-metadata.json:
+    | {
+    |   "id": "amosovadia/stoic-character-forge",
+    |   "title": "stoic-ai-studio character forge (amosovadia)",
+    |   "code_file": "character_forge.py",
+    |   "language": "python",
+    |   "kernel_type": "script",
+    |   "is_private": "true",
+    |   "enable_gpu": "true",
+    |   "enable_internet": "true",
+    |   "dataset_sources": [],
+    |   "competition_sources": [],
+    |   "kernel_sources": [],
+    |   "model_sources": []
+    | }
+::group::pushing kernel amosovadia/stoic-character-forge
+[2026-11-26 17:03:58Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel
+    | Your kernel title does not resolve to the specified id. This may result in surprising behavior. We suggest making your title something that resolves to the specified id. See https://en.wikipedia.org/wiki/Clean_URL#Slug for more information on how slugs are determined.
+    | Authentication required to call the Kaggle API.
+    | 
+    | First, you will need a Kaggle account. You can sign up at
+    |   https://www.kaggle.com/account/login
+    | 
+    | Recommended: log in with OAuth via a web-based authorization flow.
+    | No token to manage; credentials are cached locally for you.
+    |     kaggle auth login
+    | 
+    | If you'd rather not use OAuth, generate an API token at
+    |   https://www.kaggle.com/settings/api  (click "Generate New Token" under "API")
+    | and supply it to the CLI in one of these ways:
+    | 
+    |   Option A: Environment variable
+    |     export KAGGLE_API_TOKEN=xxxxxxxxxxxxxx  # token copied from the settings UI
+    | 
+    |   Option B: API token file
+    |     Save the token to ~/.kaggle/access_token
+[2026-11-26 17:03:58Z] [WARN ] exit code 1: kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel
+::endgroup::
+::error::kaggle kernels push failed (exit 1): Your kernel title does not resolve to the specified id. This may result in surprising behavior. We suggest making your title something that resolves to the specified id. See https://en.wikipedia.org/wiki/Clean_URL#Slug for more information on how slugs are determined. Authentication required to call the Kaggle API.  First, you will need a Kaggle account. You can sign up at   https://www.kaggle.com/account/login  Recommended: log in with OAuth via a web-based authorization flow. No token to manage; credentials are cached locally for you.     kaggle auth login  If you'd rather not use OAuth, gen
