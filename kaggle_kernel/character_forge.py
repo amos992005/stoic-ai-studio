@@ -417,12 +417,14 @@ def build_pipeline(timings: Dict[str, float]):
         # Optional, version-dependent VRAM guarantees — never fatal.
         _first_available(pipe, ["vae.enable_slicing", "enable_vae_slicing"], "vae slicing")
         _first_available(pipe, ["vae.enable_tiling", "enable_vae_tiling"], "vae tiling")
-        _first_available(
-            pipe,
-            ["enable_attention_slicing", "unet.enable_attention_slicing"],
-            "attention slicing",
-        )
         _first_available(pipe, ["set_use_resolution_binning"], "resolution binning")
+
+        # NOTE: attention slicing is deliberately NOT enabled here. It swaps in a
+        # SlicedAttnProcessor which diffusers 0.42 cannot re-instantiate while
+        # converting the UNet for IP-Adapter:
+        #   TypeError: SlicedAttnProcessor.__init__() missing 'slice_size'
+        # VAE slicing/tiling + fp16 already keep 768x1344 inside a 16 GB T4.
+        log("attention slicing left disabled (incompatible with IP-Adapter)")
 
         # Keep the VAE in the pipeline dtype. Upcasting it to fp32 makes the
         # decode step receive half latents and crash with
@@ -476,11 +478,36 @@ def attach_face_adapter(pipe, device: str, timings: Dict[str, float]) -> bool:
             log("clip vision encoder ready (ViT-H, fp16)")
 
         with timed("load_ip_adapter", timings):
-            pipe.load_ip_adapter(
-                IP_ADAPTER_REPO,
-                subfolder=IP_ADAPTER_SUBFOLDER,
-                weight_name=IP_ADAPTER_WEIGHT,
-            )
+            try:
+                pipe.load_ip_adapter(
+                    IP_ADAPTER_REPO,
+                    subfolder=IP_ADAPTER_SUBFOLDER,
+                    weight_name=IP_ADAPTER_WEIGHT,
+                )
+            except TypeError as exc:
+                if "SlicedAttnProcessor" not in str(exc):
+                    raise
+                # Sliceable attention processors block the IP-Adapter conversion.
+                log(
+                    "attention slicing blocks IP-Adapter conversion; disabling it "
+                    "and retrying",
+                    "WARN",
+                )
+                _first_available(pipe, ["unset_attention_slicing"], "attention slicing off")
+                unet = getattr(pipe, "unet", None)
+                try:
+                    from diffusers.models.attention_processor import AttnProcessor
+
+                    if unet is not None:
+                        unet.set_attn_processor(AttnProcessor())
+                        log("unet attention processors reset to AttnProcessor")
+                except Exception as inner:  # pragma: no cover
+                    log(f"could not reset attention processors: {inner}", "WARN")
+                pipe.load_ip_adapter(
+                    IP_ADAPTER_REPO,
+                    subfolder=IP_ADAPTER_SUBFOLDER,
+                    weight_name=IP_ADAPTER_WEIGHT,
+                )
             if hasattr(pipe, "set_ip_adapter_scale"):
                 pipe.set_ip_adapter_scale(IP_ADAPTER_SCALE)
             else:  # older/newer private hook
@@ -578,6 +605,13 @@ def _generate(
 
     if not result or not getattr(result, "images", None):
         raise RuntimeError(f"Pipeline returned no images for {label}")
+
+    try:
+        allocated = torch.cuda.max_memory_allocated(device) / 1024**3
+        log(f"{label}: peak VRAM {allocated:.2f} GB")
+    except Exception:
+        pass
+
     image = result.images[0]
     if image.size != (width, height):
         log(f"{label}: unexpected size {image.size}, expected {(width, height)}", "WARN")
