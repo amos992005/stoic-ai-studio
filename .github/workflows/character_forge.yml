@@ -4,6 +4,8 @@ name: Character Forge · Micro-Pilot 1
 # (Dual Tesla T4), waits for it, then commits the inspection artifacts back.
 
 on:
+  # Phase 1 is complete — it must NEVER burn Kaggle quota on push again.
+  # Manual dispatch only; the inputs are kept so a re-render is one click away.
   workflow_dispatch:
     inputs:
       base_seed:
@@ -15,16 +17,6 @@ on:
         type: choice
         options: ["false", "true"]
         default: "false"
-  push:
-    # `main` for production, `arena/**` so feature branches (e.g. the session
-    # branch) can render and commit artifacts straight back to themselves.
-    branches:
-      - main
-      - "arena/**"
-    paths:
-      - "kaggle_kernel/**"
-      - "scripts/**"
-      - ".github/workflows/character_forge.yml"
 
 permissions:
   contents: write

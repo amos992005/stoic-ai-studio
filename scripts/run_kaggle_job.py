@@ -70,6 +70,11 @@ EXPECTED_ARTIFACTS = [
 #: Artifacts larger than this are downloaded but never committed by CI.
 MAX_COMMIT_BYTES = 5 * 1024 * 1024
 
+#: Files whose presence defines success, and the files the workflow may commit.
+#: Phase-specific orchestrators (e.g. run_talking_job.py) override these.
+REQUIRED_ARTIFACTS: List[str] = ["contact_sheet.png", "metrics.json"]
+OPTIONAL_ARTIFACTS: List[str] = []
+
 
 # --------------------------------------------------------------------------- #
 # Logging helpers (Actions-annotated, timestamped)
@@ -538,6 +543,11 @@ def report_artifacts(root: Path) -> Dict[str, Any]:
         else:
             summary["missing"].append(name)
             log(f"artifact ✘ {name} (missing)", "WARN")
+    for name in OPTIONAL_ARTIFACTS:
+        path = root / name
+        if path.exists():
+            summary["downloaded"][name] = path.stat().st_size
+            log(f"artifact ○ {name} ({path.stat().st_size / 1024:.0f} KB, optional)")
     return summary
 
 
@@ -706,11 +716,10 @@ def main() -> int:
                 f"(final status: {final_status})\n"
             )
 
-    success = (
-        final_status == "complete"
-        and "contact_sheet.png" in summary["downloaded"]
-        and "metrics.json" in summary["downloaded"]
-    )
+    missing_required = [n for n in REQUIRED_ARTIFACTS if n not in summary["downloaded"]]
+    success = final_status == "complete" and not missing_required
+    if missing_required:
+        log(f"required artifacts absent: {', '.join(missing_required)}", "ERROR")
 
     if summary["oversized"]:
         log(
@@ -722,8 +731,9 @@ def main() -> int:
         log(f"missing artifacts: {', '.join(summary['missing'])}", "WARN")
 
     if success:
-        log("✔ MICRO-PILOT 1 artifacts are ready in ./outputs")
-        log(f"   contact sheet: {summary['downloaded']['contact_sheet.png'] / 1024:.0f} KB")
+        primary = REQUIRED_ARTIFACTS[0]
+        log(f"✔ artifacts for {KERNEL_SLUG} are ready in ./outputs")
+        log(f"   {primary}: {summary['downloaded'][primary] / 1024:.0f} KB")
         return 0
 
     annotate_error(

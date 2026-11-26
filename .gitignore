@@ -28,3 +28,9 @@ kaggle_kernel/kernel-metadata.json
 preview_contact_sheet.png
 venv/
 .venv/
+
+# Phase 2: generated kernel metadata + heavy model caches
+kaggle_kernel_talking/kernel-metadata.json
+_kokoro-v1.0.onnx
+_voices-v1.0.bin
+stoic_lipsync/
