@@ -401,13 +401,51 @@ def flatten_outputs(root: Path) -> None:
                     log(f"hoisted {item} → {target.name}")
 
 
+def fetch_kernel_log_via_cli(slug: str, env: Dict[str, str]) -> bool:
+    """
+    `kaggle kernels logs <slug>` (CLI >= 2.x) returns the run log even when the
+    kernel failed before writing anything to /kaggle/working.
+    """
+    proc = run(
+        ["kaggle", "kernels", "logs", slug],
+        env=env,
+        stream=False,
+        timeout=300,
+    )
+    content = (proc.stdout or "").strip()
+    if proc.returncode != 0 or not content:
+        log("`kaggle kernels logs` unavailable or empty (older CLI?)", "WARN")
+        return False
+    append_log_block("kaggle kernels logs", content)
+    return True
+
+
+def append_log_block(source: str, content: str) -> None:
+    """Append a labelled log block to outputs/build.log."""
+    header = f"\n===== {source} · fetched {ts()} =====\n"
+    with open(BUILD_LOG, "a", encoding="utf-8") as handle:
+        handle.write(header)
+        handle.write(content)
+        if not content.endswith("\n"):
+            handle.write("\n")
+    log(f"appended {source} → {BUILD_LOG.relative_to(REPO_ROOT)} ({len(content)} chars)")
+
+
 def collect_build_log(root: Path) -> bool:
     """
     Kaggle returns the run log as `<slug>.log`; mirror it to outputs/build.log so
     the repo has a debuggable trace even when the kernel crashes.
     """
+    # Never treat our own rotated build.log as "the kernel log" (that would
+    # append the file to itself and then delete it).
     candidates = sorted(
-        [p for p in root.rglob("*") if p.is_file() and p.suffix == ".log"],
+        [
+            p
+            for p in root.rglob("*")
+            if p.is_file()
+            and p.suffix == ".log"
+            and p.resolve() != BUILD_LOG.resolve()
+        ],
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
@@ -421,17 +459,7 @@ def collect_build_log(root: Path) -> bool:
         log(f"could not read kernel log {source}: {exc}", "WARN")
         return False
 
-    header = (
-        f"===== stoic-ai-studio · kaggle kernel log ({source.name}) "
-        f"· fetched {ts()} =====\n"
-    )
-    with open(BUILD_LOG, "a", encoding="utf-8") as handle:
-        handle.write("\n" + header)
-        handle.write(content)
-        if not content.endswith("\n"):
-            handle.write("\n")
-    log(f"mirrored kernel log → {BUILD_LOG.relative_to(REPO_ROOT)} "
-        f"({len(content)} chars)")
+    append_log_block(f"kernel log file {source.name}", content)
     try:
         source.unlink()  # keep only the canonical build.log
     except OSError:
@@ -461,8 +489,29 @@ def report_artifacts(root: Path) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def rotate_build_log() -> None:
+    """
+    Start every run with a fresh, bounded build.log.
+
+    GitHub Actions tees into this file and we also append the Kaggle kernel log,
+    so without rotation it would grow forever across runs.
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        previous = BUILD_LOG.stat().st_size if BUILD_LOG.exists() else 0
+        BUILD_LOG.write_text(
+            f"===== stoic-ai-studio · orchestrator run · {ts()} =====\n"
+            f"===== (previous log was {previous} bytes and has been rotated) =====\n",
+            encoding="utf-8",
+        )
+        log(f"rotated {BUILD_LOG.relative_to(REPO_ROOT)} (previous size: {previous} bytes)")
+    except OSError as exc:
+        log(f"could not rotate build.log: {exc}", "WARN")
+
+
 def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    rotate_build_log()
     log("=" * 78)
     log("stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE")
     log("=" * 78)
@@ -580,10 +629,13 @@ def main() -> int:
         downloaded = download_outputs(slug, env, OUTPUT_DIR)
 
     flatten_outputs(OUTPUT_DIR)
-    collect_build_log(OUTPUT_DIR)
+    # The authoritative log comes from the CLI itself; the file inside the kernel
+    # output is a fallback (it only exists if the script got far enough to write).
+    got_log = fetch_kernel_log_via_cli(slug, env)
+    file_log = collect_build_log(OUTPUT_DIR)
     summary = report_artifacts(OUTPUT_DIR)
 
-    if not BUILD_LOG.exists() or BUILD_LOG.stat().st_size == 0:
+    if not (got_log or file_log):
         with open(BUILD_LOG, "a", encoding="utf-8") as handle:
             handle.write(
                 f"[{ts()}] no kernel log could be retrieved "

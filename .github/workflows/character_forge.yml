@@ -65,8 +65,12 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --upgrade "kaggle>=1.6.17" pillow
-          python -c "import kaggle, PIL; print('kaggle + pillow ready')"
+          python -m pip install --upgrade -r requirements.txt
+          # `six` is an undeclared dependency of kaggle 2.x — make sure it exists
+          # before we rely on the CLI at all.
+          python -c "import six" || python -m pip install six
+          python -c "import kaggle, PIL, six; print('kaggle + pillow + six ready')"
+          kaggle --version
 
       - name: Smoke-test the kernel script (syntax + config only, no GPU)
         run: |
@@ -86,9 +90,11 @@ jobs:
 
       - name: Run Kaggle job
         # `tee -a` keeps a live log in the repo even if the orchestrator dies.
+        # The orchestrator rotates the file first so it never grows unbounded.
         run: |
           set -o pipefail
           mkdir -p outputs
+          : > outputs/build.log
           python scripts/run_kaggle_job.py 2>&1 | tee -a outputs/build.log
 
       - name: Upload artifacts (debug bundle)
