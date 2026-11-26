@@ -1,0 +1,387 @@
+===== stoic-ai-studio · orchestrator run · 2026-11-26 17:33:28Z =====
+===== (previous log was 0 bytes and has been rotated) =====
+[2026-11-26 17:33:28Z] [INFO ] rotated outputs/build.log (previous size: 0 bytes)
+[2026-11-26 17:33:28Z] [INFO ] ==============================================================================
+[2026-11-26 17:33:28Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-26 17:33:28Z] [INFO ] ==============================================================================
+[2026-11-26 17:33:28Z] [INFO ] username: amosovadia
+[2026-11-26 17:33:28Z] [INFO ] key: KGAT…48 (len=37)
+[2026-11-26 17:33:28Z] [INFO ] detected KGAT_ API token — using the access-token auth path
+[2026-11-26 17:33:28Z] [INFO ] auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)
+[2026-11-26 17:33:28Z] [INFO ] wrote /home/runner/.kaggle/access_token (mode 0o600)
+[2026-11-26 17:33:28Z] [INFO ] wrote /home/runner/.kaggle/username (mode 0o600)
+::group::kaggle CLI version
+[2026-11-26 17:33:28Z] [INFO ] $ kaggle --version
+    | Kaggle CLI 2.2.5
+::endgroup::
+[2026-11-26 17:33:30Z] [INFO ] generated kaggle_kernel/kernel-metadata.json:
+    | {
+    |   "id": "amosovadia/stoic-character-forge",
+    |   "title": "stoic-character-forge",
+    |   "code_file": "character_forge.py",
+    |   "language": "python",
+    |   "kernel_type": "script",
+    |   "is_private": "true",
+    |   "enable_gpu": "true",
+    |   "enable_internet": "true",
+    |   "dataset_sources": [],
+    |   "competition_sources": [],
+    |   "kernel_sources": [],
+    |   "model_sources": []
+    | }
+::group::pushing kernel amosovadia/stoic-character-forge
+[2026-11-26 17:33:30Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel
+    | Kernel version 5 successfully pushed.  Please check progress at https://www.kaggle.com/code/amosovadia/stoic-character-forge
+::endgroup::
+[2026-11-26 17:33:32Z] [INFO ] kernel push accepted — Kaggle is provisioning a T4.
+[2026-11-26 17:33:32Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:33:32Z] [INFO ] status → queued
+[2026-11-26 17:33:32Z] [INFO ] ★ status transition: (none) → queued
+[2026-11-26 17:33:32Z] [INFO ] still queued · 1499s of budget left · sleeping 25s
+[2026-11-26 17:33:57Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:33:58Z] [INFO ] status → running
+[2026-11-26 17:33:58Z] [INFO ] ★ status transition: queued → running
+[2026-11-26 17:33:58Z] [INFO ] still running · 1474s of budget left · sleeping 25s
+[2026-11-26 17:34:23Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:34:24Z] [INFO ] status → running
+[2026-11-26 17:34:24Z] [INFO ] still running · 1448s of budget left · sleeping 25s
+[2026-11-26 17:34:49Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:34:49Z] [INFO ] status → running
+[2026-11-26 17:34:49Z] [INFO ] still running · 1423s of budget left · sleeping 25s
+[2026-11-26 17:35:14Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:35:15Z] [INFO ] status → running
+[2026-11-26 17:35:15Z] [INFO ] still running · 1397s of budget left · sleeping 25s
+[2026-11-26 17:35:40Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:35:40Z] [INFO ] status → running
+[2026-11-26 17:35:40Z] [INFO ] still running · 1371s of budget left · sleeping 25s
+[2026-11-26 17:36:05Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:36:06Z] [INFO ] status → running
+[2026-11-26 17:36:06Z] [INFO ] still running · 1346s of budget left · sleeping 25s
+[2026-11-26 17:36:31Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:36:32Z] [INFO ] status → running
+[2026-11-26 17:36:32Z] [INFO ] still running · 1320s of budget left · sleeping 25s
+[2026-11-26 17:36:57Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:36:57Z] [INFO ] status → running
+[2026-11-26 17:36:57Z] [INFO ] still running · 1294s of budget left · sleeping 25s
+[2026-11-26 17:37:22Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:37:23Z] [INFO ] status → running
+[2026-11-26 17:37:23Z] [INFO ] still running · 1269s of budget left · sleeping 25s
+[2026-11-26 17:37:48Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:37:49Z] [INFO ] status → running
+[2026-11-26 17:37:49Z] [INFO ] still running · 1243s of budget left · sleeping 25s
+[2026-11-26 17:38:14Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:38:14Z] [INFO ] status → running
+[2026-11-26 17:38:14Z] [INFO ] still running · 1218s of budget left · sleeping 25s
+[2026-11-26 17:38:39Z] [INFO ] $ kaggle kernels status amosovadia/stoic-character-forge
+[2026-11-26 17:38:40Z] [INFO ] status → complete
+[2026-11-26 17:38:40Z] [INFO ] ★ status transition: running → complete
+[2026-11-26 17:38:40Z] [INFO ] kernel reported COMPLETE
+[2026-11-26 17:38:40Z] [INFO ] status timeline: [{"at": "2026-11-26 17:33:32Z", "status": "queued"}, {"at": "2026-11-26 17:33:58Z", "status": "running"}, {"at": "2026-11-26 17:38:40Z", "status": "complete"}]
+::group::downloading kernel outputs
+[2026-11-26 17:38:40Z] [INFO ] $ kaggle kernels output amosovadia/stoic-character-forge -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | Downloading 01_master_face.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/01_master_face.png
+    | Downloading 02_library_scene.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/02_library_scene.png
+    | Downloading 03_rainy_street.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/03_rainy_street.png
+    | Downloading 04_podcast_studio.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/04_podcast_studio.png
+    | build.log: Skipping, found more recently modified local copy (use --force to force download)
+    | Downloading contact_sheet.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/contact_sheet.png
+    | Downloading metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/metrics.json
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-character-forge.log 
+    ! 
+    !   0%|          | 0.00/1.38M [00:00<?, ?B/s]
+    !  73%|███████▎  | 1.00M/1.38M [00:00<00:00, 4.36MB/s]
+    ! 100%|██████████| 1.38M/1.38M [00:00<00:00, 5.15MB/s]
+    ! 
+    !   0%|          | 0.00/0.99M [00:00<?, ?B/s]
+    ! 100%|██████████| 0.99M/0.99M [00:00<00:00, 3.03MB/s]
+    ! 100%|██████████| 0.99M/0.99M [00:00<00:00, 3.03MB/s]
+    ! 
+    !   0%|          | 0.00/1.15M [00:00<?, ?B/s]
+    ! 100%|██████████| 1.15M/1.15M [00:00<00:00, 22.2MB/s]
+    ! 
+    !   0%|          | 0.00/1.02M [00:00<?, ?B/s]
+    !  98%|█████████▊| 1.00M/1.02M [00:00<00:00, 2.98MB/s]
+    ! 100%|██████████| 1.02M/1.02M [00:00<00:00, 3.03MB/s]
+    ! 
+    !   0%|          | 0.00/3.59M [00:00<?, ?B/s]
+    !  28%|██▊       | 1.00M/3.59M [00:00<00:00, 3.63MB/s]
+    !  84%|████████▎ | 3.00M/3.59M [00:00<00:00, 8.01MB/s]
+    ! 100%|██████████| 3.59M/3.59M [00:00<00:00, 8.15MB/s]
+    ! 
+    !   0%|          | 0.00/2.56k [00:00<?, ?B/s]
+    ! 100%|██████████| 2.56k/2.56k [00:00<00:00, 12.8MB/s]
+[2026-11-26 17:38:44Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-26 17:38:44Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-character-forge
+
+===== kaggle kernels logs · fetched 2026-11-26 17:38:45Z =====
+[{"stream_name":"stdout","time":1.135080248,"data":"[2026-11-26T17:33:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.135142366,"data":"[2026-11-26T17:33:52Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":1.135152639,"data":"[2026-11-26T17:33:52Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.135157654,"data":"[2026-11-26T17:33:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":26.017373719,"data":"[2026-11-26T17:34:16Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":39.284405651,"data":"[2026-11-26T17:34:30Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":39.284444899,"data":"[2026-11-26T17:34:30Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":39.284454474,"data":"[2026-11-26T17:34:30Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stdout","time":39.284487042,"data":"[2026-11-26T17:34:30Z] [INFO ] sdxl: loading SG161222/RealVisXL_V5.0 (dtype=float16, fp16 variant)\n"}
+,{"stream_name":"stderr","time":39.45458627,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":74.711463784,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 17.83it/s]\rFetching 18 files:  72%|███████▏  | 13/18 [00:00\u003c00:00, 66.82it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:19\u003c00:00, 66.82it/s]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  2.57s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.96s/it]\n"}
+,{"stream_name":"stderr","time":77.143256154,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:02\u003c00:12,  2.13s/it]\n"}
+,{"stream_name":"stderr","time":77.243732031,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":77.343219607,"data":"\rLoading weights:  50%|████▉     | 257/517 [00:00\u003c00:00, 2561.88it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2588.35it/s]\n"}
+,{"stream_name":"stderr","time":77.582258213,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.35it/s]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:00,  2.54it/s]\n"}
+,{"stream_name":"stderr","time":77.663098578,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2439.87it/s]\n"}
+,{"stream_name":"stderr","time":77.668685778,"data":"\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  3.76it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.37it/s]\n"}
+,{"stream_name":"stdout","time":77.6696462,"data":"[2026-11-26T17:35:08Z] [INFO ] ✔ done:  load_sdxl_pipeline (38.4s)\n"}
+,{"stream_name":"stdout","time":77.66970956,"data":"[2026-11-26T17:35:08Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stdout","time":77.695462407,"data":"[2026-11-26T17:35:08Z] [INFO ] scheduler: DPM-Solver++ with Karras sigmas\n"}
+,{"stream_name":"stdout","time":79.998025814,"data":"[2026-11-26T17:35:10Z] [INFO ] pipeline moved to cuda:0 (fp16 weights)\n"}
+,{"stream_name":"stdout","time":79.998057431,"data":"[2026-11-26T17:35:10Z] [INFO ] vae slicing: applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":79.998062003,"data":"[2026-11-26T17:35:10Z] [INFO ] vae tiling: applied vae.enable_tiling()\n"}
+,{"stream_name":"stdout","time":79.998077717,"data":"[2026-11-26T17:35:10Z] [WARN ] resolution binning: no supported API on this diffusers build (skipped)\n"}
+,{"stream_name":"stdout","time":79.998081993,"data":"[2026-11-26T17:35:10Z] [INFO ] attention slicing left disabled (incompatible with IP-Adapter)\n"}
+,{"stream_name":"stderr","time":79.998364814,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":80.004082292,"data":"[2026-11-26T17:35:10Z] [INFO ] vae kept in float16 (matches unet dtype)\n"}
+,{"stream_name":"stdout","time":80.007143096,"data":"[2026-11-26T17:35:10Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.3s)\n"}
+,{"stream_name":"stdout","time":80.007154958,"data":"[2026-11-26T17:35:10Z] [INFO ] ▶ start: generate_master_face\n"}
+,{"stream_name":"stdout","time":80.007159559,"data":"[2026-11-26T17:35:10Z] [INFO ] sampling 01_master_face: 1024x1024 · seed=42 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":80.020720763,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":80.027475669,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":80.027493322,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":81.319145408,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":81.321535534,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":106.838485077,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:04\u003c02:05,  4.31s/it]\rdiffusion:   7%|▋         | 2/30 [00:04\u003c00:55,  1.98s/it]\rdiffusion:  10%|█         | 3/30 [00:05\u003c00:37,  1.41s/it]\rdiffusion:  13%|█▎        | 4/30 [00:06\u003c00:29,  1.14s/it]\rdiffusion:  17%|█▋        | 5/30 [00:06\u003c00:24,  1.01it/s]\rdiffusion:  20%|██        | 6/30 [00:07\u003c00:21,  1.11it/s]\rdiffusion:  23%|██▎       | 7/30 [00:08\u003c00:19,  1.18it/s]\rdiffusion:  27%|██▋       | 8/30 [00:09\u003c00:17,  1.23it/s]\rdiffusion:  30%|███       | 9/30 [00:09\u003c00:16,  1.27it/s]\rdiffusion:  33%|███▎      | 10/30 [00:10\u003c00:15,  1.30it/s]\rdiffusion:  37%|███▋      | 11/30 [00:11\u003c00:14,  1.32it/s]\rdiffusion:  40%|████      | 12/30 [00:11\u003c00:13,  1.33it/s]\rdiffusion:  43%|████▎     | 13/30 [00:12\u003c00:12,  1.34it/s]\rdiffusion:  47%|████▋     | 14/30 [00:13\u003c00:11,  1.34it/s]\rdiffusion:  50%|█████     | 15/30 [00:14\u003c00:11,  1.35it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:14\u003c00:10,  1.35it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:15\u003c00:09,  1.35it/s]\rdiffusion:  60%|██████    | 18/30 [00:16\u003c00:08,  1.35it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:17\u003c00:08,  1.35it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:17\u003c00:07,  1.35it/s]\rdiffusion:  70%|███████   | 21/30 [00:18\u003c00:06,  1.34it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:19\u003c00:05,  1.34it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:20\u003c00:05,  1.34it/s]\rdiffusion:  80%|████████  | 24/30 [00:20\u003c00:04,  1.34it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:21\u003c00:03,  1.34it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:22\u003c00:02,  1.34it/s]\rdiffusion:  90%|█████████ | 27/30 [00:23\u003c00:02,  1.34it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:23\u003c00:01,  1.34it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.34it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.34it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.18it/s]\n"}
+,{"stream_name":"stderr","time":106.840030405,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":106.840051891,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":106.840181635,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":109.234616616,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":111.095721415,"data":"[2026-11-26T17:35:42Z] [INFO ] 01_master_face: peak VRAM 9.73 GB\n"}
+,{"stream_name":"stdout","time":112.536989855,"data":"[2026-11-26T17:35:43Z] [INFO ] saved 01_master_face.png (1409 KB)\n"}
+,{"stream_name":"stdout","time":112.537031503,"data":"[2026-11-26T17:35:43Z] [INFO ] ✔ done:  generate_master_face (32.5s)\n"}
+,{"stream_name":"stdout","time":112.537037841,"data":"[2026-11-26T17:35:43Z] [INFO ] attaching IP-Adapter Face (ip-adapter-plus-face_sdxl_vit-h.safetensors) @ scale 0.65\n"}
+,{"stream_name":"stdout","time":112.537042188,"data":"[2026-11-26T17:35:43Z] [INFO ] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":136.316570123,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  17%|█▋        | 89/520 [00:00\u003c00:00, 800.20it/s]\rLoading weights:  36%|███▌      | 185/520 [00:00\u003c00:00, 880.34it/s]\rLoading weights:  54%|█████▍    | 281/520 [00:00\u003c00:00, 910.63it/s]\rLoading weights:  72%|███████▎  | 377/520 [00:00\u003c00:00, 860.97it/s]\rLoading weights:  91%|█████████ | 473/520 [00:00\u003c00:00, 873.33it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 910.46it/s]\n"}
+,{"stream_name":"stderr","time":136.344503225,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":136.344533377,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":136.344539107,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":136.344543626,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344547921,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344552572,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344556869,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344561037,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344565311,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344569577,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344573808,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344578112,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344582321,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344586558,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344590706,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344594929,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344598966,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344603119,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344607391,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344611501,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344615772,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344619856,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344624663,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.34464398,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344648601,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344652858,"data":"\n"}
+,{"stream_name":"stderr","time":136.344656626,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":136.344661483,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":136.662197837,"data":"[2026-11-26T17:36:07Z] [INFO ] clip vision encoder ready (ViT-H, fp16)\n"}
+,{"stream_name":"stdout","time":136.662227182,"data":"[2026-11-26T17:36:07Z] [INFO ] ✔ done:  load_clip_vision (24.1s)\n"}
+,{"stream_name":"stdout","time":136.662321132,"data":"[2026-11-26T17:36:07Z] [INFO ] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stderr","time":145.186478744,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":145.439667888,"data":"[2026-11-26T17:36:16Z] [INFO ] ip-adapter scale set to 0.65\n"}
+,{"stream_name":"stdout","time":145.43969577,"data":"[2026-11-26T17:36:16Z] [INFO ] ✔ done:  load_ip_adapter (8.8s)\n"}
+,{"stream_name":"stdout","time":145.43970168,"data":"[2026-11-26T17:36:16Z] [INFO ] IP-Adapter Face ready — character consistency is locked.\n"}
+,{"stream_name":"stdout","time":145.705408027,"data":"[2026-11-26T17:36:16Z] [INFO ] ▶ start: generate_02_library_scene\n"}
+,{"stream_name":"stdout","time":145.70543465,"data":"[2026-11-26T17:36:16Z] [INFO ] sampling 02_library_scene.png: 768x1344 · seed=43 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":145.717590336,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['at the camera , glass of whiskey and an open book on the desk , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":145.729538463,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['at the camera , glass of whiskey and an open book on the desk , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":169.163668468,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:12,  2.26it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:17,  1.58it/s]\rdiffusion:  10%|█         | 3/30 [00:01\u003c00:18,  1.44it/s]\rdiffusion:  13%|█▎        | 4/30 [00:02\u003c00:18,  1.38it/s]\rdiffusion:  17%|█▋        | 5/30 [00:03\u003c00:18,  1.35it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:18,  1.33it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:17,  1.32it/s]\rdiffusion:  27%|██▋       | 8/30 [00:05\u003c00:16,  1.31it/s]\rdiffusion:  30%|███       | 9/30 [00:06\u003c00:16,  1.30it/s]\rdiffusion:  33%|███▎      | 10/30 [00:07\u003c00:15,  1.30it/s]\rdiffusion:  37%|███▋      | 11/30 [00:08\u003c00:14,  1.29it/s]\rdiffusion:  40%|████      | 12/30 [00:08\u003c00:14,  1.29it/s]\rdiffusion:  43%|████▎     | 13/30 [00:09\u003c00:13,  1.28it/s]\rdiffusion:  47%|████▋     | 14/30 [00:10\u003c00:12,  1.28it/s]\rdiffusion:  50%|█████     | 15/30 [00:11\u003c00:11,  1.28it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:12\u003c00:11,  1.27it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:12\u003c00:10,  1.27it/s]\rdiffusion:  60%|██████    | 18/30 [00:13\u003c00:09,  1.27it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:14\u003c00:08,  1.27it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:15\u003c00:07,  1.26it/s]\rdiffusion:  70%|███████   | 21/30 [00:16\u003c00:07,  1.26it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:16\u003c00:06,  1.25it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:17\u003c00:05,  1.25it/s]\rdiffusion:  80%|████████  | 24/30 [00:18\u003c00:04,  1.25it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:19\u003c00:04,  1.25it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:20\u003c00:03,  1.25it/s]\rdiffusion:  90%|█████████ | 27/30 [00:20\u003c00:02,  1.25it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:21\u003c00:01,  1.24it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:22\u003c00:00,  1.25it/s]\rdiffusion: 100%|██████████| 30/30 [00:23\u003c00:00,  1.25it/s]\rdiffusion: 100%|██████████| 30/30 [00:23\u003c00:00,  1.29it/s]\n"}
+,{"stream_name":"stderr","time":169.164869773,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":174.034692724,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":174.089006917,"data":"[2026-11-26T17:36:45Z] [INFO ] 02_library_scene.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":176.469757642,"data":"[2026-11-26T17:36:47Z] [INFO ] saved 02_library_scene.png (1009 KB)\n"}
+,{"stream_name":"stdout","time":176.469807119,"data":"[2026-11-26T17:36:47Z] [INFO ] ✔ done:  generate_02_library_scene (30.8s)\n"}
+,{"stream_name":"stdout","time":176.764816906,"data":"[2026-11-26T17:36:47Z] [INFO ] ▶ start: generate_03_rainy_street\n"}
+,{"stream_name":"stdout","time":176.764853683,"data":"[2026-11-26T17:36:47Z] [INFO ] sampling 03_rainy_street.png: 768x1344 · seed=44 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":176.776541269,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [', fine rain droplets catching the light , looking directly at the camera , cinematic bokeh streetlights behind him , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":176.787341844,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [', fine rain droplets catching the light , looking directly at the camera , cinematic bokeh streetlights behind him , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":201.946227122,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:14,  2.01it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:19,  1.46it/s]\rdiffusion:  10%|█         | 3/30 [00:02\u003c00:20,  1.34it/s]\rdiffusion:  13%|█▎        | 4/30 [00:02\u003c00:20,  1.29it/s]\rdiffusion:  17%|█▋        | 5/30 [00:03\u003c00:19,  1.26it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:19,  1.24it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:18,  1.23it/s]\rdiffusion:  27%|██▋       | 8/30 [00:06\u003c00:18,  1.22it/s]\rdiffusion:  30%|███       | 9/30 [00:07\u003c00:17,  1.22it/s]\rdiffusion:  33%|███▎      | 10/30 [00:07\u003c00:16,  1.21it/s]\rdiffusion:  37%|███▋      | 11/30 [00:08\u003c00:15,  1.21it/s]\rdiffusion:  40%|████      | 12/30 [00:09\u003c00:14,  1.20it/s]\rdiffusion:  43%|████▎     | 13/30 [00:10\u003c00:14,  1.20it/s]\rdiffusion:  47%|████▋     | 14/30 [00:11\u003c00:13,  1.19it/s]\rdiffusion:  50%|█████     | 15/30 [00:12\u003c00:12,  1.19it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:12\u003c00:11,  1.19it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:13\u003c00:10,  1.18it/s]\rdiffusion:  60%|██████    | 18/30 [00:14\u003c00:10,  1.18it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:15\u003c00:09,  1.18it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:16\u003c00:08,  1.17it/s]\rdiffusion:  70%|███████   | 21/30 [00:17\u003c00:07,  1.17it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:18\u003c00:06,  1.17it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:18\u003c00:06,  1.17it/s]\rdiffusion:  80%|████████  | 24/30 [00:19\u003c00:05,  1.17it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:20\u003c00:04,  1.16it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:21\u003c00:03,  1.16it/s]\rdiffusion:  90%|█████████ | 27/30 [00:22\u003c00:02,  1.15it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:23\u003c00:01,  1.15it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.15it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.15it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.20it/s]\n"}
+,{"stream_name":"stderr","time":201.947173221,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":207.058706148,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":207.097075912,"data":"[2026-11-26T17:37:18Z] [INFO ] 03_rainy_street.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":209.272754988,"data":"[2026-11-26T17:37:20Z] [INFO ] saved 03_rainy_street.png (1178 KB)\n"}
+,{"stream_name":"stdout","time":209.272783909,"data":"[2026-11-26T17:37:20Z] [INFO ] ✔ done:  generate_03_rainy_street (32.5s)\n"}
+,{"stream_name":"stdout","time":209.570447956,"data":"[2026-11-26T17:37:20Z] [INFO ] ▶ start: generate_04_podcast_studio\n"}
+,{"stream_name":"stdout","time":209.570477155,"data":"[2026-11-26T17:37:20Z] [INFO ] sampling 04_podcast_studio.png: 768x1344 · seed=45 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":209.582058983,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['background , looking directly at the camera , cinematic lighting , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":209.593998941,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['background , looking directly at the camera , cinematic lighting , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":235.494371281,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:14,  2.01it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:20,  1.38it/s]\rdiffusion:  10%|█         | 3/30 [00:02\u003c00:21,  1.25it/s]\rdiffusion:  13%|█▎        | 4/30 [00:03\u003c00:21,  1.20it/s]\rdiffusion:  17%|█▋        | 5/30 [00:04\u003c00:21,  1.17it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:20,  1.16it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:20,  1.15it/s]\rdiffusion:  27%|██▋       | 8/30 [00:06\u003c00:19,  1.14it/s]\rdiffusion:  30%|███       | 9/30 [00:07\u003c00:18,  1.14it/s]\rdiffusion:  33%|███▎      | 10/30 [00:08\u003c00:17,  1.14it/s]\rdiffusion:  37%|███▋      | 11/30 [00:09\u003c00:16,  1.14it/s]\rdiffusion:  40%|████      | 12/30 [00:10\u003c00:15,  1.14it/s]\rdiffusion:  43%|████▎     | 13/30 [00:11\u003c00:14,  1.14it/s]\rdiffusion:  47%|████▋     | 14/30 [00:11\u003c00:14,  1.14it/s]\rdiffusion:  50%|█████     | 15/30 [00:12\u003c00:13,  1.14it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:13\u003c00:12,  1.14it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:14\u003c00:11,  1.14it/s]\rdiffusion:  60%|██████    | 18/30 [00:15\u003c00:10,  1.15it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:16\u003c00:09,  1.15it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:17\u003c00:08,  1.15it/s]\rdiffusion:  70%|███████   | 21/30 [00:18\u003c00:07,  1.15it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:18\u003c00:06,  1.15it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:19\u003c00:06,  1.15it/s]\rdiffusion:  80%|████████  | 24/30 [00:20\u003c00:05,  1.15it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:21\u003c00:04,  1.16it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:22\u003c00:03,  1.16it/s]\rdiffusion:  90%|█████████ | 27/30 [00:23\u003c00:02,  1.16it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:24\u003c00:01,  1.16it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.17it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.17it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.16it/s]\n"}
+,{"stream_name":"stderr","time":235.495490022,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":240.507357457,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":240.544009029,"data":"[2026-11-26T17:37:51Z] [INFO ] 04_podcast_studio.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":242.646373934,"data":"[2026-11-26T17:37:53Z] [INFO ] saved 04_podcast_studio.png (1047 KB)\n"}
+,{"stream_name":"stdout","time":242.646414622,"data":"[2026-11-26T17:37:53Z] [INFO ] ✔ done:  generate_04_podcast_studio (33.1s)\n"}
+,{"stream_name":"stdout","time":242.940378697,"data":"[2026-11-26T17:37:53Z] [INFO ] ▶ start: build_contact_sheet\n"}
+,{"stream_name":"stdout","time":247.666922779,"data":"[2026-11-26T17:37:58Z] [INFO ] saved contact_sheet.png (2889x1220, 3675 KB)\n"}
+,{"stream_name":"stdout","time":247.666949622,"data":"[2026-11-26T17:37:58Z] [INFO ] ✔ done:  build_contact_sheet (4.7s)\n"}
+,{"stream_name":"stdout","time":247.667736611,"data":"[2026-11-26T17:37:58Z] [INFO ] PHASE 1 MICRO-PILOT 1 COMPLETE ✔\n"}
+,{"stream_name":"stdout","time":247.667754383,"data":"[2026-11-26T17:37:58Z] [INFO ] total wall clock: 246.539s\n"}
+,{"stream_name":"stderr","time":255.88800066,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":255.888032843,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":256.14940401,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":256.149430833,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":256.929132318,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":258.042193863,"data":"[NbConvertApp] Writing 409889 bytes to __results__.html\n"}
+]
+[2026-11-26 17:38:45Z] [INFO ] appended kaggle kernels logs → outputs/build.log (31273 chars)
+
+===== kernel log file stoic-character-forge.log · fetched 2026-11-26 17:38:45Z =====
+[{"stream_name":"stdout","time":1.135080248,"data":"[2026-11-26T17:33:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":1.135142366,"data":"[2026-11-26T17:33:52Z] [INFO ] stoic-ai-studio · THE CHARACTER FORGE · Micro-Pilot 1\n"}
+,{"stream_name":"stdout","time":1.135152639,"data":"[2026-11-26T17:33:52Z] [INFO ] output dir: /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.135157654,"data":"[2026-11-26T17:33:52Z] [INFO ] ==============================================================================\n"}
+,{"stream_name":"stdout","time":26.017373719,"data":"[2026-11-26T17:34:16Z] [INFO ] diffusers 0.42.0 detected\n"}
+,{"stream_name":"stdout","time":39.284405651,"data":"[2026-11-26T17:34:30Z] [INFO ] environment: {\"python\": \"3.13.16\", \"platform\": \"Linux-6.18.55+-x86_64-with-glibc2.39\", \"torch\": \"2.11.0+cu130\", \"cuda_available\": true, \"cuda_version\": \"13.0\", \"gpu_names\": [\"Tesla T4\", \"Tesla T4\"], \"gpu_total_vram_gb\": [14.56, 14.56], \"diffusers\": \"0.42.0\", \"transformers\": \"5.20.2\", \"accelerate\": \"1.15.0\", \"safetensors\": \"0.8.0\", \"PIL\": \"13.0.0\"}\n"}
+,{"stream_name":"stdout","time":39.284444899,"data":"[2026-11-26T17:34:30Z] [INFO ] device=cuda:0 · Tesla T4\n"}
+,{"stream_name":"stdout","time":39.284454474,"data":"[2026-11-26T17:34:30Z] [INFO ] ▶ start: load_sdxl_pipeline\n"}
+,{"stream_name":"stdout","time":39.284487042,"data":"[2026-11-26T17:34:30Z] [INFO ] sdxl: loading SG161222/RealVisXL_V5.0 (dtype=float16, fp16 variant)\n"}
+,{"stream_name":"stderr","time":39.45458627,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":74.711463784,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 17.83it/s]\rFetching 18 files:  72%|███████▏  | 13/18 [00:00\u003c00:00, 66.82it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:19\u003c00:00, 66.82it/s]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  2.57s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.96s/it]\n"}
+,{"stream_name":"stderr","time":77.143256154,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:02\u003c00:12,  2.13s/it]\n"}
+,{"stream_name":"stderr","time":77.243732031,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":77.343219607,"data":"\rLoading weights:  50%|████▉     | 257/517 [00:00\u003c00:00, 2561.88it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2588.35it/s]\n"}
+,{"stream_name":"stderr","time":77.582258213,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:02,  1.35it/s]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:00,  2.54it/s]\n"}
+,{"stream_name":"stderr","time":77.663098578,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2439.87it/s]\n"}
+,{"stream_name":"stderr","time":77.668685778,"data":"\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  3.76it/s]\rLoading pipeline components...: 100%|██████████| 7/7 [00:02\u003c00:00,  2.37it/s]\n"}
+,{"stream_name":"stdout","time":77.6696462,"data":"[2026-11-26T17:35:08Z] [INFO ] ✔ done:  load_sdxl_pipeline (38.4s)\n"}
+,{"stream_name":"stdout","time":77.66970956,"data":"[2026-11-26T17:35:08Z] [INFO ] ▶ start: configure_scheduler_and_vram\n"}
+,{"stream_name":"stdout","time":77.695462407,"data":"[2026-11-26T17:35:08Z] [INFO ] scheduler: DPM-Solver++ with Karras sigmas\n"}
+,{"stream_name":"stdout","time":79.998025814,"data":"[2026-11-26T17:35:10Z] [INFO ] pipeline moved to cuda:0 (fp16 weights)\n"}
+,{"stream_name":"stdout","time":79.998057431,"data":"[2026-11-26T17:35:10Z] [INFO ] vae slicing: applied vae.enable_slicing()\n"}
+,{"stream_name":"stdout","time":79.998062003,"data":"[2026-11-26T17:35:10Z] [INFO ] vae tiling: applied vae.enable_tiling()\n"}
+,{"stream_name":"stdout","time":79.998077717,"data":"[2026-11-26T17:35:10Z] [WARN ] resolution binning: no supported API on this diffusers build (skipped)\n"}
+,{"stream_name":"stdout","time":79.998081993,"data":"[2026-11-26T17:35:10Z] [INFO ] attention slicing left disabled (incompatible with IP-Adapter)\n"}
+,{"stream_name":"stderr","time":79.998364814,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":80.004082292,"data":"[2026-11-26T17:35:10Z] [INFO ] vae kept in float16 (matches unet dtype)\n"}
+,{"stream_name":"stdout","time":80.007143096,"data":"[2026-11-26T17:35:10Z] [INFO ] ✔ done:  configure_scheduler_and_vram (2.3s)\n"}
+,{"stream_name":"stdout","time":80.007154958,"data":"[2026-11-26T17:35:10Z] [INFO ] ▶ start: generate_master_face\n"}
+,{"stream_name":"stdout","time":80.007159559,"data":"[2026-11-26T17:35:10Z] [INFO ] sampling 01_master_face: 1024x1024 · seed=42 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":80.020720763,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":80.027475669,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer CLIPTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stderr","time":80.027493322,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":81.319145408,"data":"[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (143 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stderr","time":81.321535534,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['camera left , head and shoulders , centered composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":106.838485077,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:04\u003c02:05,  4.31s/it]\rdiffusion:   7%|▋         | 2/30 [00:04\u003c00:55,  1.98s/it]\rdiffusion:  10%|█         | 3/30 [00:05\u003c00:37,  1.41s/it]\rdiffusion:  13%|█▎        | 4/30 [00:06\u003c00:29,  1.14s/it]\rdiffusion:  17%|█▋        | 5/30 [00:06\u003c00:24,  1.01it/s]\rdiffusion:  20%|██        | 6/30 [00:07\u003c00:21,  1.11it/s]\rdiffusion:  23%|██▎       | 7/30 [00:08\u003c00:19,  1.18it/s]\rdiffusion:  27%|██▋       | 8/30 [00:09\u003c00:17,  1.23it/s]\rdiffusion:  30%|███       | 9/30 [00:09\u003c00:16,  1.27it/s]\rdiffusion:  33%|███▎      | 10/30 [00:10\u003c00:15,  1.30it/s]\rdiffusion:  37%|███▋      | 11/30 [00:11\u003c00:14,  1.32it/s]\rdiffusion:  40%|████      | 12/30 [00:11\u003c00:13,  1.33it/s]\rdiffusion:  43%|████▎     | 13/30 [00:12\u003c00:12,  1.34it/s]\rdiffusion:  47%|████▋     | 14/30 [00:13\u003c00:11,  1.34it/s]\rdiffusion:  50%|█████     | 15/30 [00:14\u003c00:11,  1.35it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:14\u003c00:10,  1.35it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:15\u003c00:09,  1.35it/s]\rdiffusion:  60%|██████    | 18/30 [00:16\u003c00:08,  1.35it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:17\u003c00:08,  1.35it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:17\u003c00:07,  1.35it/s]\rdiffusion:  70%|███████   | 21/30 [00:18\u003c00:06,  1.34it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:19\u003c00:05,  1.34it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:20\u003c00:05,  1.34it/s]\rdiffusion:  80%|████████  | 24/30 [00:20\u003c00:04,  1.34it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:21\u003c00:03,  1.34it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:22\u003c00:02,  1.34it/s]\rdiffusion:  90%|█████████ | 27/30 [00:23\u003c00:02,  1.34it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:23\u003c00:01,  1.34it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.34it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.34it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.18it/s]\n"}
+,{"stream_name":"stderr","time":106.840030405,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":106.840051891,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":106.840181635,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":109.234616616,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":111.095721415,"data":"[2026-11-26T17:35:42Z] [INFO ] 01_master_face: peak VRAM 9.73 GB\n"}
+,{"stream_name":"stdout","time":112.536989855,"data":"[2026-11-26T17:35:43Z] [INFO ] saved 01_master_face.png (1409 KB)\n"}
+,{"stream_name":"stdout","time":112.537031503,"data":"[2026-11-26T17:35:43Z] [INFO ] ✔ done:  generate_master_face (32.5s)\n"}
+,{"stream_name":"stdout","time":112.537037841,"data":"[2026-11-26T17:35:43Z] [INFO ] attaching IP-Adapter Face (ip-adapter-plus-face_sdxl_vit-h.safetensors) @ scale 0.65\n"}
+,{"stream_name":"stdout","time":112.537042188,"data":"[2026-11-26T17:35:43Z] [INFO ] ▶ start: load_clip_vision\n"}
+,{"stream_name":"stderr","time":136.316570123,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  17%|█▋        | 89/520 [00:00\u003c00:00, 800.20it/s]\rLoading weights:  36%|███▌      | 185/520 [00:00\u003c00:00, 880.34it/s]\rLoading weights:  54%|█████▍    | 281/520 [00:00\u003c00:00, 910.63it/s]\rLoading weights:  72%|███████▎  | 377/520 [00:00\u003c00:00, 860.97it/s]\rLoading weights:  91%|█████████ | 473/520 [00:00\u003c00:00, 873.33it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 910.46it/s]\n"}
+,{"stream_name":"stderr","time":136.344503225,"data":"[transformers] \u001b[1mCLIPVisionModelWithProjection LOAD REPORT\u001b[0m from: laion/CLIP-ViT-H-14-laion2B-s32B-b79K\n"}
+,{"stream_name":"stderr","time":136.344533377,"data":"Key                                                          | Status     |  | \n"}
+,{"stream_name":"stderr","time":136.344539107,"data":"-------------------------------------------------------------+------------+--+-\n"}
+,{"stream_name":"stderr","time":136.344543626,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.bias   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344547921,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344552572,"data":"text_model.encoder.layers.{0...23}.layer_norm2.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344556869,"data":"text_model.encoder.layers.{0...23}.layer_norm2.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344561037,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344565311,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344569577,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344573808,"data":"text_model.encoder.layers.{0...23}.self_attn.v_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344578112,"data":"text_model.encoder.layers.{0...23}.layer_norm1.weight        | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344582321,"data":"text_model.encoder.layers.{0...23}.layer_norm1.bias          | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344586558,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344590706,"data":"text_model.encoder.layers.{0...23}.mlp.fc2.weight            | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344594929,"data":"text_model.encoder.layers.{0...23}.mlp.fc1.bias              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344598966,"data":"text_model.encoder.layers.{0...23}.self_attn.q_proj.bias     | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344603119,"data":"text_model.encoder.layers.{0...23}.self_attn.out_proj.weight | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344607391,"data":"text_model.encoder.layers.{0...23}.self_attn.k_proj.weight   | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344611501,"data":"text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344615772,"data":"text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344619856,"data":"text_projection.weight                                       | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344624663,"data":"text_model.final_layer_norm.weight                           | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.34464398,"data":"text_model.final_layer_norm.bias                             | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344648601,"data":"logit_scale                                                  | UNEXPECTED |  | \n"}
+,{"stream_name":"stderr","time":136.344652858,"data":"\n"}
+,{"stream_name":"stderr","time":136.344656626,"data":"Notes:\n"}
+,{"stream_name":"stderr","time":136.344661483,"data":"- UNEXPECTED:\tcan be ignored when loading from different task/architecture; not ok if you expect identical arch.\n"}
+,{"stream_name":"stdout","time":136.662197837,"data":"[2026-11-26T17:36:07Z] [INFO ] clip vision encoder ready (ViT-H, fp16)\n"}
+,{"stream_name":"stdout","time":136.662227182,"data":"[2026-11-26T17:36:07Z] [INFO ] ✔ done:  load_clip_vision (24.1s)\n"}
+,{"stream_name":"stdout","time":136.662321132,"data":"[2026-11-26T17:36:07Z] [INFO ] ▶ start: load_ip_adapter\n"}
+,{"stream_name":"stderr","time":145.186478744,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":145.439667888,"data":"[2026-11-26T17:36:16Z] [INFO ] ip-adapter scale set to 0.65\n"}
+,{"stream_name":"stdout","time":145.43969577,"data":"[2026-11-26T17:36:16Z] [INFO ] ✔ done:  load_ip_adapter (8.8s)\n"}
+,{"stream_name":"stdout","time":145.43970168,"data":"[2026-11-26T17:36:16Z] [INFO ] IP-Adapter Face ready — character consistency is locked.\n"}
+,{"stream_name":"stdout","time":145.705408027,"data":"[2026-11-26T17:36:16Z] [INFO ] ▶ start: generate_02_library_scene\n"}
+,{"stream_name":"stdout","time":145.70543465,"data":"[2026-11-26T17:36:16Z] [INFO ] sampling 02_library_scene.png: 768x1344 · seed=43 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":145.717590336,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['at the camera , glass of whiskey and an open book on the desk , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":145.729538463,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['at the camera , glass of whiskey and an open book on the desk , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":169.163668468,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:12,  2.26it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:17,  1.58it/s]\rdiffusion:  10%|█         | 3/30 [00:01\u003c00:18,  1.44it/s]\rdiffusion:  13%|█▎        | 4/30 [00:02\u003c00:18,  1.38it/s]\rdiffusion:  17%|█▋        | 5/30 [00:03\u003c00:18,  1.35it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:18,  1.33it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:17,  1.32it/s]\rdiffusion:  27%|██▋       | 8/30 [00:05\u003c00:16,  1.31it/s]\rdiffusion:  30%|███       | 9/30 [00:06\u003c00:16,  1.30it/s]\rdiffusion:  33%|███▎      | 10/30 [00:07\u003c00:15,  1.30it/s]\rdiffusion:  37%|███▋      | 11/30 [00:08\u003c00:14,  1.29it/s]\rdiffusion:  40%|████      | 12/30 [00:08\u003c00:14,  1.29it/s]\rdiffusion:  43%|████▎     | 13/30 [00:09\u003c00:13,  1.28it/s]\rdiffusion:  47%|████▋     | 14/30 [00:10\u003c00:12,  1.28it/s]\rdiffusion:  50%|█████     | 15/30 [00:11\u003c00:11,  1.28it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:12\u003c00:11,  1.27it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:12\u003c00:10,  1.27it/s]\rdiffusion:  60%|██████    | 18/30 [00:13\u003c00:09,  1.27it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:14\u003c00:08,  1.27it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:15\u003c00:07,  1.26it/s]\rdiffusion:  70%|███████   | 21/30 [00:16\u003c00:07,  1.26it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:16\u003c00:06,  1.25it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:17\u003c00:05,  1.25it/s]\rdiffusion:  80%|████████  | 24/30 [00:18\u003c00:04,  1.25it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:19\u003c00:04,  1.25it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:20\u003c00:03,  1.25it/s]\rdiffusion:  90%|█████████ | 27/30 [00:20\u003c00:02,  1.25it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:21\u003c00:01,  1.24it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:22\u003c00:00,  1.25it/s]\rdiffusion: 100%|██████████| 30/30 [00:23\u003c00:00,  1.25it/s]\rdiffusion: 100%|██████████| 30/30 [00:23\u003c00:00,  1.29it/s]\n"}
+,{"stream_name":"stderr","time":169.164869773,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":174.034692724,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":174.089006917,"data":"[2026-11-26T17:36:45Z] [INFO ] 02_library_scene.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":176.469757642,"data":"[2026-11-26T17:36:47Z] [INFO ] saved 02_library_scene.png (1009 KB)\n"}
+,{"stream_name":"stdout","time":176.469807119,"data":"[2026-11-26T17:36:47Z] [INFO ] ✔ done:  generate_02_library_scene (30.8s)\n"}
+,{"stream_name":"stdout","time":176.764816906,"data":"[2026-11-26T17:36:47Z] [INFO ] ▶ start: generate_03_rainy_street\n"}
+,{"stream_name":"stdout","time":176.764853683,"data":"[2026-11-26T17:36:47Z] [INFO ] sampling 03_rainy_street.png: 768x1344 · seed=44 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":176.776541269,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [', fine rain droplets catching the light , looking directly at the camera , cinematic bokeh streetlights behind him , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":176.787341844,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: [', fine rain droplets catching the light , looking directly at the camera , cinematic bokeh streetlights behind him , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":201.946227122,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:14,  2.01it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:19,  1.46it/s]\rdiffusion:  10%|█         | 3/30 [00:02\u003c00:20,  1.34it/s]\rdiffusion:  13%|█▎        | 4/30 [00:02\u003c00:20,  1.29it/s]\rdiffusion:  17%|█▋        | 5/30 [00:03\u003c00:19,  1.26it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:19,  1.24it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:18,  1.23it/s]\rdiffusion:  27%|██▋       | 8/30 [00:06\u003c00:18,  1.22it/s]\rdiffusion:  30%|███       | 9/30 [00:07\u003c00:17,  1.22it/s]\rdiffusion:  33%|███▎      | 10/30 [00:07\u003c00:16,  1.21it/s]\rdiffusion:  37%|███▋      | 11/30 [00:08\u003c00:15,  1.21it/s]\rdiffusion:  40%|████      | 12/30 [00:09\u003c00:14,  1.20it/s]\rdiffusion:  43%|████▎     | 13/30 [00:10\u003c00:14,  1.20it/s]\rdiffusion:  47%|████▋     | 14/30 [00:11\u003c00:13,  1.19it/s]\rdiffusion:  50%|█████     | 15/30 [00:12\u003c00:12,  1.19it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:12\u003c00:11,  1.19it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:13\u003c00:10,  1.18it/s]\rdiffusion:  60%|██████    | 18/30 [00:14\u003c00:10,  1.18it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:15\u003c00:09,  1.18it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:16\u003c00:08,  1.17it/s]\rdiffusion:  70%|███████   | 21/30 [00:17\u003c00:07,  1.17it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:18\u003c00:06,  1.17it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:18\u003c00:06,  1.17it/s]\rdiffusion:  80%|████████  | 24/30 [00:19\u003c00:05,  1.17it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:20\u003c00:04,  1.16it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:21\u003c00:03,  1.16it/s]\rdiffusion:  90%|█████████ | 27/30 [00:22\u003c00:02,  1.15it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:23\u003c00:01,  1.15it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.15it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.15it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.20it/s]\n"}
+,{"stream_name":"stderr","time":201.947173221,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":207.058706148,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":207.097075912,"data":"[2026-11-26T17:37:18Z] [INFO ] 03_rainy_street.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":209.272754988,"data":"[2026-11-26T17:37:20Z] [INFO ] saved 03_rainy_street.png (1178 KB)\n"}
+,{"stream_name":"stdout","time":209.272783909,"data":"[2026-11-26T17:37:20Z] [INFO ] ✔ done:  generate_03_rainy_street (32.5s)\n"}
+,{"stream_name":"stdout","time":209.570447956,"data":"[2026-11-26T17:37:20Z] [INFO ] ▶ start: generate_04_podcast_studio\n"}
+,{"stream_name":"stdout","time":209.570477155,"data":"[2026-11-26T17:37:20Z] [INFO ] sampling 04_podcast_studio.png: 768x1344 · seed=45 · steps=30 · cfg=5.5\n"}
+,{"stream_name":"stderr","time":209.582058983,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['background , looking directly at the camera , cinematic lighting , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":209.593998941,"data":"The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['background , looking directly at the camera , cinematic lighting , vertical composition , moody chiaroscuro cinematic lighting , dramatic rim light , deep shadows , hyper - realistic skin texture with visible pores , ultra detailed , 8 5 mm lens , shallow depth of field , shot on arri alexa , editorial photography , rich filmic color grade , photorealistic , 8 k']\n"}
+,{"stream_name":"stderr","time":235.494371281,"data":"\rdiffusion:   0%|          | 0/30 [00:00\u003c?, ?it/s]\rdiffusion:   3%|▎         | 1/30 [00:00\u003c00:14,  2.01it/s]\rdiffusion:   7%|▋         | 2/30 [00:01\u003c00:20,  1.38it/s]\rdiffusion:  10%|█         | 3/30 [00:02\u003c00:21,  1.25it/s]\rdiffusion:  13%|█▎        | 4/30 [00:03\u003c00:21,  1.20it/s]\rdiffusion:  17%|█▋        | 5/30 [00:04\u003c00:21,  1.17it/s]\rdiffusion:  20%|██        | 6/30 [00:04\u003c00:20,  1.16it/s]\rdiffusion:  23%|██▎       | 7/30 [00:05\u003c00:20,  1.15it/s]\rdiffusion:  27%|██▋       | 8/30 [00:06\u003c00:19,  1.14it/s]\rdiffusion:  30%|███       | 9/30 [00:07\u003c00:18,  1.14it/s]\rdiffusion:  33%|███▎      | 10/30 [00:08\u003c00:17,  1.14it/s]\rdiffusion:  37%|███▋      | 11/30 [00:09\u003c00:16,  1.14it/s]\rdiffusion:  40%|████      | 12/30 [00:10\u003c00:15,  1.14it/s]\rdiffusion:  43%|████▎     | 13/30 [00:11\u003c00:14,  1.14it/s]\rdiffusion:  47%|████▋     | 14/30 [00:11\u003c00:14,  1.14it/s]\rdiffusion:  50%|█████     | 15/30 [00:12\u003c00:13,  1.14it/s]\rdiffusion:  53%|█████▎    | 16/30 [00:13\u003c00:12,  1.14it/s]\rdiffusion:  57%|█████▋    | 17/30 [00:14\u003c00:11,  1.14it/s]\rdiffusion:  60%|██████    | 18/30 [00:15\u003c00:10,  1.15it/s]\rdiffusion:  63%|██████▎   | 19/30 [00:16\u003c00:09,  1.15it/s]\rdiffusion:  67%|██████▋   | 20/30 [00:17\u003c00:08,  1.15it/s]\rdiffusion:  70%|███████   | 21/30 [00:18\u003c00:07,  1.15it/s]\rdiffusion:  73%|███████▎  | 22/30 [00:18\u003c00:06,  1.15it/s]\rdiffusion:  77%|███████▋  | 23/30 [00:19\u003c00:06,  1.15it/s]\rdiffusion:  80%|████████  | 24/30 [00:20\u003c00:05,  1.15it/s]\rdiffusion:  83%|████████▎ | 25/30 [00:21\u003c00:04,  1.16it/s]\rdiffusion:  87%|████████▋ | 26/30 [00:22\u003c00:03,  1.16it/s]\rdiffusion:  90%|█████████ | 27/30 [00:23\u003c00:02,  1.16it/s]\rdiffusion:  93%|█████████▎| 28/30 [00:24\u003c00:01,  1.16it/s]\rdiffusion:  97%|█████████▋| 29/30 [00:24\u003c00:00,  1.17it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.17it/s]\rdiffusion: 100%|██████████| 30/30 [00:25\u003c00:00,  1.16it/s]\n"}
+,{"stream_name":"stderr","time":235.495490022,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":240.507357457,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":240.544009029,"data":"[2026-11-26T17:37:51Z] [INFO ] 04_podcast_studio.png: peak VRAM 10.96 GB\n"}
+,{"stream_name":"stdout","time":242.646373934,"data":"[2026-11-26T17:37:53Z] [INFO ] saved 04_podcast_studio.png (1047 KB)\n"}
+,{"stream_name":"stdout","time":242.646414622,"data":"[2026-11-26T17:37:53Z] [INFO ] ✔ done:  generate_04_podcast_studio (33.1s)\n"}
+,{"stream_name":"stdout","time":242.940378697,"data":"[2026-11-26T17:37:53Z] [INFO ] ▶ start: build_contact_sheet\n"}
+,{"stream_name":"stdout","time":247.666922779,"data":"[2026-11-26T17:37:58Z] [INFO ] saved contact_sheet.png (2889x1220, 3675 KB)\n"}
+,{"stream_name":"stdout","time":247.666949622,"data":"[2026-11-26T17:37:58Z] [INFO ] ✔ done:  build_contact_sheet (4.7s)\n"}
+,{"stream_name":"stdout","time":247.667736611,"data":"[2026-11-26T17:37:58Z] [INFO ] PHASE 1 MICRO-PILOT 1 COMPLETE ✔\n"}
+,{"stream_name":"stdout","time":247.667754383,"data":"[2026-11-26T17:37:58Z] [INFO ] total wall clock: 246.539s\n"}
+,{"stream_name":"stderr","time":255.88800066,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":255.888032843,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":256.14940401,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":256.149430833,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":256.929132318,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":258.042193863,"data":"[NbConvertApp] Writing 409889 bytes to __results__.html\n"}
+]
+[2026-11-26 17:38:45Z] [INFO ] appended kernel log file stoic-character-forge.log → outputs/build.log (31273 chars)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ contact_sheet.png (3675 KB)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ 01_master_face.png (1409 KB)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ 02_library_scene.png (1009 KB)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ 03_rainy_street.png (1178 KB)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ 04_podcast_studio.png (1047 KB)
+[2026-11-26 17:38:45Z] [INFO ] artifact ✔ metrics.json (3 KB)
+[2026-11-26 17:38:45Z] [INFO ] ✔ MICRO-PILOT 1 artifacts are ready in ./outputs
+[2026-11-26 17:38:45Z] [INFO ]    contact sheet: 3675 KB
