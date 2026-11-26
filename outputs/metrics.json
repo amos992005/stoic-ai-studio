@@ -1,7 +1,7 @@
 {
   "phase": "phase-1-micro-pilot-1",
   "pilot": "the-character-forge",
-  "started_at": "2026-11-26T17:33:52.069063+00:00",
+  "started_at": "2026-11-26T17:49:42.191541+00:00",
   "status": "success",
   "config": {
     "model_id": "SG161222/RealVisXL_V5.0",
@@ -64,16 +64,16 @@
     }
   ],
   "timings_seconds": {
-    "load_sdxl_pipeline": 38.385,
-    "configure_scheduler_and_vram": 2.334,
-    "generate_master_face": 32.533,
-    "load_clip_vision": 24.125,
-    "load_ip_adapter": 8.777,
-    "generate_02_library_scene": 30.764,
-    "generate_03_rainy_street": 32.508,
-    "generate_04_podcast_studio": 33.076,
-    "build_contact_sheet": 4.727,
-    "total": 246.539
+    "load_sdxl_pipeline": 38.264,
+    "configure_scheduler_and_vram": 2.371,
+    "generate_master_face": 35.489,
+    "load_clip_vision": 23.536,
+    "load_ip_adapter": 7.678,
+    "generate_02_library_scene": 35.799,
+    "generate_03_rainy_street": 39.84,
+    "generate_04_podcast_studio": 37.261,
+    "build_contact_sheet": 4.921,
+    "total": 265.985
   },
   "errors": [],
   "environment": {
@@ -115,5 +115,5 @@
     }
   ],
   "face_locked": true,
-  "finished_at": "2026-11-26T17:37:58.607459+00:00"
+  "finished_at": "2026-11-26T17:54:08.176551+00:00"
 }
