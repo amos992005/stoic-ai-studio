@@ -156,7 +156,8 @@ NEGATIVE_PROMPT = (
     "blurry, low quality, jpeg artifacts, deformed, disfigured, mutated hands, "
     "extra fingers, extra limbs, bad anatomy, bad proportions, cross-eyed, "
     "asymmetric eyes, watermark, signature, text, logo, frame, border, "
-    "teenager, child, old man"
+    "teenager, child, old man, "
+    "two men, two men together, male couple, duplicate person, cloned face"
 )
 
 MASTER_PROMPT = (
@@ -175,14 +176,19 @@ SLIDES: List[Dict[str, Any]] = [
         "filename": "02_monaco_yacht_date.png",
         "title": "02 · MONACO · YACHT",
         "mask": "left",
+        "people": 2,
         "prompt": (
-            "Candid iPhone 16 Pro 24mm photo on the deck of a luxury Riva yacht, "
-            "Monaco at sunset. On the left, a shirtless athletic 27-year-old "
-            f"dirty-blonde man with a confident smirk holding a champagne flute "
-            f"({LUCA}). On the right, a stunning young brunette in a bikini "
-            "laughing naturally, not looking at the camera. Bright ocean horizon, "
-            "harbour lights beginning to glow, salt spray on the lens, "
-            f"{CAMERA}"
+            # Two people must be named up front: a description that buries the
+            # woman after a long male clause gets collapsed into a solo portrait.
+            "Candid iPhone 16 Pro 24mm photo of two people together on the sun "
+            "deck of a luxury Riva yacht in Monaco at sunset. LEFT HALF of the "
+            "frame: a shirtless athletic 27-year-old man holding a champagne "
+            f"flute, confident smirk, looking at the camera ({LUCA}). RIGHT HALF "
+            "of the frame: a stunning young brunette woman in a bikini, laughing "
+            "naturally and looking away from the camera. A man and a woman, two "
+            "different people, side by side. Bright ocean horizon, Monaco "
+            "skyline behind them, harbour lights beginning to glow, salt spray "
+            f"on the lens, {CAMERA}"
         ),
     },
     {
@@ -190,14 +196,16 @@ SLIDES: List[Dict[str, Any]] = [
         "filename": "03_vip_party_flash.png",
         "title": "03 · IBIZA · VIP",
         "mask": "left",
+        "people": 2,
         "prompt": (
-            "Candid 35mm direct on-camera flash photo at an Ibiza rooftop VIP "
-            "party at night. On the left, a 27-year-old dirty-blonde man in an "
-            f"unbuttoned black silk shirt smirking at the camera ({LUCA}). On "
-            "the right, a gorgeous blonde model in an evening dress holding a "
-            "drink. Harsh flash falloff, dark background with bokeh club lights, "
-            "slightly blown highlights, authentic night-flash aesthetic, "
-            f"{CAMERA}"
+            "Candid 35mm direct on-camera flash photo of two people together at "
+            "an Ibiza rooftop VIP party at night. LEFT HALF of the frame: a "
+            "27-year-old man in an unbuttoned black silk shirt, smirking at the "
+            f"camera ({LUCA}). RIGHT HALF of the frame: a gorgeous blonde woman "
+            "in an evening dress holding a cocktail, smiling. A man and a woman, "
+            "two different people, side by side. Harsh flash falloff, dark "
+            "background with bokeh club lights, slightly blown highlights, "
+            f"authentic night-flash aesthetic, {CAMERA}"
         ),
     },
     {
@@ -1384,6 +1392,7 @@ def main() -> int:
                 "jpeg": jpg_path.name,
                 "title": slide["title"],
                 "mask": slide["mask"],
+                "expected_people": slide.get("people", 1),
                 "status": "pending",
             }
             try:
