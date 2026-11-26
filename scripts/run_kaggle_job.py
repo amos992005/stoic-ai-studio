@@ -307,6 +307,64 @@ def build_metadata(username: str) -> Dict[str, Any]:
     return metadata
 
 
+def publish_dataset(
+    slug: str,
+    files: List[Path],
+    env: Dict[str, str],
+    timings: Optional[Dict[str, float]] = None,
+    overwrite: bool = True,
+) -> bool:
+    """
+    Publish (or refresh) a private Kaggle dataset from local files.
+
+    `kaggle kernels push` only uploads the code file, so any auxiliary asset a
+    kernel needs (e.g. the portrait PNG) must arrive as a dataset mount under
+    /kaggle/input/<dataset-slug>/.
+    """
+    staging = Path(os.environ.get("DATASET_STAGING_DIR", str(REPO_ROOT / ".kaggle_dataset")))
+    if staging.exists():
+        shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True, exist_ok=True)
+    for source in files:
+        if not source.is_file():
+            log(f"dataset file missing: {source}", "WARN")
+            continue
+        shutil.copyfile(source, staging / source.name)
+
+    meta = {
+        "title": slug.replace("-", " ")[:50],
+        "id": slug,
+        "licenses": [{"name": "CC0-1.0"}],
+    }
+    (staging / "dataset-metadata.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+    exists = dataset_exists(slug)
+    args = [
+        "kaggle", "datasets", "version" if exists else "create",
+        "-p", str(staging),
+    ]
+    if exists:
+        args += ["-m", f"refresh {ts()}", "--dir-mode", "zip"]
+        if overwrite:
+            args.append("--quiet")
+    else:
+        args += ["--dir-mode", "zip"]
+        if overwrite:
+            args.append("--quiet")
+
+    proc = run(args, env=env, timeout=900)
+    if proc.returncode != 0:
+        combined = f"{proc.stdout or ''}\n{proc.stderr or ''}"
+        # A dataset cannot be updated while a kernel is still mounting it.
+        if "409" in combined or "Conflict" in combined or "still being" in combined:
+            log("python-sdk 409: the dataset is locked by a running kernel", "WARN")
+            return dataset_exists(slug)
+        log(f"dataset publish failed ({proc.returncode})", "ERROR")
+        return False
+    log(f"dataset published: {slug}")
+    return True
+
+
 def dataset_exists(slug: str) -> bool:
     """Cheap, non-fatal existence probe (kaggle datasets list -s <slug>)."""
     try:

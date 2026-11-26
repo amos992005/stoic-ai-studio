@@ -66,7 +66,9 @@ FPS = 25
 MAX_SECONDS = 6.0          # pilot is a 5-6 s reel clip
 OUT_W, OUT_H = 832, 1024   # portrait 4:5-ish crop of the 1024x1024 master
 
-PORTRAIT_NAME = "portrait.png"
+PORTRAIT_NAME = "julian_portrait_1024.png"
+#: Kaggle dataset slug CI publishes the portrait under (files land in /kaggle/input).
+PORTRAIT_DATASET = os.environ.get("PORTRAIT_DATASET_SLUG", "stoic-ai-studio-portrait")
 VOICE_WAV = "julian_voice.wav"
 VOICE_MP3 = "julian_voice.mp3"
 VIDEO_MP4 = "pilot_talking.mp4"
@@ -177,16 +179,25 @@ def resolve_portrait() -> Path:
     here = Path(__file__).resolve().parent
     candidates = [
         here / PORTRAIT_NAME,
-        Path("/kaggle/src") / PORTRAIT_NAME,
+        here / "assets" / PORTRAIT_NAME,
+        Path("/kaggle/src") / PORTRAIT_NAME,          # sibling upload (best effort)
         Path.cwd() / PORTRAIT_NAME,
-        Path.cwd() / "assets" / "julian_master_face.png",
+        Path.cwd() / "assets" / PORTRAIT_NAME,
+        Path("/kaggle/input") / PORTRAIT_DATASET / PORTRAIT_NAME,
+        Path("/kaggle/input") / "stoic-ai-studio-portrait" / PORTRAIT_NAME,
+        Path("/kaggle/input") / "stoic-ai-studio" / PORTRAIT_NAME,
         here.parent / "assets" / "julian_master_face.png",
     ]
+    # Any layout under /kaggle/input/*/ that happens to hold the portrait.
+    if Path("/kaggle/input").is_dir():
+        candidates.extend(sorted(Path("/kaggle/input").rglob(PORTRAIT_NAME)))
     for path in candidates:
         if path.is_file():
             return path
     raise FileNotFoundError(
-        "portrait not found; expected one of: " + ", ".join(str(c) for c in candidates)
+        "portrait not found. Attach the portrait as a Kaggle dataset source "
+        f"(expected at /kaggle/input/{PORTRAIT_DATASET}/{PORTRAIT_NAME}). "
+        "Searched: " + ", ".join(str(c) for c in candidates)
     )
 
 

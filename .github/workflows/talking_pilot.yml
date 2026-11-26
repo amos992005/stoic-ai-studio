@@ -69,8 +69,8 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile kaggle_kernel_talking/talking_pilot.py scripts/run_talking_job.py
-          test -f kaggle_kernel_talking/portrait.png || {
-            echo "::error::kaggle_kernel_talking/portrait.png is missing — the kernel ships the portrait with the push."
+          test -f kaggle_kernel_talking/assets/julian_portrait_1024.png || {
+            echo "::error::portrait asset missing — it is published as a Kaggle dataset, not shipped with the push."
             exit 1
           }
           python - <<'PY'

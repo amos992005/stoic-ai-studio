@@ -17,6 +17,7 @@ Every knob is env-overridable so the same code can be dry-run locally:
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -31,6 +32,11 @@ KERNEL_SLUG = "stoic-talking-pilot"
 KERNEL_TITLE = KERNEL_SLUG
 KERNEL_DIR = REPO_ROOT / "kaggle_kernel_talking"
 CODE_FILE = "talking_pilot.py"
+
+#: `kernels push` uploads only CODE_FILE, so the portrait travels as a private
+#: dataset that the kernel mounts at /kaggle/input/<slug>/.
+PORTRAIT_SLUG = "stoic-ai-studio-portrait"
+PORTRAIT_FILES = [KERNEL_DIR / "assets" / "julian_portrait_1024.png"]
 
 #: A talking pilot is only useful with audio *and* video, so both are required.
 EXPECTED_ARTIFACTS: List[str] = [
@@ -90,6 +96,46 @@ def main() -> int:
     orchestrator.log("PHASE 2 · MICRO-PILOT 2 · VOICE & TALKING AVATAR")
     orchestrator.log(f"kernel: {orchestrator.KERNEL_DIR.relative_to(REPO_ROOT)}/{CODE_FILE}")
     orchestrator.log("=" * 78)
+
+    # --- ensure the portrait is available to the kernel -------------------- #
+    username = orchestrator.sanitize(os.environ.get("KAGGLE_USERNAME"))
+    key = orchestrator.sanitize(os.environ.get("KAGGLE_KEY"))
+    if not username or not key:
+        return orchestrator.main()   # let main() emit the proper auth error
+
+    env = orchestrator.env_with_credentials(username, key)
+    try:
+        orchestrator.write_kaggle_credentials(username, key)
+    except Exception as exc:  # pragma: no cover
+        orchestrator.log(f"could not persist credentials: {exc}", "WARN")
+
+    dataset_slug = f"{username}/{PORTRAIT_SLUG}"
+    missing_portrait = [str(f.relative_to(REPO_ROOT)) for f in PORTRAIT_FILES if not f.is_file()]
+    if missing_portrait:
+        orchestrator.annotate_error(f"portrait asset missing: {missing_portrait}")
+        return 2
+
+    orchestrator.log_group(f"publishing portrait dataset {dataset_slug}")
+    published = orchestrator.publish_dataset(dataset_slug, PORTRAIT_FILES, env)
+    orchestrator.log_group_end()
+    if not published:
+        orchestrator.log(
+            "dataset publish failed — the kernel will fail to find its portrait",
+            "WARN",
+        )
+
+    # Attach the dataset to the generated kernel metadata.
+    original_build_metadata = orchestrator.build_metadata
+
+    def build_metadata_with_portrait(user: str):
+        meta = original_build_metadata(user)
+        sources = list(meta.get("dataset_sources") or [])
+        if dataset_slug not in sources:
+            sources.insert(0, dataset_slug)
+        meta["dataset_sources"] = sources
+        return meta
+
+    orchestrator.build_metadata = build_metadata_with_portrait
 
     exit_code = orchestrator.main()
     if exit_code == 0:

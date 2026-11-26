@@ -34,3 +34,4 @@ kaggle_kernel_talking/kernel-metadata.json
 _kokoro-v1.0.onnx
 _voices-v1.0.bin
 stoic_lipsync/
+.kaggle_dataset/
