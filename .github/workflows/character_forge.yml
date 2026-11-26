@@ -16,7 +16,11 @@ on:
         options: ["false", "true"]
         default: "false"
   push:
-    branches: [main]
+    # `main` for production, `arena/**` so feature branches (e.g. the session
+    # branch) can render and commit artifacts straight back to themselves.
+    branches:
+      - main
+      - "arena/**"
     paths:
       - "kaggle_kernel/**"
       - "scripts/**"
@@ -25,9 +29,11 @@ on:
 permissions:
   contents: write
 
-# Never let two forges race for the same Kaggle kernel slug / git branch.
+# Never let two forges race for the same Kaggle kernel slug. Deliberately a
+# *constant* group (not per-ref): a `main` run and an `arena/**` run queue up
+# instead of hitting Kaggle concurrently, which protects the free GPU quota.
 concurrency:
-  group: character-forge-${{ github.ref }}
+  group: character-forge-kaggle
   cancel-in-progress: false
 
 env:
