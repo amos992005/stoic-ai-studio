@@ -478,6 +478,18 @@ def synthesize_voice(output_dir: Path, timings: Dict[str, float]) -> Dict[str, A
         )
     log(f"raw peak: {float(db(audio).max()):.1f} dBFS")
 
+    # The pilot clip is MAX_SECONDS long. Rather than truncating the sentence
+    # (which cuts the final word), time-stretch the mastered take to fit.
+    speech_seconds = audio.size / sr
+    if speech_seconds > MAX_SECONDS:
+        target = MAX_SECONDS - 0.08
+        stretch = speech_seconds / target
+        log(f"speech is {speech_seconds:.2f}s > {MAX_SECONDS}s clip — "
+            f"time-compressing x{stretch:.3f} to fit (no truncation)", "WARN")
+        with timed("time_stretch_to_fit", timings):
+            audio = time_stretch(audio, sr, target)
+        speech_seconds = audio.size / sr
+
     with timed("master_audio", timings):
         mastered = biquad_highpass(audio, sr, 80.0)          # 80 Hz high-pass
         mastered = peaking_boost(mastered, sr, 190.0, 2.2)   # warmth
@@ -515,6 +527,50 @@ def synthesize_voice(output_dir: Path, timings: Dict[str, float]) -> Dict[str, A
         ],
         "audio": mastered,
     }
+
+
+def time_stretch(signal: np.ndarray, sr: int, target_seconds: float,
+                 frame_ms: float = 40.0, overlap: float = 0.5) -> np.ndarray:
+    """
+    Pitch-preserving time-scale modification (WSOLA-lite: overlap-add on a
+    Hann window). Used to fit the spoken line into the clip instead of cutting
+    off the last word.
+    """
+    if signal.size == 0 or target_seconds <= 0:
+        return signal
+    frame = max(64, int(sr * frame_ms / 1000.0))
+    hop_out = max(1, int(frame * (1.0 - overlap)))
+    ratio = (signal.size / sr) / target_seconds          # >1 = compress
+    hop_in = max(1, int(round(hop_out * ratio)))
+    window = np.hanning(frame).astype(np.float32)
+    n_out = int(round(target_seconds * sr))
+    out = np.zeros(n_out + frame, dtype=np.float32)
+    norm = np.zeros(n_out + frame, dtype=np.float32)
+
+    out_pos, in_pos, search = 0, 0, max(2, int(0.01 * sr))
+    while out_pos < n_out and in_pos + frame < signal.size:
+        # pick the nearby input offset whose onset best continues the previous frame
+        best_off, best_score = 0, -1.0
+        prev = signal[max(0, in_pos - hop_in) : max(0, in_pos - hop_in) + frame]
+        for off in range(-search, search + 1, max(1, search // 4)):
+            cand_pos = min(max(0, in_pos + off), signal.size - frame)
+            cand = signal[cand_pos : cand_pos + frame]
+            score = float(np.dot(prev, cand)) if prev.size == cand.size else -1.0
+            if score > best_score:
+                best_score, best_off = score, off
+        start = min(max(0, in_pos + best_off), signal.size - frame)
+        chunk = signal[start : start + frame] * window
+        out[out_pos : out_pos + frame] += chunk
+        norm[out_pos : out_pos + frame] += window
+        out_pos += hop_out
+        in_pos += hop_in
+
+    norm[norm < 1e-3] = 1.0
+    stretched = (out / norm)[:n_out]
+    peak = float(np.max(np.abs(stretched))) if stretched.size else 0.0
+    if peak > 1e-9:
+        stretched = stretched / peak * float(np.max(np.abs(signal)))
+    return stretched.astype(np.float32)
 
 
 def resample_linear(signal: np.ndarray, sr_in: int, sr_out: int) -> np.ndarray:
@@ -1282,7 +1338,12 @@ def main() -> int:
         n_frames = max(1, int(round(duration * FPS)))
 
         neural = try_neural_lipsync(portrait, audio[: int(duration * sr)], sr, n_frames, timings)
-        metrics["lipsync_backend"] = "wav2lip-onnx" if neural else "viseme-synthesiser"
+        metrics["lipsync_backend"] = "wav2lip-onnx" if neural else "envelope-mouth-synthesiser"
+        metrics["lipsync_accuracy"] = (
+            "neural (learned lip-sync)" if neural
+            else "approximate: phonetic mouth opening timed to the speech envelope, "
+                 "not phoneme-accurate"
+        )
         metrics["lipsync_model"] = neural["model"] if neural else None
 
         if neural is None:
@@ -1304,13 +1365,25 @@ def main() -> int:
             render["openness"], output_dir / CONTACT_SHEET, timings,
         )
 
+        # `openness` is derived from the envelope when no phoneme timings exist,
+        # so a plain Pearson on those two curves is tautological (it reports 1.0).
+        # Only report a meaningful number when an independent driver exists.
+        independent_driver = bool(voice["phoneme_timings"]) or neural is not None
         correlation = pearson(render["openness"], render["envelope"])
+        if not independent_driver:
+            metrics["mouth_open_vs_audio_rms_correlation"] = None
+            metrics["mouth_open_vs_audio_rms_correlation_note"] = (
+                "not applicable: openness is derived from the audio envelope "
+                "(no phoneme timings in this Kokoro export and no neural lip-sync "
+                "weights available), so the two curves are identical by construction"
+            )
+        else:
+            metrics["mouth_open_vs_audio_rms_correlation"] = round(correlation, 4)
         metrics.update({
             "duration_s": round(render["duration"], 3),
             "fps": FPS,
             "frame_count": render["n_frames"],
             "resolution": [OUT_W, OUT_H],
-            "mouth_open_vs_audio_rms_correlation": round(correlation, 4),
             "realistic_motion": {
                 "head_micro_motion": "speech-envelope driven yaw/pitch/roll + sway",
                 "breathing": "4.2 s sine on pitch",
