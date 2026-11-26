@@ -410,12 +410,15 @@ def synthesize_voice(output_dir: Path, timings: Dict[str, float]) -> Dict[str, A
             # Use the GPU provider when onnxruntime-gpu is installed (T4): CPU
             # inference would otherwise dominate the 10-minute budget.
             import onnxruntime as ort
-            from kokoro_onnx import Kokoro as _K2
             providers = [p for p in ("CUDAExecutionProvider", "CPUExecutionProvider")
                          if p in ort.get_available_providers()]
-            session = ort.InferenceSession(str(model_path), providers=providers)
-            kokoro = Kokoro.from_session(session, str(voices_path))
-            log(f"kokoro session providers: {session.get_providers()}")
+            if providers and providers[0] == "CUDAExecutionProvider":
+                session = ort.InferenceSession(str(model_path), providers=providers)
+                kokoro = Kokoro.from_session(session, str(voices_path))
+                log(f"kokoro session providers: {session.get_providers()}")
+            else:
+                kokoro = Kokoro(str(model_path), str(voices_path))
+                log("kokoro running on CPU (no CUDA provider installed)")
         except Exception as exc:
             log(f"provider-pinned session failed ({exc}); using default loader", "WARN")
             kokoro = Kokoro(str(model_path), str(voices_path))
@@ -427,13 +430,28 @@ def synthesize_voice(output_dir: Path, timings: Dict[str, float]) -> Dict[str, A
         missing = [v for v in VOICE_BLEND if v not in available]
         if missing:
             raise RuntimeError(f"voice(s) {missing} not in voices-v1.0.bin")
-        blend = None
+        # voices-v1.0.bin ships TWO layouts depending on the export:
+        #   * (510, 256)  -> one style row per phoneme count
+        #   * (1, 256)    -> the packer already resolved a single row
+        # The weighted sum must preserve whatever rank/shape the file has, or
+        # onnxruntime rejects the tensor ("Invalid rank for input: style").
+        blend: Optional[np.ndarray] = None
+        reference_shape: tuple = ()
         for name, weight in VOICE_BLEND.items():
             style = np.asarray(kokoro.get_voice_style(name), dtype=np.float32)
-            if style.ndim == 3:      # (1, 510, 256) in some exports
-                style = style[0]
+            if reference_shape and style.shape != reference_shape:
+                raise RuntimeError(
+                    f"voice {name} has shape {style.shape}, expected {reference_shape}"
+                )
+            reference_shape = style.shape
+            if not np.isfinite(style).all():
+                raise RuntimeError(f"voice {name} contains non-finite values")
             blend = style * weight if blend is None else blend + style * weight
-        blend = blend.astype(np.float32)
+        assert blend is not None
+        blend = np.ascontiguousarray(blend, dtype=np.float32)
+        # Guard: the model expects (rows, 256)-ish; a 1-D tensor cannot be valid.
+        if blend.ndim == 1:
+            raise RuntimeError(f"blended style collapsed to rank 1: {blend.shape}")
         log(f"blended style matrix: {blend.shape} from "
             + ", ".join(f"{k}={v}" for k, v in VOICE_BLEND.items()))
 
