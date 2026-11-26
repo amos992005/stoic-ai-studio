@@ -111,16 +111,26 @@ for phonemes. Mastering is pure numpy: 80 Hz high-pass (24 dB/oct), +2.2 dB
 @190 Hz warmth, −1.2 dB @4.2 kHz, peak-normalised to −1.5 dBFS.
 
 ### Lip-sync backend (always reported in `talking_metrics.json`)
+
+The kernel reports exactly which tier ran; it never implies accuracy it does not have.
+
 * **`wav2lip-onnx`** — attempted first. Weights are probed from public
   HuggingFace repos within a time budget, the ONNX signature is introspected at
-  runtime (so any export layout works), and the *first* prediction is validated
-  (shape/mean/std) before the whole clip commits to it.
-* **`viseme-synthesiser`** — fallback that always works: Kokoro's per-phoneme
-  timings map to visemes (bilabial closure, open vowels) blended with the
-  acoustic envelope, driving a lower-lip translation + shadowed oral cavity (no
-  smearing) and a feathered unsharp mask over the mouth.
-* Motion layer either way: envelope-driven yaw/pitch/roll + sway, 4.2 s breathing
-  sine, natural blinks, 0.5 s fade in/out.
+  runtime (so any export layout works) and the first prediction is validated
+  (shape/mean/std) before the clip commits to it. *On the 2026-11 runs every
+  public `wav2lip*.onnx` repository returned 404/401, so this tier never engaged.*
+* **`envelope-mouth-synthesiser`** — the tier that actually ran. Kokoro's
+  `kokoro-v1.0.onnx` export has **no duration output**, so per-phoneme timings do
+  not exist; the mouth opening is driven by the acoustic envelope, with a
+  lower-lip translation plus shadowed oral cavity (no smearing) and a feathered
+  unsharp mask over the mouth. It is *approximate*: mouth activity is synced to
+  speech energy, not phoneme-accurate visemes.
+* Motion layer: envelope-driven yaw/pitch/roll + sway, 4.2 s breathing, natural
+  blinks, 0.5 s fade in/out.
+* `mouth_open_vs_audio_rms_correlation` is `null` with an explanatory note when
+  the openness curve is derived from the envelope (self-correlation is not a
+  metric). Speech longer than the clip is time-stretched to fit (WSOLA overlap-add,
+  pitch preserved) instead of being truncated.
 
 ### Running Phase 2
 Push to any `arena/**` branch (or dispatch **Talking Pilot · Micro-Pilot 2**).
