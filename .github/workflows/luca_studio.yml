@@ -91,7 +91,7 @@ jobs:
           hits = [f for f in forbidden if f in src]
           assert not hits, f"source-compiling dependency reintroduced: {hits}"
 
-          # Techniques the user explicitly banned in Phase 3.
+          # Techniques explicitly banned by the user.
           banned = {
               "WSOLA time stretching": "def time_stretch",
               "procedural pixel-slice mouth": "open_mouth_patch",
@@ -102,27 +102,38 @@ jobs:
           found = [name for name, token in banned.items() if token in src]
           assert not found, f"banned technique reintroduced: {found}"
 
-          # The pieces that make Phase 3 what it is.
+          # Wheels only: insightface must be pinned at the pure-python wheel.
+          assert "insightface>=2.1" in src, "insightface pin lost (pre-2.1 ships a Cython .pyx)"
+          for bad in ("import dlib", "import basicsr", "from basicsr", "import spacy"):
+              assert bad not in src, f"source-compiling dependency reintroduced: {bad}"
+
+          # The architecture the upgrade is judged on.
           required = [
-              "StableVideoDiffusionPipeline",       # real neural video
-              "ip_adapter_masks",                   # anti face-bleed
-              "IPAdapterMaskProcessor",
-              "cross_attention_kwargs",
+              "DPMSolverSinglestepScheduler",     # DPM++ SDE Karras
+              "sde-dpmsolver++",
+              "inswapper_128.onnx",               # Stage 2 biometric swap
+              "buffalo_l",
+              "StableDiffusionXLImg2ImgPipeline",  # Stage 3 adetailer
               "ip-adapter-plus-face_sdxl_vit-h.safetensors",
-              "RealVisXL_V5.0",
-              "DPMSolverMultistepScheduler",
-              "use_karras_sigmas",
-              "kokoro_onnx",
-              "am_adam",
-              "libx264",
-              "yuv420p",
-              "ping-pong",                          # loop mode
+              "LivePortrait",                     # dedicated avatar model
+              "retarget_lip",                     # audio-driven mouth
+              "stable-video-diffusion-img2vid-xt",  # b-roll
+              "edge_tts",
+              "en-US-AndrewMultilingualNeural",
+              "cuda:1",                           # dual-GPU
+              "forward-only",
           ]
           missing = [r for r in required if r not in src]
           assert not missing, f"kernel missing expected pieces: {missing}"
 
-          # The audio chain must be a single scalar multiply.
-          assert "linear peak normalisation only" in src
+          # The specifics users get burned by.
+          assert "ip_adapter=OFF" in src, "Stage 1 must state that txt2img runs without IP-Adapter"
+          assert "no sunglasses" in src, "negative prompt must forbid sunglasses"
+          assert "hands" in src and "five fingers" in src, "hands must be explicit, never hidden"
+          assert "hands out of frame" not in src, "hiding hands is forbidden"
+          assert src.count("strength=ADETAILER_STRENGTH") >= 1
+          assert "ADETAILER_STRENGTH = 0.27" in src, "adetailer strength must be 0.27"
+          assert "ADETAILER_SCALE = 0.60" in src, "a-face adapter scale must be 0.60"
           print("phase 3 static checks passed")
           PY
           ls -la kaggle_kernel_luca/

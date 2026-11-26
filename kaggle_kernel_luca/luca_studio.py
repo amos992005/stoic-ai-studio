@@ -1,48 +1,49 @@
 #!/usr/bin/env python3
 """
-stoic-ai-studio · PHASE 3 · "LUCA MORETTI" flagship character
-=============================================================
+stoic-ai-studio · PHASE 3.1 · "LUCA MORETTI" — full architectural upgrade
+=========================================================================
 
-One Kaggle T4 run produces the complete, postable asset pack for a new
-virtual creator: a lifestyle carousel, a clean synthetic voice line, and a
-*real neural* image-to-video clip.
+One Kaggle run (2x Tesla T4) produces the complete postable pack.
 
-PART A — THE CAROUSEL
-  01_luca_master.png     1024x1024  RealVisXL V5.0, fp16, DPM++ 2M Karras
-  02..05                832x1024    vertical slides, face-locked to the master
-                                     with IP-Adapter-Plus-Face @ 0.65
+  cuda:0  ── Photo carousel + 3-stage biometric face lock + adetailer
+  cuda:1  ── LivePortrait talking avatar + SVD b-roll  (runs in parallel)
 
-  Two-person slides (yacht / VIP party) are the dangerous ones: a face
-  reference with no spatial constraint leaks Luca's identity onto the woman
-  standing next to him ("face bleeding").  We solve it properly, at the
-  attention level, with diffusers' *masked* IP-Adapter:
+--------------------------------------------------------------------------------
+WHY THE PREVIOUS RUN DEFORMED HANDS
+--------------------------------------------------------------------------------
+Attaching `IP-Adapter-Plus-Face` -- which is fed a *head-only* portrait -- during
+a full-scene txt2img corrupts the UNet's spatial body/hand layout: the face
+reference drags the whole composition towards a head-and-shoulders framing and
+the hands are the first thing to collapse. So identity locking moved *after*
+generation, into a 3-stage pipeline:
 
-      cross_attention_kwargs={"ip_adapter_masks": [mask]}
+  Stage 1  txt2img with ZERO IP-Adapter. `DPM++ SDE Karras` (SDE, not 2M: the
+           stochastic step is what gives real pores and optical texture).
+           Explicit biomechanical hand descriptions; hands are never hidden.
+  Stage 2  insightface `buffalo_l` detects every face, picks the MALE one
+           (gender + rightmost tie-break) and `inswapper_128` transfers Luca's
+           bone structure onto it. The woman's face is never touched.
+  Stage 3  the swapped face is upscaled to 1024x1024 through SDXL img2img with
+           IP-Adapter-Plus-Face at 0.60 / strength 0.27, which preserves the
+           swapped bone structure while rebuilding genuine high-res skin, then
+           is Gaussian-feather-blended back into the slide.
 
-  `mask` is `[1, num_ip_images, H, W]`, 1.0 over the region where Luca stands
-  and 0.0 over the rest, with a short ramp so there is no visible seam.
-  Verified against diffusers 0.42's `IPAdapterAttnProcessor2_0`: the mask is
-  indexed per reference image, downsampled with bicubic interpolation to the
-  attention query grid, and multiplied into the IP-Adapter contribution only.
+--------------------------------------------------------------------------------
+WHY THE PREVIOUS VIDEO LOOKED LIKE A VIBRATING PHOTO
+--------------------------------------------------------------------------------
+SVD-XT is an image-to-video model: it adds small camera/motion drift but has no
+idea what a mouth is, so a "talking" clip came out as a closed-mouth vibration.
+Shot 1 therefore uses `KwaiVGI/LivePortrait`, a dedicated portrait-animation
+model: real 3D head rotation from a driving video, blinking, and lips retargeted
+through its `retarget_lip` MLP from our own audio envelope.
 
-PART B — VOICE + NEURAL VIDEO
-  luca_voice.mp3    kokoro-onnx, `am_adam`, speed 1.0.
-                    Audio processing is *linear peak normalisation only*.
-                    No WSOLA time-stretching, no biquad/parametric EQ.
-  luca_reel_clip.mp4 stabilityai/stable-video-diffusion-img2vid-xt (fully
-                    public, no auth token) generates 25 genuine neural frames
-                    from a carousel slide; the sequence is ping-pong looped to
-                    exactly the natural length of the voice track and muxed
-                    with ffmpeg.
-
-  There is no procedural pixel-slice animation anywhere in this file. Every
-  moving pixel comes out of Stable Video Diffusion.
+Shots 2-3 are SVD lifestyle b-roll, played strictly forward-only.
 
 Design rules honoured here
-  * $0: Kaggle T4 does the compute, GitHub Actions only orchestrates.
-  * <10 min wall clock on a T4; every heavy step is timed and retried.
-  * Deterministic: fixed seeds, private generators, no shuffling.
-  * Version drift never crashes the run -- explicit fallbacks everywhere.
+  * $0: Kaggle T4s do the compute, GitHub Actions only orchestrates.
+  * Wheels only -- never compile from source on Kaggle's Python 3.13.
+  * No procedural pixel-slice animation. No WSOLA. No biquad/EQ on the voice.
+  * Deterministic: fixed seeds, private generators.
 """
 
 from __future__ import annotations
@@ -55,206 +56,220 @@ import platform
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import traceback
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
 
-#: Photoreal SDXL checkpoint (public, ungated).
 MODEL_ID = os.environ.get("SDXL_MODEL_ID", "SG161222/RealVisXL_V5.0")
-
-#: CLIP vision tower required by the Face ID IP-Adapter.
-CLIP_VISION_ID = os.environ.get(
-    "CLIP_VISION_ID", "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
-)
-
-#: IP-Adapter repository / weights ("Face ID Plus" -- purpose-built for faces).
+CLIP_VISION_ID = os.environ.get("CLIP_VISION_ID", "laion/CLIP-ViT-H-14-laion2B-s32B-b79K")
 IP_ADAPTER_REPO = os.environ.get("IP_ADAPTER_REPO", "h94/IP-Adapter")
 IP_ADAPTER_SUBFOLDER = "sdxl_models"
 IP_ADAPTER_WEIGHT = "ip-adapter-plus-face_sdxl_vit-h.safetensors"
-IP_ADAPTER_SCALE = float(os.environ.get("IP_ADAPTER_SCALE", "0.65"))
 
-#: Real neural image-to-video. 100% public, native in diffusers, runs on a T4.
-SVD_MODEL_ID = os.environ.get("SVD_MODEL_ID", "stabilityai/stable-video-diffusion-img2vid-xt")
-SVD_NUM_FRAMES = int(os.environ.get("SVD_NUM_FRAMES", "25"))
+#: Stage 1 — pure scene generation (no IP-Adapter attached).
+SCENE_STEPS = int(os.environ.get("SCENE_STEPS", "32"))
+SCENE_CFG = float(os.environ.get("SCENE_CFG", "5.0"))
+MASTER_SIZE = (1024, 1024)
+SLIDE_SIZE = (832, 1024)
+BASE_SEED = int(os.environ.get("BASE_SEED", "42"))
+
+#: Stage 3 — high-res face adetailer.
+ADETAILER_SCALE = 0.60
+ADETAILER_STRENGTH = 0.27
+ADETAILER_STEPS = int(os.environ.get("ADETAILER_STEPS", "22"))
+ADETAILER_SIZE = 1024
+FACE_CROP_MULT = 2.0
+
+#: Stage 2 — biometric swap.
+FACE_MODEL_ROOT = Path(os.environ.get("FACE_MODEL_ROOT", "/tmp/stoic_face_models"))
+INSWAPPER_REPOS: List[Tuple[str, str]] = [
+    ("ezioruan/inswapper_128.onnx", "inswapper_128.onnx"),
+    ("CountFloyd/deepfake", "inswapper_128.onnx"),
+    ("ashleykleynhans/inswapper", "inswapper_128.onnx"),
+    ("thebiglaskowski/inswapper_128.onnx", "inswapper_128.onnx"),
+]
+
+#: Video.
+REEL_FPS = 25
+HOOK_FRAMES = int(os.environ.get("HOOK_FRAMES", "60"))     # 2.4 s LivePortrait
+BROLL_FRAMES = int(os.environ.get("BROLL_FRAMES", "30"))   # 1.2 s per cutaway
+BROLL_SIZE = (576, 1024)
 SVD_STEPS = int(os.environ.get("SVD_STEPS", "25"))
 SVD_MOTION_BUCKET = int(os.environ.get("SVD_MOTION_BUCKET", "127"))
-SVD_NOISE_AUG = float(os.environ.get("SVD_NOISE_AUG", "0.02"))
-SVD_FPS = int(os.environ.get("SVD_FPS", "25"))
-#: Which carousel slide seeds the video (04 = Porsche GT3 RS, 02 = yacht).
-SVD_SOURCE_SLIDE = os.environ.get("SVD_SOURCE_SLIDE", "04")
-
-#: If the IP-Adapter cannot be loaded, fail loudly by default.
-ALLOW_IP_ADAPTER_FALLBACK = os.environ.get("ALLOW_IP_ADAPTER_FALLBACK", "0") in {"1", "true", "yes"}
-#: If the masked IP-Adapter call fails at runtime, retry that slide unmasked.
-ALLOW_UNMASKED_RETRY = os.environ.get("ALLOW_UNMASKED_RETRY", "1") in {"1", "true", "yes"}
-
-#: Golden reference.
-BASE_SEED = int(os.environ.get("BASE_SEED", "777"))
-MASTER_STEPS = int(os.environ.get("MASTER_STEPS", "30"))
-MASTER_CFG = float(os.environ.get("MASTER_CFG", "5.5"))
-MASTER_SIZE = (1024, 1024)
-
-#: Carousel slides (vertical, Instagram 4:5).
-SLIDE_STEPS = int(os.environ.get("SLIDE_STEPS", "30"))
-SLIDE_CFG = float(os.environ.get("SLIDE_CFG", "5.5"))
-SLIDE_SIZE = (832, 1024)
-JPEG_QUALITY = int(os.environ.get("JPEG_QUALITY", "92"))
+SVD_NOISE_AUG = 0.02
 
 #: Voice.
-SCRIPT_LINE = "They told me to slow down and play it safe. Look where that got them."
-VOICE_NAME = os.environ.get("VOICE_NAME", "am_adam")
-SPEECH_SPEED = float(os.environ.get("SPEECH_SPEED", "1.0"))
-AUDIO_SR_TARGET = 24000
-PEAK_TARGET = 0.85  # linear peak normalisation only
+TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AndrewMultilingualNeural")
+TTS_RATE = os.environ.get("TTS_RATE", "+3%")
+TTS_PITCH = os.environ.get("TTS_PITCH", "-2Hz")
+SCRIPT_LINE = (
+    "Morning in Monaco, sunset in Ibiza... honestly, the hardest part of today "
+    "was choosing the view."
+)
+AUDIO_SR = 24000
+PEAK_TARGET = 0.89
+VOICE_GAIN = 0.86
+BED_GAIN = 0.30
+BPM = 120
 
-KOKORO_MODEL_URLS = [
-    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx",
-    "https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/kokoro-v1.0.onnx",
-]
-KOKORO_VOICES_URLS = [
-    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin",
-    "https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices-v1.0.bin",
-]
+JPEG_QUALITY = int(os.environ.get("JPEG_QUALITY", "92"))
 
 MASTER_FILENAME = "01_luca_master.png"
 CAROUSEL_SHEET = "luca_carousel_sheet.png"
 VIDEO_SHEET = "luca_video_sheet.png"
 VOICE_MP3 = "luca_voice.mp3"
-VOICE_WAV = "luca_voice.wav"
 REEL_MP4 = "luca_reel_clip.mp4"
 METRICS_FILENAME = "luca_metrics.json"
 BUILD_LOG = "build.log"
 
-#: Shared identity, repeated verbatim so only the *scene* changes between panels.
+#: Luca, stated once. Kept short here — the scenes carry the biomechanics.
 LUCA = (
-    "a 27-year-old extremely handsome man with sun-bleached tousled dirty-blonde "
-    "hair, a sharp jawline, light 3-day stubble and piercing blue-green eyes, "
-    "lean athletic swimmer's physique"
+    "27-year-old handsome man, young Brad Pitt Ocean's Eleven aesthetic, "
+    "sun-bleached dirty-blonde tousled hair, piercing blue-green eyes, sharp "
+    "jawline, light 3-day stubble"
 )
 
-#: Deliberately photographic, never "AI render".
-CAMERA = (
-    "candid smartphone photograph, real skin texture with visible pores and "
-    "imperfections, natural available light, slight motion blur, true-to-life "
-    "colour, unretouched, authentic Instagram lifestyle photo"
+PHOTOREAL = (
+    "candid iPhone 16 Pro photo, authentic smartphone sensor look, visible skin "
+    "pores and fine skin texture, true-to-life colour, unretouched, natural "
+    "available light, realistic anatomy"
 )
 
+#: Global negative — note "no sunglasses" is enforced here and in every prompt.
 NEGATIVE_PROMPT = (
-    "cartoon, anime, illustration, painting, 3d render, cgi, doll, plastic skin, "
-    "airbrushed, waxy, over-smoothed, beauty filter, oversaturated, hdr glow, "
-    "blurry, low quality, jpeg artifacts, deformed, disfigured, mutated hands, "
-    "extra fingers, extra limbs, bad anatomy, bad proportions, cross-eyed, "
-    "asymmetric eyes, watermark, signature, text, logo, frame, border, "
-    "teenager, child, old man, "
-    "two men, two men together, male couple, duplicate person, cloned face"
+    # hands / anatomy (the whole point of Stage 1)
+    "mutated hands, extra fingers, six fingers, fused fingers, deformed hands, "
+    "floating limbs, merged body, extra background heads between subjects, "
+    "bad anatomy, bad proportions, disfigured, malformed limbs, "
+    # forbidden accessories
+    "sunglasses, shades, eyeglasses, "
+    # render artefacts
+    "CGI, 3d render, plastic skin, airbrushed, oversaturated orange skin, "
+    "waxy, doll, cartoon, anime, illustration, painting, low quality, blurry, "
+    "jpeg artifacts, watermark, signature, text, logo, frame, border, "
+    # identity confusion
+    "twins, two men, duplicate person, cloned face, teenage boy, child, old man"
 )
 
-MASTER_PROMPT = (
-    f"Candid 35mm photo of {LUCA}, looking like a young Brad Pitt, with a subtle "
-    "charismatic smirk, golden hour Mediterranean sunlight on a luxury terrace, "
-    f"realistic skin pores, natural lighting, {CAMERA}"
-)
-
-#: `mask` selects the IP-Adapter spatial attention region:
-#:   "left" -> identity applied only to the left part of the frame (Luca stands
-#:             there, the woman stands right) -- this is the anti-bleed control.
-#:   "full" -> identity applied everywhere (single-subject slides).
 SLIDES: List[Dict[str, Any]] = [
+    {
+        "index": 1,
+        "filename": MASTER_FILENAME,
+        "title": "01 · MASTER",
+        "size": MASTER_SIZE,
+        "seed": 42,
+        "role": "identity master",
+        "people": 1,
+        "needs_swap": False,
+        "prompt": (
+            f"Candid raw iPhone 16 Pro 24mm portrait of a charismatic {LUCA}, "
+            "confident subtle smirk, wearing an unbuttoned white linen shirt on "
+            "a luxury yacht deck in Monaco harbour, natural Mediterranean "
+            "afternoon sunlight, visible skin pores, unretouched, "
+            f"{PHOTOREAL}"
+        ),
+    },
     {
         "index": 2,
         "filename": "02_monaco_yacht_date.png",
         "title": "02 · MONACO · YACHT",
-        "mask": "right",
+        "size": SLIDE_SIZE,
+        "seed": 42 + 2,
         "people": 2,
+        "needs_swap": True,
         "prompt": (
-            # What four runs taught us, in order:
-            #   45893591367  man-first, loose left mask   -> two men (bleed)
-            #   45895178163  woman-first, tight left mask -> real woman, but she
-            #                sat ON the mask and the man lost Luca's face
-            #   45896917042  man-first, tight left mask   -> correct pair, still
-            #                mirrored: the woman took the left half, so the
-            #                identity landed on HER and Luca came out as a
-            #                stranger with a beard.
-            # Conclusion: the composition is right, the *side* was wrong. The
-            # mask now covers the right half, where Luca actually renders.
-            "Candid iPhone 16 Pro 24mm photo of a woman and a man together on the "
-            "sun deck of a luxury Riva yacht in Monaco at sunset. LEFT HALF of the "
-            "frame: a stunning young brunette woman in a bikini laughing "
-            "naturally, long dark hair, clearly a woman, looking away from the "
-            "camera. RIGHT HALF of the frame: a shirtless athletic 27-year-old "
-            "man holding a champagne flute, confident smirk, looking at the "
-            f"camera ({LUCA}). One man and one woman, two different people, side "
-            "by side. Bright ocean horizon, Monaco skyline behind them, harbour "
-            f"lights beginning to glow, salt spray on the lens, {CAMERA}"
-        ),
-        "negative": (
-            "two men, two women, male couple, men only, no woman, two boys, "
-            "duplicate man, cloned face, twins, same face twice, "
-            "man on the left"
+            "Candid iPhone 16 Pro photo on a luxury teak yacht sunpad in Monaco "
+            "at golden hour, medium two-shot of a gorgeous young brunette woman "
+            "in a stylish bikini on the left laughing naturally, and a handsome "
+            "athletic 27-year-old man with tousled dirty-blonde hair and light "
+            "stubble in an open white linen shirt on the right, his right arm "
+            "resting naturally on the teak backrest and his left hand holding a "
+            "chilled champagne flute by the stem with five natural fingers, "
+            "looking at the camera with a confident smirk, clear blue-green "
+            f"eyes, no sunglasses, warm sunset light, {PHOTOREAL}"
         ),
     },
     {
         "index": 3,
         "filename": "03_vip_party_flash.png",
         "title": "03 · IBIZA · VIP",
-        "mask": "right",
+        "size": SLIDE_SIZE,
+        "seed": 42 + 3,
         "people": 2,
+        "needs_swap": True,
         "prompt": (
-            "Candid 35mm direct on-camera flash photo of a woman and a man "
-            "together at an Ibiza rooftop VIP party at night. LEFT HALF of the "
-            "frame: a gorgeous blonde woman in an evening dress holding a "
-            "cocktail, long blonde hair, clearly a woman, smiling. RIGHT HALF of "
-            "the frame: a 27-year-old man in an unbuttoned black silk shirt, "
-            f"smirking at the camera ({LUCA}). One man and one woman, two "
-            "different people, side by side. Harsh flash falloff, dark background "
-            "with bokeh club lights, slightly blown highlights, authentic "
-            f"night-flash aesthetic, {CAMERA}"
-        ),
-        "negative": (
-            "two men, two women, male couple, men only, no woman, two boys, "
-            "duplicate man, cloned face, twins, same face twice, "
-            "man on the left"
+            "Authentic 35mm direct on-camera flash night party photo at an "
+            "exclusive Ibiza rooftop VIP table, medium two-shot of a stunning "
+            "young blonde woman in a sleek black sequin dress on the left "
+            "smiling, and a handsome 27-year-old man with tousled dirty-blonde "
+            "hair and light stubble in a fitted black silk shirt unbuttoned at "
+            "the collar on the right, one hand resting naturally on the VIP "
+            "table holding a crystal rocks glass with ice and amber whiskey "
+            "with five natural fingers, looking at the camera with a confident "
+            "smirk, clear eyes, no sunglasses, dark night sky bokeh background "
+            f"with no extra faces between them, {PHOTOREAL}"
         ),
     },
     {
         "index": 4,
         "filename": "04_porsche_gt3_pov.png",
         "title": "04 · AMALFI · GT3",
-        "mask": "full",
+        "size": SLIDE_SIZE,
+        "seed": 42 + 4,
+        "people": 1,
+        "needs_swap": True,
         "prompt": (
-            "Candid iPhone photo taken from the passenger seat of a Porsche 911 "
-            "GT3 RS on the Amalfi coast cliff road. A 27-year-old dirty-blonde "
-            f"man driving, sunglasses pushed up on his forehead, one hand on the "
-            f"alcantara steering wheel, carefree grin straight at the camera "
-            f"({LUCA}). Bright Mediterranean daylight, sea and guardrail through "
-            f"the windscreen, motion in the background, {CAMERA}"
+            "Candid iPhone 16 Pro daylight photo at a coastal cliffside overlook "
+            "on the Amalfi coast, medium three-quarter shot of a handsome "
+            "athletic 27-year-old man with windblown dirty-blonde hair, sharp "
+            "jawline, light stubble, and piercing blue-green eyes, wearing a "
+            "fitted white polo shirt and tailored chinos, standing outside "
+            "beside the driver door of a parked white Porsche 911 GT3 RS, one "
+            "hand resting flat and naturally with five fingers on the car's "
+            "sleek front fender and the other hand relaxed by his pocket, "
+            "looking directly at the camera with a confident smirk, no "
+            f"sunglasses, Mediterranean sea cliffs in background, {PHOTOREAL}"
         ),
     },
     {
         "index": 5,
         "filename": "05_extreme_action.png",
         "title": "05 · EXTREME",
-        "mask": "full",
+        "size": SLIDE_SIZE,
+        "seed": 42 + 5,
+        "people": 1,
+        "needs_swap": True,
         "prompt": (
-            "Raw GoPro action shot of a 27-year-old athletic dirty-blonde man "
-            f"leaning out of an open helicopter doorway above a turquoise "
-            f"coastline, wind tearing through his hair, adrenaline grin ({LUCA}). "
-            "Water droplets on the lens, sun flare, helicopter skid and rotor "
-            "wash visible, distant cliffs and boats below, genuine action-camera "
-            f"sharpness, {CAMERA}"
+            "Candid iPhone 16 Pro action lifestyle photo in Ibiza, medium shot "
+            "of an athletic 27-year-old man with wet tousled dirty-blonde hair, "
+            "sharp jawline, light stubble, and piercing blue-green eyes sitting "
+            "astride a matte-black Yamaha Waverunner jet-ski in crystal-clear "
+            "turquoise Mediterranean water, both hands gripping the jet-ski "
+            "handlebars naturally with five fingers, water droplets glistening "
+            "on his sun-kissed muscular forearms and shirtless torso, looking at "
+            "the camera with an effortless smile, no sunglasses, bright natural "
+            f"daylight, {PHOTOREAL}"
         ),
     },
+]
+
+#: LivePortrait weights: (repo, filename, repo_type, local filename)
+LIVEPORTRAIT_WEIGHTS: List[Tuple[str, str]] = [
+    ("appearance_feature_extractor.pth", "liveportrait/base_models/appearance_feature_extractor.pth"),
+    ("motion_extractor.pth", "liveportrait/base_models/motion_extractor.pth"),
+    ("warping_module.pth", "liveportrait/base_models/warping_module.pth"),
+    ("spade_generator.pth", "liveportrait/base_models/spade_generator.pth"),
+    ("stitching_retargeting_module.pth", "liveportrait/retargeting_models/stitching_retargeting_module.pth"),
 ]
 
 
@@ -263,33 +278,28 @@ SLIDES: List[Dict[str, Any]] = [
 # --------------------------------------------------------------------------- #
 
 
-def log(message: str, level: str = "INFO") -> None:
-    """Timestamped, flush-on-write logging that survives a crashed kernel."""
+def log(message: str, level: str = "INFO", tag: str = "") -> None:
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    print(f"[{stamp}] [{level:<5}] {message}", flush=True)
+    prefix = f"[{stamp}] [{level:<5}]"
+    if tag:
+        prefix += f" [{tag}]"
+    print(f"{prefix} {message}", flush=True)
 
 
 @contextmanager
-def timed(label: str, timings: Dict[str, float]):
-    """Record wall-clock duration of a block in `timings` (seconds)."""
-    log(f"▶ start: {label}")
+def timed(label: str, timings: Dict[str, float], tag: str = ""):
+    log(f"▶ start: {label}", tag=tag)
     start = time.perf_counter()
     try:
         yield
     finally:
         elapsed = time.perf_counter() - start
-        timings[label] = round(elapsed, 3)
-        log(f"✔ done:  {label} ({elapsed:.1f}s)")
+        key = f"{tag}/{label}" if tag else label
+        timings[key] = round(elapsed, 3)
+        log(f"✔ done:  {label} ({elapsed:.1f}s)", tag=tag)
 
 
 def resolve_output_dir() -> Path:
-    """
-    Where artifacts are written.
-
-    On Kaggle we write to the *working directory root* (`/kaggle/working`) so
-    that `kaggle kernels output ... -p ./outputs` lands files at
-    `outputs/<file>` rather than `outputs/outputs/<file>`.
-    """
     explicit = os.environ.get("OUTPUT_DIR")
     if explicit:
         out = Path(explicit).expanduser().resolve()
@@ -302,17 +312,20 @@ def resolve_output_dir() -> Path:
 
 
 class Tee:
-    """Mirror everything printed to stdout into the kernel's build log file."""
+    """Mirror stdout into the build log. Line-buffered so a crash keeps context."""
 
     def __init__(self, path: Path, stream):
         self._stream = stream
         self._file = open(path, "a", encoding="utf-8", buffering=1)
 
     def write(self, data: str) -> int:
-        self._stream.write(data)
+        try:
+            self._stream.write(data)
+        except Exception:
+            pass
         try:
             self._file.write(data)
-        except Exception:  # never let logging break generation
+        except Exception:
             pass
         return len(data)
 
@@ -323,7 +336,7 @@ class Tee:
             except Exception:
                 pass
 
-    def isatty(self) -> bool:  # pragma: no cover - cosmetic
+    def isatty(self) -> bool:  # pragma: no cover
         return False
 
     def close(self) -> None:
@@ -334,8 +347,22 @@ class Tee:
             pass
 
 
+def release_memory(device: Optional[str] = None) -> None:
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            if device:
+                with torch.cuda.device(device):
+                    torch.cuda.empty_cache()
+            else:
+                torch.cuda.empty_cache()
+    except Exception:
+        pass
+
+
 def env_fingerprint() -> Dict[str, Any]:
-    """Versions + GPU description for metrics.json."""
     info: Dict[str, Any] = {"python": sys.version.split()[0], "platform": platform.platform()}
     try:
         import torch
@@ -345,111 +372,23 @@ def env_fingerprint() -> Dict[str, Any]:
         info["cuda_version"] = torch.version.cuda
         if torch.cuda.is_available():
             info["gpu_names"] = [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
-            info["gpu_total_vram_gb"] = [
-                round(torch.cuda.get_device_properties(i).total_memory / 1024**3, 2)
-                for i in range(torch.cuda.device_count())
-            ]
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:
         info["torch_error"] = f"{type(exc).__name__}: {exc}"
-    for mod in ("diffusers", "transformers", "accelerate", "safetensors", "PIL", "onnxruntime"):
+    for mod in ("diffusers", "transformers", "accelerate", "safetensors", "PIL",
+                "onnxruntime", "insightface", "cv2", "edge_tts"):
         try:
-            info[mod] = __import__(mod).__version__
+            info[mod] = getattr(__import__(mod), "__version__", "unknown")
         except Exception:
             info[mod] = "unavailable"
     return info
 
 
-def release_memory() -> None:
-    """Best-effort VRAM/RAM reclaim between pipeline swaps."""
-    gc.collect()
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
-    except Exception:
-        pass
-
-
 # --------------------------------------------------------------------------- #
-# Dependency bootstrap (wheels only -- never compile from source)
-# --------------------------------------------------------------------------- #
-
-
-def ensure_python_deps(timings: Dict[str, float]) -> None:
-    required = {
-        "kokoro_onnx": "kokoro-onnx",
-        "soundfile": "soundfile",
-        "imageio_ffmpeg": "imageio-ffmpeg",
-        "onnxruntime": "onnxruntime-gpu",
-    }
-    missing: List[str] = []
-    for module, package in required.items():
-        try:
-            __import__(module)
-        except Exception:
-            missing.append(package)
-
-    if not missing:
-        log("python deps already present: " + ", ".join(required.values()))
-    else:
-        log(f"installing missing deps: {missing}", "WARN")
-        with timed("pip_install_deps", timings):
-            cmd = [
-                sys.executable, "-m", "pip", "install", "--quiet", "--no-input",
-                "--disable-pip-version-check", "--only-binary=:all:", *missing,
-            ]
-            proc = subprocess.run(cmd, capture_output=True, text=True)
-            if proc.returncode != 0:
-                log(proc.stderr[-3000:], "ERROR")
-                proc = subprocess.run(cmd[:-1], capture_output=True, text=True)
-                if proc.returncode != 0:
-                    log(proc.stderr[-3000:], "ERROR")
-                    raise RuntimeError(f"could not install {missing}")
-        for module in required:
-            try:
-                __import__(module)
-            except Exception as exc:
-                raise RuntimeError(f"{module} still unavailable after install: {exc}") from exc
-
-    # diffusers must know about IP-Adapter masks *and* Stable Video Diffusion.
-    import diffusers
-
-    log(f"diffusers {diffusers.__version__} detected")
-    try:
-        # Capability probe only -- the real imports happen inside the builders.
-        assert diffusers.StableVideoDiffusionPipeline is not None
-        assert diffusers.image_processor.IPAdapterMaskProcessor is not None
-        return
-    except Exception as exc:
-        log(f"diffusers build lacks SVD/IP-Adapter-mask support ({exc}) -- upgrading", "WARN")
-
-    with timed("pip_install_diffusers", timings):
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "--no-input",
-             "--disable-pip-version-check", "--only-binary=:all:", "diffusers>=0.31.0"],
-            capture_output=True,
-            text=True,
-        )
-    import importlib
-
-    importlib.reload(diffusers)
-    # Re-probe after the upgrade; these shadow the names above on purpose.
-    from diffusers import StableVideoDiffusionPipeline as _SVD  # noqa: F401
-    from diffusers.image_processor import IPAdapterMaskProcessor as _MaskProc  # noqa: F401
-
-    del _SVD, _MaskProc
-    log(f"diffusers upgraded to {diffusers.__version__} ({'SVD + mask API ready'})")
-
-
-# --------------------------------------------------------------------------- #
-# ffmpeg helpers
+# ffmpeg
 # --------------------------------------------------------------------------- #
 
 
 def ffmpeg_binary() -> str:
-    """Prefer the system ffmpeg (libmp3lame + libx264), then imageio's static build."""
     system = shutil.which("ffmpeg")
     if system:
         return system
@@ -466,317 +405,149 @@ def has_encoder(ffmpeg: str, codec: str) -> bool:
         return False
 
 
-def download_first(urls: Sequence[str], dest: Path, timeout: int = 300) -> Path:
-    """Download the first working URL to `dest` (used for Kokoro weights)."""
-    import urllib.request
-
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    errors: List[str] = []
-    for url in urls:
-        try:
-            log(f"downloading {url.split('/')[-1]} ← {url.split('/')[2]}")
-            req = urllib.request.Request(url, headers={"User-Agent": "stoic-ai-studio/3.0"})
-            with urllib.request.urlopen(req, timeout=timeout) as response, open(dest, "wb") as handle:
-                shutil.copyfileobj(response, handle)
-            size_mb = dest.stat().st_size / 1024**2
-            if size_mb < 1:
-                raise RuntimeError(f"only {size_mb:.1f} MB downloaded -- truncated")
-            log(f"  ✓ {dest.name} ({size_mb:.1f} MB)")
-            return dest
-        except Exception as exc:
-            errors.append(f"{url} → {type(exc).__name__}: {exc}")
-            log(f"  ✗ {errors[-1]}", "WARN")
-    raise RuntimeError("every mirror failed:\n  " + "\n  ".join(errors))
-
-
 # --------------------------------------------------------------------------- #
-# Part A — SDXL pipeline
+# Dependency bootstrap (wheels only)
 # --------------------------------------------------------------------------- #
 
 
-def _first_available(owner, names: List[str], label: str) -> Optional[str]:
+def _pip_install(packages: List[str], timings: Dict[str, float], label: str) -> bool:
+    with timed(label, timings):
+        for extra in (["--only-binary=:all:"], []):
+            cmd = [sys.executable, "-m", "pip", "install", "--quiet", "--no-input",
+                   "--disable-pip-version-check", *extra, *packages]
+            proc = subprocess.run(cmd, capture_output=True, text=True)
+            if proc.returncode == 0:
+                log(f"installed: {' '.join(packages)}", tag="deps")
+                return True
+            log(f"pip attempt failed: {proc.stderr.strip()[-600:]}", "WARN", tag="deps")
+    return False
+
+
+def ensure_python_deps(timings: Dict[str, float]) -> None:
     """
-    Call the first API that exists on this object and return its name.
+    Install everything the kernel needs, in wheels-only order.
 
-    diffusers relocates these knobs between releases (0.42 dropped
-    `pipe.enable_vae_slicing()` for `pipe.vae.enable_slicing()`), so we never
-    hard-code a single signature for an *optional* VRAM optimisation.
+    insightface>=2.1 ships a pure-python wheel (verified: no .so/.pyx inside), so
+    it installs on Kaggle's Python 3.13 without a compiler. Older pins ship a
+    Cython .pyx and would try to build -- hence the floor.
     """
-    for name in names:
-        parts = name.split(".")
-        target = owner
-        try:
-            for part in parts[:-1]:
-                target = getattr(target, part)
-            fn = getattr(target, parts[-1], None)
-        except AttributeError:
-            continue
-        if not callable(fn):
-            continue
-        try:
-            fn()
-            log(f"{label}: applied {name}()")
-            return name
-        except Exception as exc:
-            log(f"{label}: {name}() failed ({type(exc).__name__}: {exc})", "WARN")
-    log(f"{label}: no supported API on this diffusers build (skipped)", "WARN")
-    return None
+    required = {
+        "soundfile": "soundfile",
+        "imageio_ffmpeg": "imageio-ffmpeg",
+        "cv2": "opencv-python-headless",
+        "onnxruntime": "onnxruntime-gpu",
+        "edge_tts": "edge-tts",
+        "insightface": "insightface>=2.1",
+    }
+    missing = [pkg for mod, pkg in required.items() if not _importable(mod)]
+    if missing:
+        log(f"installing: {missing}", tag="deps")
+        _pip_install(missing, timings, "pip_install_deps")
+    else:
+        log("python deps already present", tag="deps")
+
+    # onnxruntime-gpu installs as module `onnxruntime`; if only CPU is present and
+    # the GPU package is missing, try once (never fatal — CPU fallback is fine).
+    if not _importable("onnxruntime"):
+        _pip_install(["onnxruntime"], timings, "pip_install_ort_cpu")
+
+    for mod, pkg in required.items():
+        if not _importable(mod):
+            log(f"{pkg} still unavailable — the kernel will fall back", "WARN", tag="deps")
+
+    import diffusers
+
+    log(f"diffusers {diffusers.__version__}", tag="deps")
+    try:
+        assert diffusers.StableVideoDiffusionPipeline is not None
+        assert diffusers.image_processor.IPAdapterMaskProcessor is not None
+    except Exception:
+        _pip_install(["diffusers>=0.31.0"], timings, "pip_install_diffusers")
+        import importlib
+
+        importlib.reload(diffusers)
 
 
-def _load_pipeline(cls, model_id: str, label: str):
-    """Load a diffusers pipeline in fp16, tolerating the dtype/torch_dtype rename."""
+def _importable(module: str) -> bool:
+    try:
+        __import__(module)
+        return True
+    except Exception:
+        return False
+
+
+# --------------------------------------------------------------------------- #
+# Stage 1 — scene generation (SDXL, DPM++ SDE Karras, NO IP-Adapter)
+# --------------------------------------------------------------------------- #
+
+
+def build_scene_pipeline(device: str, timings: Dict[str, float], tag: str = "gpu0"):
+    """
+    RealVisXL V5.0 in fp16 with DPM++ **SDE** Karras.
+
+    `DPMSolverSinglestepScheduler` + `algorithm_type="sde-dpmsolver++"` is the
+    stochastic variant: it re-injects noise each step, which is what yields
+    believable skin pores and optical texture instead of the waxy look the
+    deterministic 2M sampler produced.
+    """
     import torch
-
-    attempts: List[Dict[str, Any]] = [
-        {"variant": "fp16", "dtype": torch.float16, "use_safetensors": True},
-        {"variant": "fp16", "torch_dtype": torch.float16, "use_safetensors": True},
-        {"dtype": torch.float16, "use_safetensors": True},
-        {"torch_dtype": torch.float16, "use_safetensors": True},
-        {"dtype": torch.float16},
-    ]
-    last_error: Optional[Exception] = None
-    for kwargs in attempts:
-        dtype_key = "dtype" if "dtype" in kwargs else "torch_dtype"
-        variant = "fp16 variant" if "variant" in kwargs else "no variant"
-        try:
-            log(f"{label}: loading {model_id} ({dtype_key}=float16, {variant})")
-            return cls.from_pretrained(model_id, **kwargs)
-        except Exception as exc:
-            last_error = exc
-            log(f"{label}: attempt failed ({type(exc).__name__}: {exc})", "WARN")
-    raise RuntimeError(f"could not load {model_id}: {last_error}") from last_error
-
-
-def build_pipeline(timings: Dict[str, float]):
-    """Load RealVisXL V5.0 in fp16 on cuda:0 with a Karras DPM-Solver++ scheduler."""
-    import torch
-    from diffusers import DPMSolverMultistepScheduler, StableDiffusionXLPipeline
+    from diffusers import DPMSolverSinglestepScheduler, StableDiffusionXLPipeline
 
     if not torch.cuda.is_available():
-        raise RuntimeError(
-            "CUDA is not available. This kernel must run with a GPU "
-            "(Kaggle: Settings → Accelerator → GPU T4 x2)."
-        )
+        raise RuntimeError("CUDA is not available — enable a Kaggle GPU accelerator")
 
-    device = "cuda:0"
-    log(f"device={device} · {torch.cuda.get_device_name(0)}")
+    with timed("load_sdxl", timings, tag):
+        pipe = None
+        last_error: Optional[Exception] = None
+        for kwargs in (
+            {"variant": "fp16", "torch_dtype": torch.float16, "use_safetensors": True},
+            {"torch_dtype": torch.float16, "use_safetensors": True},
+            {"torch_dtype": torch.float16},
+        ):
+            try:
+                log(f"loading {MODEL_ID} ({list(kwargs)})", tag=tag)
+                pipe = StableDiffusionXLPipeline.from_pretrained(MODEL_ID, **kwargs)
+                break
+            except Exception as exc:
+                last_error = exc
+                log(f"load attempt failed: {type(exc).__name__}: {exc}", "WARN", tag=tag)
+        if pipe is None:
+            raise RuntimeError(f"could not load {MODEL_ID}: {last_error}") from last_error
 
-    with timed("load_sdxl_pipeline", timings):
-        pipe = _load_pipeline(StableDiffusionXLPipeline, MODEL_ID, "sdxl")
-
-    with timed("configure_scheduler_and_vram", timings):
+    with timed("configure_pipeline", timings, tag):
         try:
-            pipe.scheduler = DPMSolverMultistepScheduler.from_config(
-                pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="dpmsolver++"
+            pipe.scheduler = DPMSolverSinglestepScheduler.from_config(
+                pipe.scheduler.config,
+                use_karras_sigmas=True,
+                algorithm_type="sde-dpmsolver++",
             )
-            log("scheduler: DPM-Solver++ 2M with Karras sigmas")
+            log("scheduler: DPM++ SDE Karras (singlestep, sde-dpmsolver++)", tag=tag)
         except Exception as exc:
-            log(f"scheduler swap failed, keeping default: {exc}", "WARN")
-
-        try:
-            pipe.set_progress_bar_config(disable=False, desc="diffusion")
-        except Exception:
-            pass
+            log(f"scheduler swap failed, keeping default: {exc}", "WARN", tag=tag)
 
         pipe.to(device)
-        log(f"pipeline moved to {device} (fp16 weights)")
+        for name in ("vae.enable_slicing", "enable_vae_slicing", "vae.enable_tiling"):
+            try:
+                target = pipe
+                for part in name.split(".")[:-1]:
+                    target = getattr(target, part)
+                getattr(target, name.split(".")[-1])()
+                log(f"applied {name}()", tag=tag)
+                break
+            except Exception:
+                continue
 
-        _first_available(pipe, ["vae.enable_slicing", "enable_vae_slicing"], "vae slicing")
-        _first_available(pipe, ["vae.enable_tiling", "enable_vae_tiling"], "vae tiling")
-        _first_available(pipe, ["set_use_resolution_binning"], "resolution binning")
-
-        # Attention slicing is deliberately NOT enabled: it installs a
-        # SlicedAttnProcessor that diffusers cannot re-instantiate while
-        # converting the UNet for IP-Adapter, and it breaks the masked
-        # attention path we rely on for anti-bleed.
-        log("attention slicing left disabled (incompatible with IP-Adapter masks)")
+        # Attention slicing stays OFF: it swaps in SlicedAttnProcessor, which
+        # diffusers cannot re-instantiate when converting the UNet for IP-Adapter
+        # in Stage 3.
+        log("attention slicing disabled (needed by Stage-3 IP-Adapter)", tag=tag)
 
         if getattr(pipe, "vae", None) is not None:
             pipe.vae.to(device=device, dtype=torch.float16)
-            log("vae kept in float16 (matches unet dtype)")
-
-    return pipe, device
+    return pipe
 
 
-def attach_face_adapter(pipe, device: str, timings: Dict[str, float]) -> bool:
-    """Load the CLIP image encoder + IP-Adapter Face weights and set scale 0.65."""
-    import torch
-    from transformers import CLIPVisionModelWithProjection
-
-    log(f"attaching IP-Adapter Face ({IP_ADAPTER_WEIGHT}) @ scale {IP_ADAPTER_SCALE}")
-    try:
-        with timed("load_clip_vision", timings):
-            image_encoder = None
-            last_error: Optional[Exception] = None
-            for kwargs in (
-                {"dtype": torch.float16, "use_safetensors": True},
-                {"torch_dtype": torch.float16, "use_safetensors": True},
-                {"dtype": torch.float16},
-                {},
-            ):
-                try:
-                    image_encoder = CLIPVisionModelWithProjection.from_pretrained(CLIP_VISION_ID, **kwargs)
-                    break
-                except Exception as exc:
-                    last_error = exc
-                    log(f"clip-vision load attempt failed ({type(exc).__name__}: {exc})", "WARN")
-            if image_encoder is None:
-                raise RuntimeError(f"could not load {CLIP_VISION_ID}: {last_error}") from last_error
-            image_encoder = image_encoder.to(device, dtype=torch.float16)
-            image_encoder.eval()
-            pipe.image_encoder = image_encoder
-            log("clip vision encoder ready (ViT-H, fp16)")
-
-        with timed("load_ip_adapter", timings):
-            try:
-                pipe.load_ip_adapter(
-                    IP_ADAPTER_REPO, subfolder=IP_ADAPTER_SUBFOLDER, weight_name=IP_ADAPTER_WEIGHT
-                )
-            except TypeError as exc:
-                if "SlicedAttnProcessor" not in str(exc):
-                    raise
-                log("attention slicing blocks IP-Adapter conversion; resetting processors", "WARN")
-                _first_available(pipe, ["unset_attention_slicing"], "attention slicing off")
-                try:
-                    from diffusers.models.attention_processor import AttnProcessor2_0
-
-                    if getattr(pipe, "unet", None) is not None:
-                        pipe.unet.set_attn_processor(AttnProcessor2_0())
-                except Exception as inner:
-                    log(f"could not reset attention processors: {inner}", "WARN")
-                pipe.load_ip_adapter(
-                    IP_ADAPTER_REPO, subfolder=IP_ADAPTER_SUBFOLDER, weight_name=IP_ADAPTER_WEIGHT
-                )
-
-            if hasattr(pipe, "set_ip_adapter_scale"):
-                pipe.set_ip_adapter_scale(IP_ADAPTER_SCALE)
-            else:
-                setter = getattr(pipe, "_set_ip_adapter_scale", None)
-                if setter is None:
-                    raise RuntimeError("this diffusers build exposes no IP-Adapter scale setter")
-                setter(IP_ADAPTER_SCALE)
-            log(f"ip-adapter scale set to {IP_ADAPTER_SCALE}")
-
-        _describe_ip_processor(pipe)
-        log("IP-Adapter Face ready — character consistency is locked.")
-        return True
-
-    except Exception as exc:
-        detail = f"{type(exc).__name__}: {exc}"
-        log(f"IP-Adapter setup FAILED — {detail}", "ERROR")
-        log(traceback.format_exc(), "ERROR")
-        if not ALLOW_IP_ADAPTER_FALLBACK:
-            raise RuntimeError(
-                "Face-lock adapter is mandatory for this run "
-                "(set ALLOW_IP_ADAPTER_FALLBACK=1 to degrade gracefully)."
-            ) from exc
-        log("ALLOW_IP_ADAPTER_FALLBACK=1 → continuing WITHOUT face lock.", "WARN")
-        try:
-            pipe.set_ip_adapter_scale(0.0)
-        except Exception:
-            pass
-        return False
-    finally:
-        release_memory()
-
-
-def _describe_ip_processor(pipe) -> None:
-    """Log which attention processor carries the IP-Adapter (mask capability probe)."""
-    try:
-        unet = getattr(pipe, "unet", None)
-        names = set()
-        supports_masks = False
-        for name, proc in unet.attn_processors.items():
-            names.add(type(proc).__name__)
-            if "ip_adapter_masks" in getattr(proc.__call__, "__code__", type("x", (), {"co_varnames": ()})).co_varnames:
-                supports_masks = True
-        log(f"unet attention processors: {sorted(names)}")
-        log(f"masked IP-Adapter (ip_adapter_masks) supported: {supports_masks}")
-    except Exception as exc:
-        log(f"processor description skipped: {exc}", "WARN")
-
-
-# --------------------------------------------------------------------------- #
-# Anti-bleed: spatial attention mask
-# --------------------------------------------------------------------------- #
-
-
-def build_ip_mask(kind: Optional[str], width: int, height: int):
-    """
-    Build the `[1, 1, H, W]` spatial mask that confines the face reference.
-
-    "right": 1.0 over the RIGHT part of the frame, fading to 0.0 by ~35% of the
-            width. This is the side Luca actually lands on: across three runs
-            SDXL consistently places the *woman* on the left of a
-            "man and a woman" pair, whatever order they are named in. Masking
-            the left therefore applied Luca's identity to the woman and left
-            Luca himself unlocked -- he came out as a different man. Masking the
-            right is what makes the reference land on the intended subject.
-
-    "left": symmetric fallback, kept so the side can be flipped by env if a
-            future checkpoint changes its composition bias.
-
-    "full" / None: no mask (single-subject slides).
-
-    The ramp stays soft: the attention-mask downsampler interpolates
-    bicubically, so a hard edge would show up as a visible seam.
-    """
-    import torch
-
-    if kind in (None, "full"):
-        return None
-
-    if kind not in ("left", "right"):
-        raise ValueError(f"unknown mask kind {kind!r}")
-
-    x = np.linspace(0.0, 1.0, width, dtype=np.float32)[None, :]
-    if kind == "right":
-        ramp_start, ramp_end = 0.52, 0.70
-        weights = np.clip((x - ramp_start) / (ramp_end - ramp_start), 0.0, 1.0)
-        side = "1.0 → x>70%, 0.0 → x<52%"
-    else:
-        ramp_start, ramp_end = 0.30, 0.48
-        weights = np.clip((ramp_end - x) / (ramp_end - ramp_start), 0.0, 1.0)
-        side = f"1.0 → x<{ramp_start:.0%}, 0.0 → x>{ramp_end:.0%}"
-    weights = weights * weights * (3.0 - 2.0 * weights)  # smoothstep
-    column = weights.reshape(1, width).repeat(height, axis=0)
-
-    mask = torch.from_numpy(column.astype(np.float32)).unsqueeze(0).unsqueeze(0)
-    log(
-        f"ip mask '{kind}': {tuple(mask.shape)} · coverage {float(column.mean()):.1%} "
-        f"({side})"
-    )
-    return mask
-
-
-# --------------------------------------------------------------------------- #
-# Generation
-# --------------------------------------------------------------------------- #
-
-
-def _run_pipeline(pipe, kwargs: Dict[str, Any], label: str):
-    """One inference pass, with the classic fp16 VAE-dtype recovery."""
-    import torch
-
-    def _run():
-        with torch.inference_mode():
-            return pipe(**kwargs)
-
-    try:
-        return _run()
-    except RuntimeError as exc:
-        if "should be the same" not in str(exc):
-            raise
-        log(f"{label}: dtype mismatch at decode ({exc}); aligning VAE dtype", "WARN")
-        vae, unet = getattr(pipe, "vae", None), getattr(pipe, "unet", None)
-        if vae is None or unet is None:
-            raise
-        vae.to(device=unet.device, dtype=unet.dtype)
-        release_memory()
-        return _run()
-
-
-def generate_image(
+def generate_scene(
     pipe,
     device: str,
     *,
@@ -784,530 +555,1249 @@ def generate_image(
     width: int,
     height: int,
     seed: int,
-    steps: int,
-    cfg: float,
-    ip_adapter_image: Optional[Any] = None,
-    mask_kind: Optional[str] = None,
-    negative_prompt: Optional[str] = None,
-    label: str = "image",
-) -> Tuple[Image.Image, Dict[str, Any]]:
-    """Run one diffusion pass, optionally with a spatially masked face reference."""
+    label: str,
+    steps: int = SCENE_STEPS,
+    cfg: float = SCENE_CFG,
+    negative: Optional[str] = None,
+) -> Image.Image:
     import torch
-
-    info: Dict[str, Any] = {
-        "seed": seed,
-        "steps": steps,
-        "cfg": cfg,
-        "size": [width, height],
-        "ip_adapter_image": ip_adapter_image is not None,
-        "ip_mask": mask_kind,
-        "masked_ip_adapter": False,
-        "unmasked_retry": False,
-    }
 
     kwargs: Dict[str, Any] = {
         "prompt": prompt,
-        "negative_prompt": negative_prompt or NEGATIVE_PROMPT,
+        "negative_prompt": negative or NEGATIVE_PROMPT,
         "width": width,
         "height": height,
         "num_inference_steps": steps,
         "guidance_scale": cfg,
         "generator": torch.Generator(device=device).manual_seed(seed),
     }
-    if ip_adapter_image is not None:
-        kwargs["ip_adapter_image"] = ip_adapter_image
+    log(f"txt2img {label}: {width}x{height} seed={seed} steps={steps} cfg={cfg} "
+        f"ip_adapter=OFF", tag="gpu0")
 
-    mask = build_ip_mask(mask_kind, width, height) if ip_adapter_image is not None else None
-
-    log(f"sampling {label}: {width}x{height} · seed={seed} · steps={steps} · cfg={cfg}"
-        + (f" · mask={mask_kind}" if mask is not None else ""))
-
-    result = None
-    if mask is not None:
-        masked_kwargs = dict(kwargs)
-        masked_kwargs["cross_attention_kwargs"] = {"ip_adapter_masks": [mask]}
-        try:
-            result = _run_pipeline(pipe, masked_kwargs, label)
-            info["masked_ip_adapter"] = True
-            log(f"{label}: masked IP-Adapter applied (anti-bleed active)")
-        except Exception as exc:
-            if not ALLOW_UNMASKED_RETRY:
-                raise
-            log(f"{label}: masked IP-Adapter failed ({type(exc).__name__}: {exc})", "ERROR")
-            log(traceback.format_exc(), "ERROR")
-            log(f"{label}: retrying WITHOUT the spatial mask — identity may bleed", "WARN")
-            release_memory()
-            info["unmasked_retry"] = True
-
-    if result is None:
-        result = _run_pipeline(pipe, kwargs, label)
-
-    if not result or not getattr(result, "images", None):
-        raise RuntimeError(f"Pipeline returned no images for {label}")
+    def _run():
+        with torch.inference_mode():
+            return pipe(**kwargs)
 
     try:
-        allocated = torch.cuda.max_memory_allocated(device) / 1024**3
-        log(f"{label}: peak VRAM {allocated:.2f} GB")
-        info["peak_vram_gb"] = round(float(allocated), 2)
-    except Exception:
-        pass
+        result = _run()
+    except RuntimeError as exc:
+        if "should be the same" not in str(exc):
+            raise
+        log(f"dtype mismatch at decode ({exc}); aligning VAE", "WARN", tag="gpu0")
+        pipe.vae.to(device=pipe.unet.device, dtype=pipe.unet.dtype)
+        release_memory(device)
+        result = _run()
 
-    image = result.images[0]
-    if image.size != (width, height):
-        log(f"{label}: unexpected size {image.size}, expected {(width, height)}", "WARN")
-    return image, info
-
-
-def save_png(image: Image.Image, path: Path) -> None:
-    image.save(path, format="PNG", optimize=True)
-    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB)")
-
-
-def save_jpeg(image: Image.Image, path: Path, quality: int = JPEG_QUALITY) -> None:
-    image.convert("RGB").save(path, format="JPEG", quality=quality, optimize=True, progressive=True)
-    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB, q={quality})")
+    if not result or not getattr(result, "images", None):
+        raise RuntimeError(f"pipeline returned no images for {label}")
+    return result.images[0]
 
 
 # --------------------------------------------------------------------------- #
-# Contact sheets
+# Stage 2 — biometric face detection + inswapper_128
+# --------------------------------------------------------------------------- #
+
+
+def _hf_token() -> Optional[str]:
+    for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+        if os.environ.get(key):
+            return os.environ[key]
+    return None
+
+
+def stage_face_models(timings: Dict[str, float]) -> Dict[str, Path]:
+    """
+    Put the insightface packages and inswapper where both GPUs can find them.
+
+    insightface resolves `root/models/<name>` and downloads from its own CDN.
+    We download here, once, into a shared root with a short retry ladder, and
+    then pass that directory explicitly (FaceAnalysis uses a directory verbatim
+    when the path exists) so neither worker needs network access.
+    """
+    import urllib.request
+
+    FACE_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
+
+    def _download(url: str, dest: Path) -> bool:
+        if dest.exists() and dest.stat().st_size > 1024:
+            return True
+        tmp = dest.with_suffix(dest.suffix + ".part")
+        req = urllib.request.Request(url, headers={"User-Agent": "stoic-ai-studio/3.1"})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp, open(tmp, "wb") as fh:
+                shutil.copyfileobj(resp, fh)
+            tmp.replace(dest)
+            return dest.stat().st_size > 1024
+        except Exception as exc:
+            log(f"  ✗ {url.split('/')[-1]}: {type(exc).__name__}: {exc}", "WARN", tag="face")
+            tmp.unlink(missing_ok=True)
+            return False
+
+    out: Dict[str, Path] = {}
+
+    # ---- buffalo_l (detection + genderage; both release asset layouts) ----
+    with timed("fetch_buffalo_l", timings, "face"):
+        pkg_dir = FACE_MODEL_ROOT / "models" / "buffalo_l"
+        pkg_dir.mkdir(parents=True, exist_ok=True)
+
+        if not (pkg_dir / "det_10g.onnx").exists() or not (pkg_dir / "genderage.onnx").exists():
+            for asset in ("buffalo_l.zip", "buffalo_l"):
+                url = (f"https://github.com/deepinsight/insightface/releases/download/"
+                       f"v0.7/{asset}")
+                if _download(url, FACE_MODEL_ROOT / "_buffalo_l.zip"):
+                    import zipfile
+
+                    try:
+                        with zipfile.ZipFile(FACE_MODEL_ROOT / "_buffalo_l.zip") as zf:
+                            zf.extractall(pkg_dir)
+                        for f in pkg_dir.glob("*.onnx"):
+                            log(f"  ✓ {f.name} ({f.stat().st_size / 1e6:.1f} MB)", tag="face")
+                        break
+                    except Exception as exc:
+                        log(f"  zip extract failed: {exc}", "WARN", tag="face")
+                else:
+                    log(f"  release asset {asset} unavailable", "WARN", tag="face")
+
+            # Mirror fallback (single files, no zip).
+            if not (pkg_dir / "det_10g.onnx").exists():
+                mirror = "https://huggingface.co/immich-app/buffalo_l/resolve/main"
+                for fname in ("det_10g.onnx", "genderage.onnx", "2d106det.onnx",
+                              "w600k_r50.onnx", "1k3d68.onnx"):
+                    _download(f"{mirror}/{fname}", pkg_dir / fname)
+
+        out["buffalo_l"] = pkg_dir
+        present = sorted(p.name for p in pkg_dir.glob("*.onnx"))
+        log(f"buffalo_l models: {present}", tag="face")
+        if "det_10g.onnx" not in present:
+            raise RuntimeError(
+                "buffalo_l detection model (det_10g.onnx) could not be downloaded from "
+                "the insightface release assets or the HF mirror"
+            )
+
+    # ---- inswapper_128 ----
+    with timed("fetch_inswapper", timings, "face"):
+        swapper_path = FACE_MODEL_ROOT / "inswapper_128.onnx"
+        if not (swapper_path.exists() and swapper_path.stat().st_size > 10_000_000):
+            got = False
+            try:
+                from huggingface_hub import hf_hub_download
+            except Exception:
+                hf_hub_download = None  # type: ignore
+
+            if hf_hub_download is not None:
+                for repo, fname in INSWAPPER_REPOS:
+                    for token in ({}, {"token": _hf_token()}) if _hf_token() else ({},):
+                        try:
+                            path = hf_hub_download(repo_id=repo, filename=fname, **token)
+                            shutil.copyfile(path, swapper_path)
+                            log(f"  ✓ inswapper from {repo} "
+                                f"({swapper_path.stat().st_size / 1e6:.1f} MB)", tag="face")
+                            got = True
+                            break
+                        except Exception as exc:
+                            log(f"  ✗ {repo}: {type(exc).__name__}: "
+                                f"{str(exc).splitlines()[0][:100]}", "WARN", tag="face")
+                    if got:
+                        break
+            if not got:
+                for repo, fname in INSWAPPER_REPOS:
+                    if _download(f"https://huggingface.co/{repo}/resolve/main/{fname}",
+                                 swapper_path):
+                        log(f"  ✓ inswapper via direct URL ({repo})", tag="face")
+                        got = True
+                        break
+            if not got:
+                raise RuntimeError(
+                    "inswapper_128.onnx could not be obtained from any of "
+                    f"{[r for r, _ in INSWAPPER_REPOS]}"
+                )
+        out["inswapper"] = swapper_path
+
+    return out
+
+
+class FaceEngine:
+    """
+    insightface analysis + inswapper, wrapped for our two jobs:
+
+      * `face_locks()` -> 512-d embeddings, so identity can be *measured*
+      * `swap_male()`  -> replace Luca's face and nothing else
+
+    Male selection: buffalo_l's genderage head gives `face.sex`. In a two-person
+    slide the woman is never modified, so a face that scores female is excluded
+    outright; remaining ties break rightmost (where the prompts put Luca).
+    """
+
+    def __init__(self, models: Dict[str, Path], device_id: int, timings: Dict[str, float],
+                 tag: str = "gpu0"):
+        self.models = models
+        self.device_id = device_id
+        self.tag = tag
+        self.timings = timings
+        self.app = None
+        self.swapper = None
+
+    def _providers(self) -> List[str]:
+        try:
+            import onnxruntime as ort
+
+            available = ort.get_available_providers()
+            return [p for p in ("CUDAExecutionProvider", "CPUExecutionProvider") if p in available]
+        except Exception:
+            return ["CPUExecutionProvider"]
+
+    def load(self) -> None:
+        from insightface.app import FaceAnalysis
+
+        with timed("load_insightface", self.timings, self.tag):
+            providers = self._providers()
+            log(f"providers: {providers}", tag=self.tag)
+            self.app = FaceAnalysis(
+                name=str(self.models["buffalo_l"]),
+                providers=providers,
+                allowed_modules=["detection", "genderage", "recognition"],
+            )
+            self.app.prepare(ctx_id=self.device_id, det_size=(640, 640), det_thresh=0.35)
+
+        with timed("load_inswapper", self.timings, self.tag):
+            import onnxruntime as ort
+
+            providers = self._providers()
+            self.swapper = ort.InferenceSession(str(self.models["inswapper"]), providers=providers)
+            log(f"inswapper providers: {self.swapper.get_providers()}", tag=self.tag)
+
+    # -- detection ---------------------------------------------------------- #
+
+    def detect(self, image_rgb: np.ndarray) -> List[Any]:
+        import cv2
+
+        bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+        return self.app.get(bgr)
+
+    def pick_male(self, faces: List[Any], width: int) -> Optional[Any]:
+        """The male face, preferring the rightmost candidate (where Luca stands)."""
+        if not faces:
+            return None
+        males = [f for f in faces if getattr(f, "sex", None) == "M"]
+        if not males:
+            # genderage may be unsure on small/stylised faces — fall back to the
+            # rightmost face, which the prompts always place Luca on.
+            log("no face scored male; falling back to rightmost face", "WARN", tag=self.tag)
+            males = list(faces)
+        return max(males, key=lambda f: f.bbox[0] + f.bbox[2])
+
+    @staticmethod
+    def face_box(face, width: int, height: int, mult: float = FACE_CROP_MULT
+                 ) -> Tuple[int, int, int, int]:
+        x1, y1, x2, y2 = [float(v) for v in face.bbox[:4]]
+        cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+        half = max(x2 - x1, y2 - y1) * mult / 2.0
+        return (int(max(0, cx - half)), int(max(0, cy - half)),
+                int(min(width, cx + half)), int(min(height, cy + half)))
+
+    # -- swap --------------------------------------------------------------- #
+
+    def swap_male(
+        self,
+        scene_rgb: np.ndarray,
+        source_face: Any,
+        faces: List[Any],
+    ) -> Tuple[np.ndarray, Optional[Tuple[int, int, int, int]], Dict[str, Any]]:
+        """
+        Transfer `source_face` onto the detected male face only.
+
+        Returns the swapped image, the male bbox (for the Stage-3 crop) and a
+        record of what was touched.
+        """
+        from insightface.model_zoo import get_model
+
+        height, width = scene_rgb.shape[:2]
+        info: Dict[str, Any] = {
+            "faces_detected": len(faces),
+            "genders": [getattr(f, "sex", "?") for f in faces],
+            "male_index": None,
+            "swapped": False,
+        }
+        male = self.pick_male(faces, width)
+        if male is None:
+            log("no face detected — swap skipped", "WARN", tag=self.tag)
+            return scene_rgb, None, info
+
+        info["male_index"] = list(faces).index(male)
+        bbox = self.face_box(male, width, height)
+        info["male_bbox"] = list(bbox)
+
+        if self.swapper is None:
+            self.swapper = get_model(str(self.models["inswapper"]), providers=self._providers())
+
+        out = scene_rgb.copy()
+        out = self.swapper.get(out, male, source_face, paste_back=True)
+        info["swapped"] = True
+        log(f"inswapper applied to male face idx={info['male_index']} bbox={bbox} "
+            f"(genders={info['genders']})", tag=self.tag)
+        return out, bbox, info
+
+    # -- verification ------------------------------------------------------- #
+
+    def embedding(self, image_rgb: np.ndarray) -> Optional[np.ndarray]:
+        faces = self.detect(image_rgb)
+        if not faces:
+            return None
+        face = self.pick_male(faces, image_rgb.shape[1]) or faces[0]
+        emb = getattr(face, "normed_embedding", None)
+        return None if emb is None else np.asarray(emb, dtype=np.float32)
+
+
+def cosine(a: Optional[np.ndarray], b: Optional[np.ndarray]) -> Optional[float]:
+    if a is None or b is None:
+        return None
+    na, nb = float(np.linalg.norm(a)), float(np.linalg.norm(b))
+    if na == 0 or nb == 0:
+        return None
+    return round(float(np.dot(a, b) / (na * nb)), 4)
+
+
+# --------------------------------------------------------------------------- #
+# Stage 3 — 1024px face adetailer (SDXL img2img + IP-Adapter-Plus-Face)
+# --------------------------------------------------------------------------- #
+
+
+def attach_adetailer_adapter(pipe, device: str, timings: Dict[str, float],
+                             tag: str = "gpu0") -> bool:
+    import torch
+    from transformers import CLIPVisionModelWithProjection
+
+    log(f"attaching IP-Adapter-Plus-Face @ {ADETAILER_SCALE}", tag=tag)
+    try:
+        with timed("load_clip_vision", timings, tag):
+            encoder = None
+            for kwargs in ({"dtype": torch.float16, "use_safetensors": True},
+                           {"torch_dtype": torch.float16, "use_safetensors": True},
+                           {"dtype": torch.float16}, {}):
+                try:
+                    encoder = CLIPVisionModelWithProjection.from_pretrained(CLIP_VISION_ID, **kwargs)
+                    break
+                except Exception as exc:
+                    log(f"clip-vision attempt failed: {type(exc).__name__}", "WARN", tag=tag)
+            if encoder is None:
+                raise RuntimeError(f"could not load {CLIP_VISION_ID}")
+            pipe.image_encoder = encoder.to(device, dtype=torch.float16).eval()
+
+        with timed("load_ip_adapter", timings, tag):
+            try:
+                pipe.load_ip_adapter(IP_ADAPTER_REPO, subfolder=IP_ADAPTER_SUBFOLDER,
+                                     weight_name=IP_ADAPTER_WEIGHT)
+            except TypeError as exc:
+                if "SlicedAttnProcessor" not in str(exc):
+                    raise
+                log("attention slicing blocks IP-Adapter; resetting processors", "WARN", tag=tag)
+                try:
+                    from diffusers.models.attention_processor import AttnProcessor2_0
+
+                    pipe.unset_attention_slicing()
+                    pipe.unet.set_attn_processor(AttnProcessor2_0())
+                except Exception as inner:
+                    log(f"processor reset failed: {inner}", "WARN", tag=tag)
+                pipe.load_ip_adapter(IP_ADAPTER_REPO, subfolder=IP_ADAPTER_SUBFOLDER,
+                                     weight_name=IP_ADAPTER_WEIGHT)
+            pipe.set_ip_adapter_scale(ADETAILER_SCALE)
+        log("adetailer adapter ready", tag=tag)
+        return True
+    except Exception as exc:
+        log(f"adetailer adapter FAILED — {type(exc).__name__}: {exc}", "ERROR", tag=tag)
+        log(traceback.format_exc(), "ERROR", tag=tag)
+        return False
+
+
+def build_img2img(pipe, timings: Dict[str, float], tag: str = "gpu0"):
+    """Reuse the txt2img components as an img2img pipeline (no second load)."""
+    from diffusers import StableDiffusionXLImg2ImgPipeline
+
+    with timed("build_img2img", timings, tag):
+        img2img = StableDiffusionXLImg2ImgPipeline(**pipe.components)
+        log("img2img pipeline built from shared components", tag=tag)
+    return img2img
+
+
+def adetailer_face(
+    img2img,
+    slide_rgb: np.ndarray,
+    bbox: Tuple[int, int, int, int],
+    master_img: Image.Image,
+    device: str,
+    seed: int,
+    tag: str = "gpu0",
+) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """
+    Refine the swapped face at 1024x1024 and feather it back in.
+
+    `strength=0.27` is the load-bearing number: low enough that the biometric
+    bone structure from inswapper survives, high enough that SDXL rebuilds real
+    pores, stubble and catchlights at four times the swap resolution.
+    """
+    import torch
+
+    base = Image.fromarray(slide_rgb)
+    width, height = base.size
+    x1, y1, x2, y2 = bbox
+    if x2 - x1 < 48 or y2 - y1 < 48:
+        log("face crop too small for adetailer — skipped", "WARN", tag=tag)
+        return slide_rgb, {"adetailer": False, "reason": "crop too small"}
+
+    crop = base.crop((x1, y1, x2, y2)).resize((ADETAILER_SIZE, ADETAILER_SIZE), Image.LANCZOS)
+
+    try:
+        with torch.inference_mode():
+            result = img2img(
+                prompt=(
+                    f"Extreme close-up portrait of {LUCA}, confident subtle smirk, "
+                    "razor-sharp realistic skin pores, individual stubble hairs, "
+                    "crisp eye catchlights, natural skin tone, photorealistic, "
+                    "unretouched iPhone 16 Pro portrait"
+                ),
+                negative_prompt=NEGATIVE_PROMPT,
+                image=crop,
+                strength=ADETAILER_STRENGTH,
+                num_inference_steps=ADETAILER_STEPS,
+                guidance_scale=SCENE_CFG,
+                ip_adapter_image=master_img,
+                generator=torch.Generator(device=device).manual_seed(seed + 1000),
+            )
+    except Exception as exc:
+        log(f"adetailer sample FAILED ({type(exc).__name__}: {exc})", "ERROR", tag=tag)
+        log(traceback.format_exc(), "ERROR", tag=tag)
+        return slide_rgb, {"adetailer": False, "reason": f"{type(exc).__name__}"}
+
+    refined = result.images[0].resize((x2 - x1, y2 - y1), Image.LANCZOS)
+
+    # Elliptical Gaussian feather: fully opaque in the middle of the face, fading
+    # to nothing at the crop edge, so there is no visible seam on skin or hair.
+    cw, ch = x2 - x1, y2 - y1
+    sigma = max(4.0, cw * 0.12)
+    yy, xx = np.mgrid[0:ch, 0:cw].astype(np.float32)
+    cx, cy = (cw - 1) / 2.0, (ch - 1) / 2.0
+    # normalised elliptical radius, squashed slightly on x (faces are taller)
+    r = np.sqrt(((xx - cx) / (cw * 0.46)) ** 2 + ((yy - cy) / (ch * 0.46)) ** 2)
+    mask = np.clip(1.0 - (r ** 2), 0.0, 1.0)
+    mask = np.exp(-((r ** 2.4)) * 2.2).astype(np.float32)
+    mask = np.asarray(Image.fromarray((mask * 255).astype(np.uint8))
+                      .filter(ImageFilter.GaussianBlur(sigma * 0.16)), dtype=np.float32) / 255.0
+    mask3 = mask[..., None]
+
+    base_arr = np.asarray(base, dtype=np.float32).copy()
+    region = base_arr[y1:y2, x1:x2]
+    region[...] = np.asarray(refined, dtype=np.float32) * mask3 + region * (1.0 - mask3)
+    base_arr[y1:y2, x1:x2] = region
+
+    return np.clip(base_arr, 0, 255).astype(np.uint8), {
+        "adetailer": True,
+        "strength": ADETAILER_STRENGTH,
+        "ip_adapter_scale": ADETAILER_SCALE,
+        "crop": [x1, y1, x2, y2],
+        "blend": f"elliptical gaussian feather, sigma≈{sigma:.1f}px",
+    }
+
+
+def optical_polish(image: Image.Image, seed: int = 0) -> Tuple[Image.Image, Dict[str, Any]]:
+    """
+    Make hands, skin and background share one sensor signature.
+
+    Two steps only: pull 5% out of the orange/yellow cast the SDXL checkpoint
+    likes, then add a whisper of photographic grain (sigma 1.3) so the
+    upscaled face does not sit on a cleaner background than everything else.
+    """
+    arr = np.asarray(image, dtype=np.float32)
+    # blue lift / warm pull, 5% toward neutral
+    arr[..., 2] = np.clip(arr[..., 2] * 1.05, 0, 255)
+    arr[..., 0] = np.clip(arr[..., 0] * 0.985, 0, 255)
+    arr[..., 1] = np.clip(arr[..., 1] * 0.99, 0, 255)
+    rng = np.random.default_rng(seed)
+    noise = rng.normal(0.0, 1.3, arr.shape[:2])[..., None]
+    arr = arr + noise
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)), {
+        "colour": "warm cast reduced 5% (blue ×1.05)",
+        "grain_sigma": 1.3,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Sheets
 # --------------------------------------------------------------------------- #
 
 
 def _font(size: int, bold: bool = False):
-    candidates = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-    ]
-    for path in candidates:
-        try:
-            return ImageFont.truetype(path, size)
-        except Exception:
-            continue
+    names = ("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf",
+             "LiberationSans-Bold.ttf" if bold else "LiberationSans-Regular.ttf")
+    for name in names:
+        for root in ("/usr/share/fonts/truetype/dejavu", "/usr/share/fonts/truetype/liberation"):
+            try:
+                return ImageFont.truetype(f"{root}/{name}", size)
+            except Exception:
+                continue
     try:
         return ImageFont.load_default(size=size)
     except Exception:
         return ImageFont.load_default()
 
 
-def _fit(dfont, text: str, max_width: int) -> None:
-    try:
-        length = dfont.getlength(text)
-    except Exception:
-        return
-    if length > max_width:
-        log(f"sheet label may overflow: {text!r}", "WARN")
-
-
 def build_carousel_sheet(items: List[Tuple[str, Image.Image]], path: Path) -> None:
-    """Inspection grid: master on the left, then the four vertical slides."""
-    pad, label_h, header_h = 24, 46, 78
-    thumb_h = 560
+    pad, label_h, header_h, thumb_h = 24, 46, 82, 560
     thumbs = []
-    for title, image in items:
-        scale = thumb_h / image.height
-        thumbs.append((title, image.resize((max(1, int(image.width * scale)), thumb_h), Image.LANCZOS)))
-
+    for title, img in items:
+        scale = thumb_h / img.height
+        thumbs.append((title, img.resize((max(1, int(img.width * scale)), thumb_h), Image.LANCZOS)))
     total_w = pad + sum(t.width + pad for _, t in thumbs)
-    total_h = header_h + thumb_h + label_h + pad
-    sheet = Image.new("RGB", (total_w, total_h), (16, 16, 18))
+    sheet = Image.new("RGB", (total_w, header_h + thumb_h + label_h + pad), (16, 16, 18))
     draw = ImageDraw.Draw(sheet)
-
-    draw.text((pad, 20), "LUCA MORETTI · Monaco & Ibiza Weekend · carousel",
+    draw.text((pad, 18), "LUCA MORETTI · Monaco & Ibiza Weekend",
               font=_font(30, bold=True), fill=(240, 240, 245))
-    draw.text((pad, 52), "RealVisXL V5.0 · IP-Adapter-Plus-Face 0.65 · masked attention (anti-bleed)",
+    draw.text((pad, 52), "RealVisXL V5.0 · DPM++ SDE Karras · inswapper_128 · "
+                         "1024px adetailer @ 0.27",
               font=_font(17), fill=(150, 152, 160))
-
     x = pad
     for title, thumb in thumbs:
         sheet.paste(thumb, (x, header_h))
         draw.rectangle([x, header_h, x + thumb.width - 1, header_h + thumb.height - 1],
                        outline=(58, 58, 64))
-        draw.text((x + 2, header_h + thumb.height + 12), title, font=_font(19, bold=True),
-                  fill=(225, 226, 232))
+        draw.text((x + 2, header_h + thumb.height + 12), title,
+                  font=_font(19, bold=True), fill=(225, 226, 232))
         x += thumb.width + pad
-
     sheet.save(path, format="PNG", optimize=True)
-    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB) · {sheet.size[0]}x{sheet.size[1]}")
+    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB)")
 
 
-def build_video_sheet(frames: List[Image.Image], path: Path, subtitle: str) -> None:
-    """Horizontal strip of evenly spaced video frames."""
-    pad, header_h, label_h = 14, 72, 34
+def build_video_sheet(frames: List[Image.Image], path: Path, subtitle: str,
+                      boundaries: Optional[List[int]] = None) -> None:
+    pad, header_h, label_h, thumb_h = 14, 74, 34, 420
     count = min(8, len(frames))
-    picks = [frames[round(i * (len(frames) - 1) / max(1, count - 1))] for i in range(count)]
-    thumb_h = 420
+    picks = [round(i * (len(frames) - 1) / max(1, count - 1)) for i in range(count)]
     thumbs = []
-    for image in picks:
-        scale = thumb_h / image.height
-        thumbs.append(image.resize((max(1, int(image.width * scale)), thumb_h), Image.LANCZOS))
-
-    total_w = pad + sum(t.width + pad for t in thumbs)
+    for idx in picks:
+        img = frames[idx]
+        scale = thumb_h / img.height
+        thumbs.append((idx, img.resize((max(1, int(img.width * scale)), thumb_h), Image.LANCZOS)))
+    total_w = pad + sum(t.width + pad for _, t in thumbs)
     sheet = Image.new("RGB", (total_w, header_h + thumb_h + label_h), (16, 16, 18))
     draw = ImageDraw.Draw(sheet)
-    draw.text((pad, 18), "LUCA · neural image-to-video (Stable Video Diffusion XT)",
+    draw.text((pad, 16), "LUCA · hybrid reel (LivePortrait hook + SVD b-roll)",
               font=_font(27, bold=True), fill=(240, 240, 245))
     draw.text((pad, 48), subtitle, font=_font(16), fill=(150, 152, 160))
-
     x = pad
-    for i, thumb in enumerate(thumbs):
+    for idx, thumb in thumbs:
         sheet.paste(thumb, (x, header_h))
         draw.rectangle([x, header_h, x + thumb.width - 1, header_h + thumb.height - 1],
                        outline=(58, 58, 64))
-        draw.text((x + 2, header_h + thumb.height + 8), f"frame {i + 1}/{count}",
-                  font=_font(16), fill=(200, 202, 210))
+        shot = "hook" if boundaries and idx < boundaries[0] else (
+            "b-roll 1" if boundaries and idx < boundaries[1] else "b-roll 2")
+        draw.text((x + 2, header_h + thumb.height + 8), f"f{idx + 1} · {shot}",
+                  font=_font(15), fill=(200, 202, 210))
         x += thumb.width + pad
-
     sheet.save(path, format="PNG", optimize=True)
-    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB) · {sheet.size[0]}x{sheet.size[1]}")
+    log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB)")
 
 
 # --------------------------------------------------------------------------- #
-# Part B.1 — Voice (linear peak normalisation only)
+# Audio: edge-tts voice + synthesised 120 BPM bed
 # --------------------------------------------------------------------------- #
 
 
 def synth_voice(output_dir: Path, timings: Dict[str, float]) -> Dict[str, Any]:
     """
-    Kokoro -> wav -> mp3.
+    edge-tts -> wav. The voice path is: decode, peak-normalise, mix. Nothing else.
 
-    The ONLY processing applied is a linear peak normalisation. No time
-    stretching (the video is fitted to the audio, never the reverse), no
-    biquad/parametric EQ, no dynamic compression.
+    No time-stretch, no EQ, no compressor. The bed is generated separately and
+    mixed underneath; the voice itself is never spectrally altered.
     """
+    import asyncio
+
     import soundfile as sf
-    from kokoro_onnx import Kokoro
 
-    cache_dir = Path(os.environ.get("MODEL_CACHE_DIR", tempfile.gettempdir())) / "stoic_kokoro"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    with timed("download_kokoro_assets", timings):
-        model_path = cache_dir / "kokoro-v1.0.onnx"
-        voices_path = cache_dir / "voices-v1.0.bin"
-        if not model_path.exists():
-            download_first(KOKORO_MODEL_URLS, model_path)
-        if not voices_path.exists():
-            download_first(KOKORO_VOICES_URLS, voices_path)
-
-    with timed("load_kokoro", timings):
-        try:
-            import onnxruntime as ort
-
-            providers = [p for p in ("CUDAExecutionProvider", "CPUExecutionProvider")
-                         if p in ort.get_available_providers()]
-            if providers and providers[0] == "CUDAExecutionProvider":
-                session = ort.InferenceSession(str(model_path), providers=providers)
-                kokoro = Kokoro.from_session(session, str(voices_path))
-                log(f"kokoro providers: {session.get_providers()}")
-            else:
-                kokoro = Kokoro(str(model_path), str(voices_path))
-                log("kokoro running on CPU (no CUDA provider available)")
-        except Exception as exc:
-            log(f"provider-pinned session failed ({exc}); using default loader", "WARN")
-            kokoro = Kokoro(str(model_path), str(voices_path))
-
-        available = set(kokoro.get_voices())
-        log(f"kokoro voices: total={len(available)}")
-        if VOICE_NAME not in available:
-            fallbacks = [v for v in ("am_michael", "bm_lewis", "am_adam") if v in available]
-            if not fallbacks:
-                raise RuntimeError(f"voice {VOICE_NAME!r} unavailable and no fallback found")
-            log(f"voice {VOICE_NAME!r} missing → using {fallbacks[0]!r}", "WARN")
-
-    voice = VOICE_NAME if VOICE_NAME in available else fallbacks[0]
-    # A voice *name* is passed through untouched: kokoro indexes the full
-    # style matrix with the phoneme count (voice[len(tokens) - 1]). Slicing a
-    # style tensor to (1, 256) is what produced `Invalid rank for input: style`.
-    style_shape = None
-    try:
-        style_shape = tuple(np.asarray(kokoro.get_voice_style(voice)).shape)
-        log(f"voice {voice!r} style tensor {style_shape} (passed by name, never sliced)")
-    except Exception as exc:
-        log(f"style probe skipped: {exc}", "WARN")
-
-    with timed("synthesize_speech", timings):
-        audio, sr = kokoro.create(SCRIPT_LINE, voice=voice, speed=SPEECH_SPEED, lang="en-us")
-        audio = np.asarray(audio, dtype=np.float32).squeeze()
-        if audio.size == 0:
-            raise RuntimeError("kokoro returned empty audio")
-        if sr != AUDIO_SR_TARGET:
-            raise RuntimeError(
-                f"kokoro returned {sr} Hz, expected {AUDIO_SR_TARGET} Hz — refusing to "
-                "resample (any resampler would alter the signal we are trying to keep clean)"
-            )
-        log(f"raw speech: {audio.size / sr:.3f}s @ {sr} Hz, peak {np.max(np.abs(audio)):.4f}")
-
-    peak_in = float(np.max(np.abs(audio)))
-    if peak_in < 1e-5:
-        raise RuntimeError("synthesised audio is silent — the TTS model produced no signal")
-
-    with timed("normalize_peak", timings):
-        # The entire signal chain: one scalar multiply. Nothing else.
-        mastered = (audio / peak_in * PEAK_TARGET).astype(np.float32)
-        mastered = np.clip(mastered, -1.0, 1.0)
-        log(f"peak-normalised ×{PEAK_TARGET / peak_in:.3f} → "
-            f"{20 * math.log10(max(float(np.max(np.abs(mastered))), 1e-10)):.2f} dBFS "
-            f"({mastered.size / sr:.3f}s)")
-
-    wav_path = output_dir / VOICE_WAV
+    ffmpeg = ffmpeg_binary()
+    raw_mp3 = output_dir / "_voice_raw.mp3"
+    wav_path = output_dir / "luca_voice.wav"
     mp3_path = output_dir / VOICE_MP3
-    with timed("write_audio", timings):
-        sf.write(wav_path, mastered, sr, subtype="PCM_16")
-        ffmpeg = ffmpeg_binary()
-        cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(wav_path),
-               "-c:a", "libmp3lame", "-b:a", "192k", str(mp3_path)]
-        proc = subprocess.run(cmd, capture_output=True, text=True)
-        if proc.returncode != 0 or not mp3_path.exists():
-            raise RuntimeError(f"mp3 encode failed: {proc.stderr.strip()[-400:]}")
-        log(f"wrote {mp3_path.name} ({mp3_path.stat().st_size / 1024:.0f} KB)")
+
+    with timed("edge_tts", timings, "av"):
+        import edge_tts
+
+        async def _run():
+            communicate = edge_tts.Communicate(SCRIPT_LINE, TTS_VOICE,
+                                               rate=TTS_RATE, pitch=TTS_PITCH)
+            await communicate.save(str(raw_mp3))
+
+        asyncio.run(_run())
+        if not raw_mp3.exists() or raw_mp3.stat().st_size < 2000:
+            raise RuntimeError("edge-tts produced no audio (network blocked?)")
+        log(f"edge-tts ok: {raw_mp3.stat().st_size / 1024:.0f} KB "
+            f"voice={TTS_VOICE} rate={TTS_RATE} pitch={TTS_PITCH}", tag="av")
+
+    with timed("decode_voice", timings, "av"):
+        proc = subprocess.run(
+            [ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(raw_mp3),
+             "-ac", "1", "-ar", str(AUDIO_SR), "-f", "wav", str(wav_path)],
+            capture_output=True, text=True,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(f"voice decode failed: {proc.stderr[-500:]}")
+        audio, sr = sf.read(wav_path, dtype="float32")
+        audio = np.asarray(audio, dtype=np.float32).squeeze()
+        raw_mp3.unlink(missing_ok=True)
+
+    peak = float(np.max(np.abs(audio))) if audio.size else 0.0
+    if peak < 1e-4:
+        raise RuntimeError("decoded voice is silent")
+    # The ONLY processing on the voice.
+    voice = (audio / peak * PEAK_TARGET).astype(np.float32)
+    log(f"voice: {voice.size / sr:.3f}s @ {sr} Hz, peak-normalised "
+        f"{20 * math.log10(max(peak, 1e-9)):.1f} → "
+        f"{20 * math.log10(PEAK_TARGET):.2f} dBFS", tag="av")
+
+    sf.write(wav_path, voice, sr, subtype="PCM_16")
+    proc = subprocess.run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error",
+                           "-i", str(wav_path), "-c:a", "libmp3lame", "-b:a", "192k",
+                           str(mp3_path)], capture_output=True, text=True)
+    if proc.returncode != 0:
+        log(f"mp3 encode failed: {proc.stderr[-300:]}", "WARN", tag="av")
 
     return {
+        "engine": "edge-tts",
+        "voice": TTS_VOICE,
+        "rate": TTS_RATE,
+        "pitch": TTS_PITCH,
         "text": SCRIPT_LINE,
-        "voice": voice,
-        "voice_style_tensor_shape": list(style_shape) if style_shape else None,
-        "speed": SPEECH_SPEED,
         "sample_rate": int(sr),
-        "duration_s": round(float(mastered.size / sr), 3),
-        "peak_dbfs": round(float(20 * math.log10(max(float(np.max(np.abs(mastered))), 1e-10))), 2),
-        "processing": "linear peak normalisation only",
+        "duration_s": round(float(voice.size / sr), 3),
+        "peak_dbfs": round(float(20 * math.log10(PEAK_TARGET)), 2),
+        "processing": "decode + linear peak normalisation (voice untouched otherwise)",
         "wsola_time_stretch": False,
         "biquad_or_parametric_eq": False,
-        "audio": mastered,
+        "samples": voice,
+    }
+
+
+def speech_envelope(voice: np.ndarray, sr: int, n_frames: int, fps: int = REEL_FPS
+                    ) -> Dict[str, np.ndarray]:
+    """
+    Frame-synchronous acoustic articulation curve.
+
+    `mouth_open` is the RMS of the 300-3400 Hz vocal band (measured with an FFT
+    band mask, so it tracks articulation rather than bass rumble), normalised to
+    its own 98th percentile and smoothed. Also returns broadband RMS.
+    """
+    frame_len = int(round(sr / fps))
+    band_lo, band_hi = 300.0, 3400.0
+
+    mouth = np.zeros(n_frames, dtype=np.float32)
+    energy = np.zeros(n_frames, dtype=np.float32)
+    window = np.hanning(frame_len).astype(np.float32)
+    freqs = np.fft.rfftfreq(frame_len, d=1.0 / sr)
+    band = (freqs >= band_lo) & (freqs <= band_hi)
+
+    for i in range(n_frames):
+        start = i * frame_len
+        chunk = voice[start:start + frame_len]
+        if chunk.size < frame_len:
+            chunk = np.pad(chunk, (0, frame_len - chunk.size))
+        spectrum = np.abs(np.fft.rfft(chunk * window))
+        mouth[i] = float(np.sqrt(np.mean(spectrum[band] ** 2)))
+        energy[i] = float(np.sqrt(np.mean(chunk ** 2)))
+
+    def _norm(x: np.ndarray) -> np.ndarray:
+        hi = float(np.percentile(x, 98)) if x.size else 0.0
+        if hi <= 1e-9:
+            return np.zeros_like(x)
+        return np.clip(x / hi, 0.0, 1.0)
+
+    curve = _norm(mouth)
+    # gentle attack/release smoothing so the jaw does not chatter
+    smoothed = np.zeros_like(curve)
+    attack, release = 0.55, 0.28
+    for i, value in enumerate(curve):
+        prev = smoothed[i - 1] if i else 0.0
+        coeff = attack if value > prev else release
+        smoothed[i] = prev + coeff * (value - prev)
+
+    return {"mouth_open": smoothed.astype(np.float32), "rms": _norm(energy).astype(np.float32)}
+
+
+def _spectral_noise(n: int, sr: int, lo: float, hi: float, rng: np.random.Generator,
+                    tilt: float = 0.0) -> np.ndarray:
+    """Band-limited noise via an FFT mask (no biquad anywhere)."""
+    noise = rng.standard_normal(n)
+    spec = np.fft.rfft(noise)
+    freqs = np.fft.rfftfreq(n, d=1.0 / sr)
+    mask = ((freqs >= lo) & (freqs <= hi)).astype(np.float32)
+    if tilt:
+        mask *= np.clip((np.maximum(freqs, 1e-6) / max(hi, 1e-6)) ** tilt, 0.0, 1.0)
+    out = np.fft.irfft(spec * mask, n=n)
+    peak = np.max(np.abs(out)) if out.size else 0.0
+    return out / peak if peak > 0 else out
+
+
+def build_music_bed(n: int, sr: int, rng: np.random.Generator) -> np.ndarray:
+    """
+    Stereo 120 BPM Ibiza deep-house groove + a soft Mediterranean breeze.
+
+    Synthesised additively from oscillators and FFT-shaped noise, then mixed.
+    Nothing here touches the voice; it is a separate signal.
+    """
+    beat = 60.0 / BPM
+    t = np.arange(n, dtype=np.float32) / sr
+    left = np.zeros(n, dtype=np.float32)
+    right = np.zeros(n, dtype=np.float32)
+
+    def place(signal: np.ndarray, at_sec: float, gain: float, pan: float = 0.0) -> None:
+        start = int(at_sec * sr)
+        if start >= n:
+            return
+        end = min(n, start + signal.size)
+        seg = signal[: end - start] * gain
+        left[start:end] += seg * (1.0 - max(0.0, pan))
+        right[start:end] += seg * (1.0 + min(0.0, pan))
+
+    # --- kick: 4 on the floor, pitch-swept sine ---
+    kick_len = int(0.28 * sr)
+    kt = np.arange(kick_len) / sr
+    sweep = 150.0 * np.exp(-kt * 22.0) + 46.0
+    kick = np.sin(2 * np.pi * np.cumsum(sweep) / sr) * np.exp(-kt * 9.0)
+    for b in range(int(n / sr / beat) + 1):
+        place(kick.astype(np.float32), b * beat, 0.85)
+
+    # --- sub bass: root movement across a 4-bar loop (Am - F - C - G) ---
+    roots = [55.0, 43.65, 65.41, 49.0]
+    bar = 4 * beat
+    for bar_i in range(int(n / sr / bar) + 1):
+        root = roots[bar_i % len(roots)]
+        seg_len = int(bar * sr)
+        if seg_len <= 0:
+            continue
+        st = np.arange(seg_len) / sr
+        env = np.exp(-((st % beat) * 2.4))
+        sub = np.sin(2 * np.pi * root * st) * env * 0.5
+        place(sub.astype(np.float32), bar_i * bar, 0.36)
+
+    # --- chord stabs on the offbeat, minor 7ths ---
+    for bar_i in range(int(n / sr / bar) + 1):
+        root = roots[bar_i % len(roots)]
+        for step in range(8):
+            at = bar_i * bar + step * beat / 2.0 + beat / 4.0
+            stab_len = int(0.16 * sr)
+            st = np.arange(stab_len) / sr
+            env = np.exp(-st * 26.0)
+            tone = np.zeros(stab_len, dtype=np.float32)
+            for mult in (2.0, 2.378, 2.997, 3.564):   # root, m3, 5th, m7
+                tone += np.sin(2 * np.pi * root * mult * st).astype(np.float32)
+            place((tone * env * 0.10).astype(np.float32), at, 0.34,
+                  pan=0.55 if step % 2 else -0.55)
+
+    # --- hats: 8ths, bright band-limited noise, alternating across the field ---
+    hat_len = int(0.05 * sr)
+    hat_env = np.exp(-np.arange(hat_len) / sr * 70.0)
+    for step in range(int(n / sr / (beat / 2)) + 1):
+        hat = _spectral_noise(hat_len, sr, 6000, 11000, rng) * hat_env * 0.46
+        start = int(step * beat / 2.0 * sr)
+        if start >= n:
+            break
+        end = min(n, start + hat_len)
+        seg = hat[: end - start]
+        # hard-panned: odd 8ths right, even 8ths left -> real stereo width
+        if step % 2:
+            right[start:end] += seg
+        else:
+            left[start:end] += seg
+
+    # --- wide detuned pad: hard left / hard right detune is what actually
+    # produces stereo width in this genre (the kick and sub are meant to be mono)
+    bar_sec = bar
+    for bar_i in range(int(n / bar_sec) + 2):
+        root = roots[bar_i % len(roots)]
+        seg_len = int(bar_sec * sr)
+        start = int(bar_i * bar_sec * sr)
+        if start >= n or seg_len <= 0:
+            continue
+        end = min(n, start + seg_len)
+        seg_len = end - start
+        st = np.arange(seg_len) / sr
+        env = np.minimum(1.0, st / 0.35) * np.minimum(1.0, (seg_len / sr - st) / 0.35 + 0.15)
+        env = np.clip(env, 0.0, 1.0).astype(np.float32)
+        for ch, detune in ((left, 1.0035), (right, 0.9965)):
+            voice = np.zeros(seg_len, dtype=np.float32)
+            for mult in (2.0, 2.378, 2.997, 4.0):
+                voice += np.sin(2 * np.pi * root * mult * detune * st).astype(np.float32)
+            ch[start:end] += (voice * env * 0.055).astype(np.float32)
+
+    # --- Mediterranean yacht breeze: two DECORRELATED noise fields, slowly
+    # panned against each other, which is what actually widens the image ---
+    lfo = (0.5 + 0.5 * np.sin(2 * np.pi * 0.09 * t + 0.7)).astype(np.float32)
+    pan_lfo = (0.5 + 0.5 * np.sin(2 * np.pi * 0.05 * t)).astype(np.float32)
+    breeze_l = (_spectral_noise(n, sr, 220, 2400, rng, tilt=-1.1) * lfo * 0.135).astype(np.float32)
+    breeze_r = (_spectral_noise(n, sr, 220, 2400, rng, tilt=-1.1) * lfo * 0.135).astype(np.float32)
+    left += breeze_l * (0.45 + 0.55 * (1.0 - pan_lfo))
+    right += breeze_r * (0.45 + 0.55 * pan_lfo)
+
+    stereo = np.stack([left, right], axis=1)
+    peak = float(np.max(np.abs(stereo))) if stereo.size else 0.0
+    if peak > 0:
+        stereo = stereo / peak * 0.72
+    return stereo.astype(np.float32)
+
+
+def build_reel_audio(voice: np.ndarray, sr: int, frames: int,
+                     timings: Dict[str, float]) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """
+    Voice over the bed, length-locked to the video.
+
+    The bed ducks under speech using the voice's own RMS as the sidechain —
+    that is gain automation, not spectral processing, so the voice stays
+    bit-for-bit the edge-tts take.
+    """
+    n = int(round(frames / REEL_FPS * sr))
+    rng = np.random.default_rng(7)
+    bed = build_music_bed(n, sr, rng)
+
+    v = voice[:n]
+    if v.size < n:
+        v = np.pad(v, (0, n - v.size))
+
+    # sidechain: track the voice's short-term level, map to a gentle duck
+    frame_len = int(sr / 50)
+    env = np.zeros(n, dtype=np.float32)
+    for i in range(0, n, frame_len):
+        chunk = v[i:i + frame_len]
+        env[i:i + chunk.size] = float(np.sqrt(np.mean(chunk ** 2)))
+    smooth = np.convolve(env, np.ones(frame_len) / frame_len, mode="same")
+    hi = float(np.percentile(smooth, 95)) if smooth.size else 0.0
+    duck = 1.0 - 0.55 * np.clip(smooth / hi, 0.0, 1.0) if hi > 1e-6 else np.ones(n, np.float32)
+
+    mixed = bed * (BED_GAIN * duck[:, None]) + np.stack([v, v], axis=1) * VOICE_GAIN
+    peak = float(np.max(np.abs(mixed)))
+    if peak > 1e-6:
+        # normalise to just under full scale: honest headroom without leaving the
+        # reel 5 dB quieter than everything else on the feed
+        mixed *= 0.95 / peak
+    log(f"reel audio: {n / sr:.3f}s @ {sr} Hz, bed {BED_GAIN:.2f} ducked by voice, "
+        f"peak {20 * math.log10(max(float(np.max(np.abs(mixed))), 1e-9)):.2f} dBFS", tag="av")
+    return mixed.astype(np.float32), {
+        "bpm": BPM,
+        "bed": "synthesised 120 BPM deep-house groove + Mediterranean breeze",
+        "bed_gain": BED_GAIN,
+        "voice_gain": VOICE_GAIN,
+        "duck": "gain automation from voice RMS (no spectral processing)",
+        "duration_s": round(n / sr, 3),
     }
 
 
 # --------------------------------------------------------------------------- #
-# Part B.2 — Real neural video (Stable Video Diffusion XT)
+# LivePortrait
+# --------------------------------------------------------------------------- #
+
+LIVEPORTRAIT_REPO = "https://github.com/KwaiVGI/LivePortrait.git"
+LIVEPORTRAIT_DIR = Path(os.environ.get("LIVEPORTRAIT_DIR", "/tmp/LivePortrait"))
+
+
+def fetch_liveportrait(timings: Dict[str, float]) -> Path:
+    """Clone the repo (code only) and stage the five pure-PyTorch checkpoints."""
+    if not (LIVEPORTRAIT_DIR / "src" / "live_portrait_wrapper.py").exists():
+        with timed("clone_liveportrait", timings, "gpu1"):
+            subprocess.run(["git", "clone", "--depth", "1", "-q", LIVEPORTRAIT_REPO,
+                            str(LIVEPORTRAIT_DIR)], check=False, capture_output=True)
+        if not (LIVEPORTRAIT_DIR / "src").exists():
+            raise RuntimeError("LivePortrait clone failed")
+
+    weights_root = LIVEPORTRAIT_DIR / "pretrained_weights"
+    with timed("fetch_liveportrait_weights", timings, "gpu1"):
+        from huggingface_hub import hf_hub_download
+
+        candidates = [("KwaiVGI/LivePortrait", "model"), ("KwaiVGI/LivePortrait", "space"),
+                      ("camenduru/LivePortrait", "model")]
+        for _, rel in LIVEPORTRAIT_WEIGHTS:
+            dest = weights_root / rel
+            if dest.exists() and dest.stat().st_size > 1_000_000:
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            got = False
+            for repo, kind in candidates:
+                try:
+                    path = hf_hub_download(repo_id=repo, filename=rel, repo_type=kind)
+                    shutil.copy(path, dest)
+                    log(f"  ✓ {rel} ← {repo} ({kind})", tag="gpu1")
+                    got = True
+                    break
+                except Exception as exc:
+                    log(f"  ✗ {repo} {rel}: {str(exc).splitlines()[0][:80]}", "WARN", tag="gpu1")
+            if not got:
+                raise RuntimeError(f"could not fetch LivePortrait weight {rel}")
+
+    # landmark.onnx is needed by the cropper for the 106-point lip landmarks.
+    landmark = weights_root / "liveportrait" / "landmark.onnx"
+    if not (landmark.exists() and landmark.stat().st_size > 100_000):
+        landmark.parent.mkdir(parents=True, exist_ok=True)
+        for repo, kind in candidates:
+            try:
+                path = hf_hub_download(repo_id=repo, filename="liveportrait/landmark.onnx",
+                                       repo_type=kind)
+                shutil.copy(path, landmark)
+                log(f"  ✓ landmark.onnx ← {repo}", tag="gpu1")
+                break
+            except Exception as exc:
+                log(f"  ✗ landmark.onnx {repo}: {str(exc).splitlines()[0][:80]}",
+                    "WARN", tag="gpu1")
+        if not landmark.exists():
+            raise RuntimeError("landmark.onnx unavailable — lip retargeting needs it")
+
+    return LIVEPORTRAIT_DIR
+
+
+class LivePortraitDriver:
+    """
+    Thin, CLI-free driver over LivePortrait's own modules.
+
+    Everything below mirrors `LivePortraitPipeline.execute()` but with two
+    deliberate differences for our use case:
+
+      * the head pose / eyes come from a real driving video's motion template;
+      * the LIP is driven from our audio envelope via `retarget_lip`, so Luca's
+        mouth articulates in sync with the edge-tts take instead of mouthing
+        whatever the driving actor happened to say.
+    """
+
+    def __init__(self, repo: Path, device_id: int, face_root: Path, timings: Dict[str, float]):
+        self.repo = repo
+        self.device_id = device_id
+        self.face_root = face_root
+        self.timings = timings
+        self.wrapper = None
+        self.cropper = None
+        self.crop_cfg = None
+
+    def load(self) -> None:
+        import sys as _sys
+
+        if str(self.repo) not in _sys.path:
+            _sys.path.insert(0, str(self.repo))
+
+        import yaml
+
+        from src.config.crop_config import CropConfig
+        from src.config.inference_config import InferenceConfig
+        from src.live_portrait_wrapper import LivePortraitWrapper
+        from src.utils.cropper import Cropper
+
+        with timed("load_liveportrait", self.timings, "gpu1"):
+            weights = self.repo / "pretrained_weights"
+            cfg = InferenceConfig(
+                device_id=self.device_id,
+                flag_use_half_precision=True,
+                flag_pasteback=True,
+                flag_do_crop=True,
+                flag_stitching=True,
+                flag_relative_motion=True,
+                flag_lip_retargeting=True,
+                flag_eye_retargeting=False,
+                animation_region="all",
+                driving_option="pose-friendly",
+                output_fps=REEL_FPS,
+                models_config=str(self.repo / "src" / "config" / "models.yaml"),
+                checkpoint_F=str(weights / "liveportrait/base_models/appearance_feature_extractor.pth"),
+                checkpoint_M=str(weights / "liveportrait/base_models/motion_extractor.pth"),
+                checkpoint_W=str(weights / "liveportrait/base_models/warping_module.pth"),
+                checkpoint_G=str(weights / "liveportrait/base_models/spade_generator.pth"),
+                checkpoint_S=str(weights / "liveportrait/retargeting_models/stitching_retargeting_module.pth"),
+            )
+            self.wrapper = LivePortraitWrapper(inference_cfg=cfg)
+            log(f"wrapper on {self.wrapper.device}", tag="gpu1")
+
+            self.crop_cfg = CropConfig(device_id=self.device_id,
+                                       insightface_root=str(self.face_root))
+            self.cropper = Cropper(crop_cfg=self.crop_cfg, device_id=self.device_id)
+            log("cropper ready (insightface + landmark.onnx)", tag="gpu1")
+
+        # `load_model` uses raw torch.load; assert the yaml is the one we expect
+        yaml.load(open(str(self.repo / "src" / "config" / "models.yaml")), Loader=yaml.SafeLoader)
+
+    def animate(
+        self,
+        source_rgb: np.ndarray,
+        driving_video: Path,
+        n_frames: int,
+        mouth_open: np.ndarray,
+        mouth_range: Tuple[float, float] = (0.02, 0.62),
+    ) -> Tuple[List[np.ndarray], Dict[str, Any]]:
+        import cv2
+        import torch
+
+        from src.utils.camera import get_rotation_matrix
+        from src.utils.crop import prepare_paste_back, paste_back
+        from src.utils.video import load_video
+
+        wrapper = self.wrapper
+        device = wrapper.device
+        info: Dict[str, Any] = {"frames": 0}
+
+        # ---- source identity ----
+        crop_info = self.cropper.crop_source_image(source_rgb, self.crop_cfg)
+        if crop_info is None:
+            raise RuntimeError("no face detected in the LivePortrait source image")
+        source_lmk = crop_info["lmk_crop"]
+        img_crop = crop_info["img_crop_256x256"]
+
+        I_s = wrapper.prepare_source(img_crop)
+        x_s_info = wrapper.get_kp_info(I_s)
+        x_c_s = x_s_info["kp"]
+        R_s = get_rotation_matrix(x_s_info["pitch"], x_s_info["yaw"], x_s_info["roll"])
+        f_s = wrapper.extract_feature_3d(I_s)
+        x_s = wrapper.transform_keypoint(x_s_info)
+
+        # Pasteback mask: the config already loaded the 512x512 template for us.
+        mask_ori = prepare_paste_back(
+            wrapper.inference_cfg.mask_crop,
+            crop_info["M_c2o"],
+            dsize=(source_rgb.shape[1], source_rgb.shape[0]),
+        )
+
+        # ---- driving motion template (head pose, eyes, translation) ----
+        driving = load_video(str(driving_video))
+        if not driving:
+            raise RuntimeError(f"could not read driving video {driving_video}")
+        while len(driving) < n_frames:
+            driving = driving + driving
+        driving = driving[:n_frames]
+
+        ret_d = self.cropper.crop_driving_video(driving)
+        crops = [cv2.resize(f, (256, 256)) for f in ret_d["frame_crop_lst"]][:n_frames]
+        lmk_crop = ret_d["lmk_crop_lst"][:n_frames]
+        c_d_eyes_lst, c_d_lip_lst = wrapper.calc_ratio(lmk_crop)
+
+        I_d = wrapper.prepare_videos(crops)
+        motion = []
+        for i in range(I_d.shape[0]):
+            x_i_info = wrapper.get_kp_info(I_d[i:i + 1])
+            motion.append({
+                "R": get_rotation_matrix(x_i_info["pitch"], x_i_info["yaw"],
+                                         x_i_info["roll"]).cpu().numpy().astype(np.float32),
+                "exp": x_i_info["exp"].cpu().numpy().astype(np.float32),
+                "t": x_i_info["t"].cpu().numpy().astype(np.float32),
+                "scale": x_i_info["scale"].cpu().numpy().astype(np.float32),
+            })
+        log(f"driving template: {len(motion)} frames from {driving_video.name}", tag="gpu1")
+
+        # ---- render ----
+        # Composition of motion, mirroring LivePortrait's Algorithm 1:
+        #   * head pose (R), translation (t) and scale come from the DRIVING video
+        #     (that is the natural 3D turn and the blinks);
+        #   * the expression delta comes from the driving video too, EXCEPT the
+        #     mouth, which we replace with our own retarget_lip delta driven by
+        #     the audio envelope;
+        #   * `stitching` then fuses driving-head/source-expression so the face
+        #     keeps Luca's identity.
+        lo, hi = mouth_range
+        R_d_0 = torch.from_numpy(motion[0]["R"]).to(device)
+        exp_0 = torch.from_numpy(motion[0]["exp"]).to(device)
+        t_d_0 = torch.from_numpy(motion[0]["t"]).to(device)
+        scale_d_0 = torch.from_numpy(motion[0]["scale"]).to(device)
+        frames: List[np.ndarray] = []
+        lip_values: List[float] = []
+
+        for i in range(n_frames):
+            m = motion[min(i, len(motion) - 1)]
+            R_d_i = torch.from_numpy(m["R"]).to(device)
+            t_d_i = torch.from_numpy(m["t"]).to(device)
+            exp_d_i = torch.from_numpy(m["exp"]).to(device)
+            scale_d_i = torch.from_numpy(m["scale"]).to(device)
+
+            # driving pose, re-anchored to the source frame of reference
+            R_new = (R_d_i @ R_d_0.transpose(1, 2)) @ R_s
+            t_new = x_s_info["t"] + (t_d_i - t_d_0)
+            t_new[..., 2].fill_(0)
+            scale_new = x_s_info["scale"] * (scale_d_i / scale_d_0)
+
+            # expression: driving delta on top of the source expression
+            delta_new = x_s_info["exp"] + (exp_d_i - exp_0)
+
+            x_d_i_new = scale_new * (x_c_s @ R_new + delta_new) + t_new
+
+            # ---- our mouth, from the audio envelope ----
+            openness = float(np.clip(mouth_open[min(i, mouth_open.size - 1)], 0.0, 1.0))
+            c_d_lip = lo + (hi - lo) * openness
+            lip_values.append(c_d_lip)
+            combined = wrapper.calc_combined_lip_ratio([c_d_lip], source_lmk)
+            lip_delta = wrapper.retarget_lip(x_s, combined)
+
+            # stitch driving-pose keypoints, then swap in our lip delta. The lip
+            # delta is a keypoint offset, so it survives the stitching untouched.
+            stitched = wrapper.stitching(x_s, x_d_i_new)
+            x_final = stitched + lip_delta
+
+            out = wrapper.warp_decode(f_s, x_s, x_final)
+            crop_rgb = wrapper.parse_output(out)[0]
+            pasted = paste_back(crop_rgb, crop_info["M_c2o"], source_rgb, mask_ori)
+            frames.append(pasted)
+
+        info.update({
+            "frames": len(frames),
+            "driving": driving_video.name,
+            "lip_drive": "audio envelope → retarget_lip MLP",
+            "lip_range": [lo, hi],
+            "lip_mean": round(float(np.mean(lip_values)), 4),
+            "head_pose": "3D rotation from driving video",
+        })
+        log(f"liveportrait: {len(frames)} frames, lip ratio "
+            f"{min(lip_values):.2f}–{max(lip_values):.2f}", tag="gpu1")
+        return frames, info
+
+
+# --------------------------------------------------------------------------- #
+# SVD b-roll (forward-only)
 # --------------------------------------------------------------------------- #
 
 
-def build_video_pipeline(timings: Dict[str, float]):
-    """
-    Load SVD-XT in fp16 and offload it so a 16 GB T4 can hold all 25 frames.
-
-    Verified against diffusers 0.42: `StableVideoDiffusionPipeline` has no
-    `enable_vae_slicing()`, but its VAE (`AutoencoderKLTemporalDecoder`) does
-    expose `enable_slicing()`/`enable_tiling()`.
-    """
+def build_svd_pipeline(device: str, timings: Dict[str, float]):
     import torch
     from diffusers import StableVideoDiffusionPipeline
 
-    with timed("load_svd_pipeline", timings):
-        pipe = _load_pipeline(StableVideoDiffusionPipeline, SVD_MODEL_ID, "svd")
+    with timed("load_svd", timings, "gpu1"):
+        pipe = None
+        last: Optional[Exception] = None
+        for kwargs in (
+            {"variant": "fp16", "torch_dtype": torch.float16},
+            {"torch_dtype": torch.float16},
+        ):
+            try:
+                pipe = StableVideoDiffusionPipeline.from_pretrained(
+                    "stabilityai/stable-video-diffusion-img2vid-xt", **kwargs)
+                break
+            except Exception as exc:
+                last = exc
+                log(f"svd load attempt failed: {type(exc).__name__}: {exc}", "WARN", tag="gpu1")
+        if pipe is None:
+            raise RuntimeError(f"could not load SVD-XT: {last}") from last
 
-    with timed("configure_svd_vram", timings):
-        _first_available(pipe, ["vae.enable_slicing", "enable_vae_slicing"], "svd vae slicing")
-        _first_available(pipe, ["vae.enable_tiling", "enable_vae_tiling"], "svd vae tiling")
+    with timed("configure_svd", timings, "gpu1"):
+        for name in ("vae.enable_slicing", "enable_vae_slicing"):
+            try:
+                target = pipe
+                for part in name.split(".")[:-1]:
+                    target = getattr(target, part)
+                getattr(target, name.split(".")[-1])()
+                log(f"applied svd {name}()", tag="gpu1")
+                break
+            except Exception:
+                continue
         try:
-            pipe.enable_model_cpu_offload(device="cuda:0")
-            log("svd: model CPU offload enabled (unet streams from host RAM)")
+            pipe.enable_model_cpu_offload(device=device)
+            log("svd: model CPU offload", tag="gpu1")
         except Exception as exc:
-            log(f"svd: cpu offload unavailable ({exc}); moving fully to GPU", "WARN")
-            pipe.to("cuda:0", dtype=torch.float16)
-        try:
-            pipe.set_progress_bar_config(disable=False, desc="svd")
-        except Exception:
-            pass
-
+            log(f"svd offload unavailable ({exc}); moving to {device}", "WARN", tag="gpu1")
+            pipe.to(device, dtype=torch.float16)
     return pipe
 
 
-def generate_neural_frames(pipe, image: Image.Image, timings: Dict[str, float]) -> Tuple[List[Image.Image], Dict[str, Any]]:
+def svd_broll(pipe, image: Image.Image, n_frames: int, seed: int,
+              timings: Dict[str, float], label: str) -> Tuple[List[Image.Image], Dict[str, Any]]:
     """
-    Run SVD with a VRAM-recovery ladder.
+    Forward-only b-roll.
 
-    Vertical 576x1024 is the native SVD field of view rotated for Reels; if a
-    T4 cannot hold a given (frames, chunk) combination the next rung is tried
-    instead of failing the run.
+    `fps=REEL_FPS` is passed to SVD so the model calibrates its motion per frame
+    for 25 fps playback. That is what lets the clip be used strictly
+    forward-only with no ping-pong and no cross-fade retiming: the frames are
+    already at the right temporal density, so we simply play them in order.
     """
     import torch
 
-    width, height = 576, 1024
-    ladder: List[Dict[str, int]] = [
-        {"num_frames": SVD_NUM_FRAMES, "decode_chunk_size": 4},
-        {"num_frames": SVD_NUM_FRAMES, "decode_chunk_size": 2},
-        {"num_frames": max(14, SVD_NUM_FRAMES // 2), "decode_chunk_size": 2},
-    ]
-    last_error: Optional[Exception] = None
-
-    for attempt, rung in enumerate(ladder, start=1):
-        frames = rung["num_frames"]
-        chunk = rung["decode_chunk_size"]
-        label = f"svd_generate_f{frames}_c{chunk}"
-        log(f"svd attempt {attempt}/{len(ladder)}: {frames} frames, decode_chunk_size={chunk}")
+    width, height = BROLL_SIZE
+    last: Optional[Exception] = None
+    for chunk in (4, 2):
         try:
-            with timed(label, timings):
+            with timed(f"svd_{label}", timings, "gpu1"):
                 result = pipe(
                     image,
                     height=height,
                     width=width,
-                    num_frames=frames,
+                    num_frames=n_frames,
                     num_inference_steps=SVD_STEPS,
                     motion_bucket_id=SVD_MOTION_BUCKET,
                     noise_aug_strength=SVD_NOISE_AUG,
+                    fps=REEL_FPS,
                     decode_chunk_size=chunk,
-                    generator=torch.Generator(device="cuda").manual_seed(BASE_SEED + 100),
+                    generator=torch.Generator(device="cuda").manual_seed(seed),
                 )
-                out = result.frames[0]
-            if not out:
-                raise RuntimeError("SVD returned zero frames")
-            log(f"svd: {len(out)} neural frames at {out[0].size[0]}x{out[0].size[1]}")
-            return list(out), {
+                frames = list(result.frames[0])
+            log(f"svd {label}: {len(frames)} frames {width}x{height} (forward-only)", tag="gpu1")
+            return frames, {
                 "backend": "stable-video-diffusion-img2vid-xt",
-                "num_frames": len(out),
-                "num_inference_steps": SVD_STEPS,
-                "motion_bucket_id": SVD_MOTION_BUCKET,
-                "noise_aug_strength": SVD_NOISE_AUG,
+                "frames": len(frames),
+                "fps_conditioning": REEL_FPS,
+                "playback": "forward-only (no ping-pong, no cross-fade)",
                 "decode_chunk_size": chunk,
-                "native_size": [out[0].size[0], out[0].size[1]],
-                "source_fps": 7,
-                "attempt": attempt,
             }
         except Exception as exc:
-            last_error = exc
-            log(f"svd attempt {attempt} failed ({type(exc).__name__}: {exc})", "ERROR")
-            release_memory()
-
-    raise RuntimeError(f"Stable Video Diffusion failed on every rung: {last_error}") from last_error
-
-
-def retime_to_duration(
-    frames: List[Image.Image],
-    source_fps: int,
-    target_fps: int,
-    seconds: float,
-) -> Tuple[List[Image.Image], Dict[str, Any]]:
-    """
-    Fit the neural clip to the audio duration **without** changing its speed.
-
-    Naively replaying SVD's 7 fps output at 25 fps would play Luca 3.5x too
-    fast. Instead we:
-
-      1. build a ping-pong cycle (forward, then backward) so the sequence can
-         be repeated with no seam -- the frame before the turnaround is
-         adjacent to the frame it reverses into;
-      2. sample that cycle at the true source rate, i.e. position
-         `i / target_fps * source_fps` source frames in, and cross-fade
-         between the two neighbouring neural frames.
-
-    Step 2 is *temporal upsampling* of existing neural frames: every pixel in
-    the output is a blend of two frames Stable Video Diffusion actually
-    generated. Nothing is drawn, warped or synthesised procedurally.
-    """
-    import torch
-
-    if not frames:
-        raise RuntimeError("no frames to retime")
-
-    target_count = max(1, int(round(seconds * target_fps)))
-
-    if len(frames) == 1:
-        cycle = list(frames)
-    else:
-        cycle = list(frames) + list(frames[-2:0:-1])   # ping-pong, no repeat at the join
-
-    cycle_len = len(cycle)
-    # Total neural motion available in the cycle, in seconds.
-    cycle_seconds = cycle_len / float(source_fps)
-
-    out: List[Image.Image] = []
-    for i in range(target_count):
-        position = (i / float(target_fps)) * float(source_fps)   # index in source frames
-        if cycle_seconds > 0:
-            position = position % cycle_len
-        low = int(math.floor(position)) % cycle_len
-        high = (low + 1) % cycle_len
-        frac = position - math.floor(position)
-
-        if frac < 1e-3 or cycle_len == 1:
-            out.append(cycle[low])
-            continue
-
-        a = torch.from_numpy(np.asarray(cycle[low], dtype=np.float32)).permute(2, 0, 1)[None]
-        b = torch.from_numpy(np.asarray(cycle[high], dtype=np.float32)).permute(2, 0, 1)[None]
-        blended = (a * (1.0 - frac) + b * frac).clamp(0, 255).round().to(torch.uint8)
-        out.append(Image.fromarray(blended[0].permute(1, 2, 0).numpy()))
-
-    info = {
-        "source_fps": source_fps,
-        "fps": target_fps,
-        "ping_pong_cycle": cycle_len,
-        "looped_frames": len(out),
-        "duration_s": round(len(out) / float(target_fps), 3),
-        "loop_mode": "ping-pong",
-        "retime": f"cross-fade temporal upsampling {source_fps}→{target_fps} fps (speed preserved)",
-    }
-    log(
-        f"retime: {len(frames)} neural frames → ping-pong cycle {cycle_len} @ {source_fps} fps "
-        f"→ {len(out)} frames @ {target_fps} fps ({len(out) / target_fps:.3f}s, speed preserved)"
-    )
-    return out, info
+            last = exc
+            log(f"svd {label} chunk={chunk} failed: {type(exc).__name__}: {exc}",
+                "WARN", tag="gpu1")
+            release_memory("cuda:1")
+    raise RuntimeError(f"SVD failed for {label}: {last}") from last
 
 
+# --------------------------------------------------------------------------- #
+# Encoding
+# --------------------------------------------------------------------------- #
 
-def encode_video(frames: List[Image.Image], audio: np.ndarray, sr: int, out_path: Path,
-                 timings: Dict[str, float], fps: int = SVD_FPS) -> None:
-    """Pipe raw RGB into ffmpeg -> libx264 yuv420p + AAC, trimmed to the audio."""
+
+def encode_reel(frames: List[np.ndarray], audio: np.ndarray, sr: int,
+                out_path: Path, timings: Dict[str, float]) -> None:
     import soundfile as sf
 
     if not frames:
-        raise RuntimeError("encode_video got no frames")
-    width, height = frames[0].size
+        raise RuntimeError("encode_reel got no frames")
+    height, width = frames[0].shape[:2]
     tmp_wav = out_path.with_suffix(".tmp.wav")
     sf.write(tmp_wav, audio, sr, subtype="PCM_16")
 
     ffmpeg = ffmpeg_binary()
-    video_codec = ["-c:v", "libx264", "-preset", "medium", "-crf", "19",
-                   "-x264-params", "keyint=50:min-keyint=25"]
+    vcodec = ["-c:v", "libx264", "-preset", "medium", "-crf", "19",
+              "-x264-params", "keyint=50:min-keyint=25"]
     if not has_encoder(ffmpeg, "libx264"):
-        log("libx264 missing — falling back to mpeg4", "WARN")
-        video_codec = ["-c:v", "mpeg4", "-q:v", "2"]
+        log("libx264 missing — mpeg4 fallback", "WARN")
+        vcodec = ["-c:v", "mpeg4", "-q:v", "2"]
 
-    cmd = [
-        ffmpeg, "-y", "-hide_banner", "-loglevel", "error",
-        "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
-        "-r", str(fps), "-i", "pipe:0",
-        "-i", str(tmp_wav),
-        *video_codec,
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        "-c:a", "aac", "-b:a", "160k", "-ar", str(sr), "-ac", "1",
-        "-shortest", str(out_path),
-    ]
-    with timed("encode_video", timings):
-        process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error",
+           "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
+           "-r", str(REEL_FPS), "-i", "pipe:0",
+           "-i", str(tmp_wav),
+           *vcodec, "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+           "-c:a", "aac", "-b:a", "192k", "-ar", str(sr), "-ac", "2",
+           "-shortest", str(out_path)]
+
+    with timed("encode_reel", timings, "av"):
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         try:
             for frame in frames:
-                process.stdin.write(np.asarray(frame.convert("RGB"), dtype=np.uint8).tobytes())
+                proc.stdin.write(np.asarray(frame, dtype=np.uint8).tobytes())
         except Exception as exc:
             log(f"frame pipe failed: {exc}", "ERROR")
         finally:
-            # MUST always close stdin: an open pipe leaves ffmpeg waiting for
-            # more frames forever and the kernel would burn its time budget.
+            # Always close stdin: an open pipe makes ffmpeg wait for ever and the
+            # kernel would burn its whole time budget.
             try:
-                process.stdin.close()
+                proc.stdin.close()
             except Exception:
                 pass
-        stderr = process.stderr.read().decode("utf-8", "replace") if process.stderr else ""
-        returncode = process.wait()
+        stderr = proc.stderr.read().decode("utf-8", "replace") if proc.stderr else ""
+        rc = proc.wait()
     tmp_wav.unlink(missing_ok=True)
-    if returncode != 0 or not out_path.exists():
-        raise RuntimeError(f"ffmpeg failed ({returncode}): {stderr[-1200:]}")
+    if rc != 0 or not out_path.exists():
+        raise RuntimeError(f"ffmpeg failed ({rc}): {stderr[-1200:]}")
     log(f"encoded {out_path.name} ({out_path.stat().st_size / 1024:.0f} KB)")
 
 
 def probe_video(path: Path) -> Dict[str, Any]:
-    """
-    Describe the deliverable so metrics.json reflects the *real* file.
-
-    imageio-ffmpeg ships no `ffprobe` sibling, so we parse `ffmpeg -i`'s
-    banner instead of depending on a tool that may not exist.
-    """
     ffmpeg = ffmpeg_binary()
     try:
         proc = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path)],
                               capture_output=True, text=True)
-        banner = proc.stderr or ""
         info: Dict[str, Any] = {"size_bytes": path.stat().st_size}
-        for line in banner.splitlines():
+        for line in (proc.stderr or "").splitlines():
             line = line.strip()
             if line.startswith("Duration:"):
                 info["duration"] = line.split("Duration:")[1].split(",")[0].strip()
@@ -1315,25 +1805,307 @@ def probe_video(path: Path) -> Dict[str, Any]:
                 parts = [p.strip() for p in line.split("Video:")[1].split(",")]
                 info["video_codec"] = parts[0]
                 info["pix_fmt"] = parts[1] if len(parts) > 1 else None
-                for part in parts:
-                    if "x" in part and part.split("x")[0].isdigit():
-                        info["resolution"] = part.split()[0]
+                for p in parts:
+                    if "x" in p and p.split("x")[0].isdigit():
+                        info["resolution"] = p.split()[0]
                         break
-                for part in parts:
-                    if part.endswith("fps"):
-                        info["fps"] = part.split()[0]
+                for p in parts:
+                    if p.endswith("fps"):
+                        info["fps"] = p.split()[0]
                         break
             elif "Audio:" in line:
                 parts = [p.strip() for p in line.split("Audio:")[1].split(",")]
                 info["audio_codec"] = parts[0]
-                for part in parts:
-                    if "Hz" in part:
-                        info["sample_rate"] = part.split()[0]
+                for p in parts:
+                    if "Hz" in p:
+                        info["sample_rate"] = p.split()[0]
                         break
-                info["audio_layout"] = "mono" if "mono" in line else "stereo"
+                info["audio_layout"] = "stereo" if "stereo" in line else "mono"
         return info
     except Exception as exc:
         return {"probe_error": f"{type(exc).__name__}: {exc}"}
+
+
+# --------------------------------------------------------------------------- #
+# GPU 0 worker — carousel
+# --------------------------------------------------------------------------- #
+
+
+def save_slide(image: Image.Image, png: Path, jpg: Path) -> None:
+    image.save(png, format="PNG", optimize=True)
+    image.convert("RGB").save(jpg, format="JPEG", quality=JPEG_QUALITY, optimize=True,
+                              progressive=True)
+    log(f"wrote {png.name} ({png.stat().st_size/1024:.0f} KB) + "
+        f"{jpg.name} ({jpg.stat().st_size/1024:.0f} KB)")
+
+
+def run_carousel(output_dir: Path, timings: Dict[str, float],
+                 models: Dict[str, Path], q: Any) -> Dict[str, Any]:
+    """cuda:0 — scene generation, biometric swap, 1024px adetailer, slide pack."""
+    tag = "gpu0"
+    device = "cuda:0"
+    import torch
+
+    torch.cuda.set_device(0)
+    result: Dict[str, Any] = {"slides": [], "artifacts": [], "errors": []}
+
+    pipe = build_scene_pipeline(device, timings, tag)
+
+    # ---- Stage 1: pure scenes ----
+    scenes: Dict[int, Image.Image] = {}
+    for slide in SLIDES:
+        width, height = slide["size"]
+        with timed(f"scene_{slide['index']:02d}", timings, tag):
+            img = generate_scene(pipe, device, prompt=slide["prompt"], width=width,
+                                 height=height, seed=slide["seed"], label=slide["filename"])
+        scenes[slide["index"]] = img
+        result["slides"].append({
+            "index": slide["index"], "filename": slide["filename"], "title": slide["title"],
+            "seed": slide["seed"], "size": [width, height],
+            "expected_people": slide["people"], "stage1": "ok",
+            "ip_adapter_during_txt2img": False,
+        })
+
+    master = scenes[1]
+
+    # ---- Stage 2 + 3 ----
+    engine = FaceEngine(models, 0, timings, tag)
+    engine.load()
+    source_faces = engine.detect(np.asarray(master))
+    source_face = engine.pick_male(source_faces, master.width)
+    if source_face is None:
+        raise RuntimeError("no face found in the master slide — biometric lock impossible")
+    master_emb = engine.embedding(np.asarray(master))
+    log(f"master face locked: bbox={[int(v) for v in source_face.bbox]}", tag=tag)
+
+    img2img = build_img2img(pipe, timings, tag)
+    adapter_ok = attach_adetailer_adapter(pipe, device, timings, tag)
+    result["adetailer_adapter"] = adapter_ok
+
+    final_slides: Dict[int, Image.Image] = {1: master}
+    identities: Dict[str, Optional[float]] = {}
+
+    for slide in SLIDES:
+        if not slide["needs_swap"]:
+            continue
+        idx = slide["index"]
+        record = result["slides"][idx - 1]
+        arr = np.asarray(scenes[idx])
+        try:
+            with timed(f"swap_{idx:02d}", timings, tag):
+                faces = engine.detect(arr)
+                swapped, bbox, swap_info = engine.swap_male(arr, source_face, faces)
+            record["stage2"] = swap_info
+
+            if bbox and adapter_ok:
+                with timed(f"adetailer_{idx:02d}", timings, tag):
+                    arr2, adetailer_info = adetailer_face(
+                        img2img, swapped, bbox, master, device, slide["seed"], tag)
+                record["stage3"] = adetailer_info
+            else:
+                arr2 = swapped
+                record["stage3"] = {"adetailer": False,
+                                    "reason": "adapter unavailable" if not adapter_ok
+                                    else "no face"}
+
+            polished, polish_info = optical_polish(Image.fromarray(arr2), slide["seed"])
+            record["polish"] = polish_info
+
+            embedding = engine.embedding(np.asarray(polished))
+            similarity = cosine(master_emb, embedding)
+            record["identity_cosine"] = similarity
+            identities[slide["filename"]] = similarity
+            if similarity is not None:
+                verdict = "MATCH" if similarity >= 0.45 else "DRIFT"
+                log(f"identity {slide['filename']}: cosine={similarity:.4f} ({verdict})", tag=tag)
+            final_slides[idx] = polished
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            log(f"slide {slide['filename']} post-process FAILED — {detail}", "ERROR", tag=tag)
+            log(traceback.format_exc(), "ERROR", tag=tag)
+            record["error"] = detail
+            result["errors"].append({"filename": slide["filename"], "error": detail})
+            final_slides[idx] = scenes[idx]
+
+    result["identity_cosine"] = identities
+
+    # ---- write the pack ----
+    sheet_items: List[Tuple[str, Image.Image]] = []
+    for slide in SLIDES:
+        idx = slide["index"]
+        image = final_slides[idx]
+        png = output_dir / slide["filename"]
+        jpg = output_dir / f"luca_slide_{idx:02d}.jpg"
+        with timed(f"write_{idx:02d}", timings, tag):
+            save_slide(image, png, jpg)
+        result["artifacts"] += [slide["filename"], jpg.name]
+        sheet_items.append((slide["title"], image))
+
+    with timed("carousel_sheet", timings, tag):
+        build_carousel_sheet(sheet_items, output_dir / CAROUSEL_SHEET)
+    result["artifacts"].append(CAROUSEL_SHEET)
+
+    try:
+        pipe.to("cpu")
+    except Exception:
+        pass
+    del pipe
+    release_memory(device)
+
+    # Hand the final slides to the video worker through the queue (queue, not a
+    # shared file: it cannot be half-written).
+    q.put({"slides": {i: np.asarray(im) for i, im in final_slides.items()}})
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# GPU 1 worker — voice + reel
+# --------------------------------------------------------------------------- #
+
+
+def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path],
+             q: Any, wait_seconds: float = 600.0) -> Dict[str, Any]:
+    """cuda:1 — edge-tts voice, LivePortrait hook, SVD b-roll, muxed reel."""
+    tag = "gpu1"
+    device = "cuda:1"
+    import torch
+
+    torch.cuda.set_device(1)
+    result: Dict[str, Any] = {"artifacts": [], "errors": []}
+
+    # ---- voice first: the video length is derived from it ----
+    voice = synth_voice(output_dir, timings)
+    samples = voice.pop("samples")
+    result["voice"] = voice
+    result["artifacts"] += [VOICE_MP3, "luca_voice.wav"]
+
+    total_frames = HOOK_FRAMES + 2 * BROLL_FRAMES
+    mouth = speech_envelope(samples, voice["sample_rate"], total_frames, REEL_FPS)
+    result["envelope"] = {
+        "frames": int(total_frames),
+        "fps": REEL_FPS,
+        "vocal_band_hz": [300, 3400],
+        "mouth_open_mean": round(float(mouth["mouth_open"].mean()), 4),
+        "mouth_open_max": round(float(mouth["mouth_open"].max()), 4),
+        "active_fraction": round(float((mouth["mouth_open"] > 0.05).mean()), 3),
+    }
+    log(f"envelope: {total_frames} frames, "
+        f"{(mouth['mouth_open'] > 0.05).mean():.0%} active", tag=tag)
+
+    # ---- wait for cuda:0 to publish the face-locked slides ----
+    with timed("await_carousel", timings, tag):
+        payload = q.get(timeout=wait_seconds)
+    slides: Dict[int, np.ndarray] = payload["slides"]
+    log(f"received {len(slides)} face-locked slides from cuda:0", tag=tag)
+
+    frames_all: List[np.ndarray] = []
+    boundaries: List[int] = []
+
+    # ---- Shot 1: LivePortrait talking avatar ----
+    with timed("shot1_liveportrait", timings, tag):
+        repo = fetch_liveportrait(timings)
+        driver = LivePortraitDriver(repo, 1, models["buffalo_l"], timings)
+        driver.load()
+
+        master = Image.open(output_dir / MASTER_FILENAME).convert("RGB")
+        # 576x1024 9:16 crop around the face, keeping the head high in frame
+        src = _nine_sixteen_portrait(master, np.asarray(master), (576, 1024))
+        driving = repo / "assets" / "examples" / "driving" / "d0.mp4"
+        if not driving.exists():
+            raise RuntimeError(f"driving video missing: {driving}")
+
+        hook_frames, hook_info = driver.animate(
+            src, driving, HOOK_FRAMES, mouth["mouth_open"][:HOOK_FRAMES])
+        frames_all.extend(hook_frames)
+        boundaries.append(len(frames_all))
+        result["shot1"] = hook_info
+
+        del driver
+        release_memory(device)
+
+    # ---- Shots 2-3: SVD b-roll, forward-only ----
+    svd = build_svd_pipeline(device, timings)
+    broll_specs = [("porsche", 4), ("yacht", 2)]
+    result["broll"] = []
+    for name, slide_idx in broll_specs:
+        arr = slides.get(slide_idx)
+        if arr is None:
+            raise RuntimeError(f"slide {slide_idx} unavailable for b-roll {name}")
+        image = Image.fromarray(arr).resize(BROLL_SIZE, Image.LANCZOS)
+        frames, info = svd_broll(svd, image, BROLL_FRAMES, BASE_SEED + 40 + slide_idx,
+                                 timings, name)
+        frames_all.extend([np.asarray(f.convert("RGB")) for f in frames])
+        boundaries.append(len(frames_all))
+        info["source_slide"] = slide_idx
+        result["broll"].append({"shot": name, **info})
+
+    try:
+        svd.to("cpu")
+    except Exception:
+        pass
+    del svd
+    release_memory(device)
+
+    # LivePortrait emits 512-based crops pasted into a 576x1024 canvas; the SVD
+    # shots are natively 576x1024. Conform every frame to one canvas.
+    frames_all = [_conform(f, BROLL_SIZE) for f in frames_all]
+
+    # ---- audio ----
+    mixed, audio_info = build_reel_audio(samples, voice["sample_rate"], len(frames_all), timings)
+    result["audio_mix"] = audio_info
+
+    # ---- encode ----
+    reel = output_dir / REEL_MP4
+    encode_reel(frames_all, mixed, voice["sample_rate"], reel, timings)
+    result["artifacts"].append(REEL_MP4)
+    result["video"] = {
+        "frames": len(frames_all),
+        "fps": REEL_FPS,
+        "duration_s": round(len(frames_all) / REEL_FPS, 3),
+        "shot_boundaries": boundaries,
+        "shots": ["liveportrait talking hook", "porsche b-roll", "yacht b-roll"],
+        "ping_pong": False,
+        "cross_fade_retime": False,
+        "procedural_animation": False,
+        "probe": probe_video(reel),
+    }
+
+    with timed("video_sheet", timings, tag):
+        build_video_sheet([Image.fromarray(f) for f in frames_all],
+                          output_dir / VIDEO_SHEET,
+                          f"{len(frames_all)} frames @ {REEL_FPS} fps · "
+                          f"{result['video']['duration_s']}s · LivePortrait + SVD forward-only",
+                          boundaries)
+    result["artifacts"].append(VIDEO_SHEET)
+    return result
+
+
+def _nine_sixteen_portrait(image: Image.Image, arr: np.ndarray,
+                           size: Tuple[int, int]) -> np.ndarray:
+    """
+    Crop a 9:16 window around the face so LivePortrait gets a portrait-shaped
+    source with the head in the upper third (its own cropper re-frames the face).
+    """
+    width, height = size
+    aspect = width / height
+    src_w, src_h = image.size
+    target_w = int(min(src_w, src_h * aspect))
+    target_h = int(target_w / aspect)
+    if target_h > src_h:
+        target_h = src_h
+        target_w = int(target_h * aspect)
+    # bias the window upward: heads sit high in a portrait frame
+    left = (src_w - target_w) // 2
+    top = int((src_h - target_h) * 0.30)
+    box = (left, top, left + target_w, top + target_h)
+    return np.asarray(image.crop(box).resize((width, height), Image.LANCZOS))
+
+
+def _conform(frame: np.ndarray, size: Tuple[int, int]) -> np.ndarray:
+    width, height = size
+    if frame.shape[1] == width and frame.shape[0] == height:
+        return frame
+    return np.asarray(Image.fromarray(frame).resize((width, height), Image.LANCZOS))
 
 
 # --------------------------------------------------------------------------- #
@@ -1348,39 +2120,35 @@ def main() -> int:
     sys.stdout = tee  # type: ignore[assignment]
 
     metrics: Dict[str, Any] = {
-        "phase": "phase-3-luca-moretti",
+        "phase": "phase-3.1-luca-moretti",
         "character": "Luca Moretti · 27 · young-millionaire playboy",
         "started_at": datetime.now(timezone.utc).isoformat(),
         "status": "running",
         "config": {
-            "model_id": MODEL_ID,
-            "clip_vision_id": CLIP_VISION_ID,
-            "ip_adapter_weight": IP_ADAPTER_WEIGHT,
-            "ip_adapter_scale": IP_ADAPTER_SCALE,
-            "anti_bleed": "spatial attention masking (cross_attention_kwargs.ip_adapter_masks)",
-            "base_seed": BASE_SEED,
-            "master": {"size": list(MASTER_SIZE), "steps": MASTER_STEPS, "cfg": MASTER_CFG},
-            "slides": {"size": list(SLIDE_SIZE), "steps": SLIDE_STEPS, "cfg": SLIDE_CFG,
-                       "jpeg_quality": JPEG_QUALITY},
-            "svd": {"model_id": SVD_MODEL_ID, "num_frames": SVD_NUM_FRAMES,
-                    "steps": SVD_STEPS, "motion_bucket_id": SVD_MOTION_BUCKET,
-                    "fps": SVD_FPS, "source_slide": SVD_SOURCE_SLIDE},
-            "voice": {"engine": "kokoro-onnx", "voice": VOICE_NAME, "speed": SPEECH_SPEED},
-            "dtype": "float16",
-            "device": "cuda:0",
-            "procedural_animation": False,
-            "wsola_time_stretch": False,
-            "custom_biquad_filters": False,
+            "stage1": {"model": MODEL_ID, "scheduler": "DPM++ SDE Karras",
+                       "algorithm": "sde-dpmsolver++", "steps": SCENE_STEPS,
+                       "cfg": SCENE_CFG, "ip_adapter": False},
+            "stage2": {"detector": "insightface buffalo_l", "swapper": "inswapper_128.onnx",
+                       "target": "male face only"},
+            "stage3": {"pipeline": "SDXL img2img + IP-Adapter-Plus-Face",
+                       "scale": ADETAILER_SCALE, "strength": ADETAILER_STRENGTH,
+                       "size": ADETAILER_SIZE, "steps": ADETAILER_STEPS},
+            "video": {"hook": "KwaiVGI/LivePortrait", "hook_frames": HOOK_FRAMES,
+                      "broll": "stable-video-diffusion-img2vid-xt",
+                      "broll_frames": BROLL_FRAMES, "fps": REEL_FPS,
+                      "ping_pong": False, "cross_fade": False},
+            "audio": {"engine": "edge-tts", "voice": TTS_VOICE,
+                      "bed_bpm": BPM, "wsola": False, "biquad_eq": False},
+            "parallelism": "cuda:0 carousel ‖ cuda:1 reel",
         },
         "artifacts": [],
         "timings_seconds": {},
-        "slides": [],
         "errors": [],
     }
     timings: Dict[str, float] = metrics["timings_seconds"]
 
     log("=" * 78)
-    log("stoic-ai-studio · PHASE 3 · LUCA MORETTI")
+    log("stoic-ai-studio · PHASE 3.1 · LUCA MORETTI · dual-GPU upgrade")
     log(f"output dir: {output_dir}")
     log("=" * 78)
 
@@ -1390,142 +2158,88 @@ def main() -> int:
         metrics["environment"] = env_fingerprint()
         log(f"environment: {json.dumps(metrics['environment'], default=str)}")
 
-        # ---------------- Part A.1: identity master ---------------- #
-        pipe, device = build_pipeline(timings)
+        models = stage_face_models(timings)
+        metrics["face_models"] = {k: str(v) for k, v in models.items()}
 
-        master_path = output_dir / MASTER_FILENAME
-        with timed("generate_master", timings):
-            master, master_info = generate_image(
-                pipe, device,
-                prompt=MASTER_PROMPT,
-                width=MASTER_SIZE[0], height=MASTER_SIZE[1],
-                seed=BASE_SEED, steps=MASTER_STEPS, cfg=MASTER_CFG,
-                label="01_luca_master",
-            )
-            save_png(master, master_path)
-            save_jpeg(master, output_dir / "luca_slide_01.jpg")
-        metrics["slides"].append({"filename": MASTER_FILENAME, "role": "identity master",
-                                  "status": "ok", **master_info})
-        metrics["artifacts"] += [MASTER_FILENAME, "luca_slide_01.jpg"]
+        # ---------------- dual-GPU parallel execution ---------------- #
+        import multiprocessing as mp
 
-        # ---------------- Part A.2: face-locked carousel ---------------- #
-        face_locked = attach_face_adapter(pipe, device, timings)
-        metrics["ip_adapter_active"] = face_locked
-        if not face_locked:
-            log("running WITHOUT identity lock — slides will not be consistent", "WARN")
+        ctx = mp.get_context("spawn")
+        queue: Any = ctx.Queue()
+        results: Dict[str, Any] = {}
 
-        slide_images: List[Tuple[str, Image.Image]] = []
-        by_index: Dict[int, Image.Image] = {}
-
-        for slide in SLIDES:
-            seed = BASE_SEED + slide["index"]
-            png_path = output_dir / slide["filename"]
-            jpg_path = output_dir / f"luca_slide_{slide['index']:02d}.jpg"
-            record: Dict[str, Any] = {
-                "index": slide["index"],
-                "filename": slide["filename"],
-                "jpeg": jpg_path.name,
-                "title": slide["title"],
-                "mask": slide["mask"],
-                "expected_people": slide.get("people", 1),
-                "status": "pending",
+        with timed("parallel_gpu_workers", timings):
+            procs = {
+                "carousel": ctx.Process(target=_worker_carousel,
+                                        args=(output_dir, timings, models, queue),
+                                        name="gpu0-carousel"),
+                "reel": ctx.Process(target=_worker_reel,
+                                    args=(output_dir, timings, models, queue),
+                                    name="gpu1-reel"),
             }
-            try:
-                with timed(f"generate_slide_{slide['index']:02d}", timings):
-                    image, info = generate_image(
-                        pipe, device,
-                        prompt=slide["prompt"],
-                        width=SLIDE_SIZE[0], height=SLIDE_SIZE[1],
-                        seed=seed, steps=SLIDE_STEPS, cfg=SLIDE_CFG,
-                        ip_adapter_image=master if face_locked else None,
-                        mask_kind=slide["mask"],
-                        negative_prompt=(
-                            NEGATIVE_PROMPT + ", " + slide["negative"]
-                            if slide.get("negative")
-                            else None
-                        ),
-                        label=slide["filename"],
-                    )
-                    save_png(image, png_path)
-                    save_jpeg(image, jpg_path)
-                record.update(info)
-                record["status"] = "ok"
-                record["jpeg_kb"] = round(jpg_path.stat().st_size / 1024, 1)
-                slide_images.append((slide["title"], image))
-                by_index[slide["index"]] = image
-                metrics["artifacts"] += [slide["filename"], jpg_path.name]
-            except Exception as exc:
-                detail = f"{type(exc).__name__}: {exc}"
-                log(f"slide {slide['filename']} FAILED — {detail}", "ERROR")
-                log(traceback.format_exc(), "ERROR")
-                record["status"] = "error"
-                record["error"] = detail
-                metrics["errors"].append({"filename": slide["filename"], "error": detail})
-            metrics["slides"].append(record)
+            for name, proc in procs.items():
+                proc.start()
+                log(f"started {name} worker on {proc.name}", tag="main")
+            for name, proc in procs.items():
+                proc.join()
+                log(f"{name} worker exited with code {proc.exitcode}", tag="main")
+                if proc.exitcode != 0:
+                    metrics["errors"].append({"worker": name, "exitcode": proc.exitcode})
 
-        if not slide_images:
-            raise RuntimeError("every carousel slide failed — nothing to assemble")
+        # Workers return their detail through the sidecar files they write;
+        # worker-local metrics are merged below from those files.
+        for name in ("carousel", "reel"):
+            sidecar = output_dir / f"_metrics_{name}.json"
+            if sidecar.is_file():
+                try:
+                    results[name] = json.loads(sidecar.read_text(encoding="utf-8"))
+                    sidecar.unlink()
+                except Exception as exc:
+                    log(f"could not read {sidecar.name}: {exc}", "WARN")
 
-        sheet_items = [("01 · MASTER (identity reference)", master)] + slide_images
-        with timed("build_carousel_sheet", timings):
-            sheet_path = output_dir / CAROUSEL_SHEET
-            build_carousel_sheet(sheet_items, sheet_path)
-            metrics["artifacts"].append(CAROUSEL_SHEET)
+        if results.get("carousel"):
+            car = results["carousel"]
+            metrics["slides"] = car.get("slides", [])
+            metrics["identity_cosine"] = car.get("identity_cosine", {})
+            metrics["adetailer_adapter"] = car.get("adetailer_adapter")
+            metrics["artifacts"] += car.get("artifacts", [])
+            metrics["errors"] += car.get("errors", [])
 
-        # ---------------- Part B.1: voice ---------------- #
-        voice = synth_voice(output_dir, timings)
-        audio = voice.pop("audio")
-        metrics["voice"] = voice
-        metrics["artifacts"] += [VOICE_MP3, VOICE_WAV]
-        target_seconds = voice["duration_s"]
+        if results.get("reel"):
+            reel = results["reel"]
+            metrics["voice"] = reel.get("voice", {})
+            metrics["envelope"] = reel.get("envelope", {})
+            metrics["shot1"] = reel.get("shot1", {})
+            metrics["broll"] = reel.get("broll", [])
+            metrics["audio_mix"] = reel.get("audio_mix", {})
+            metrics["video"] = reel.get("video", {})
+            metrics["artifacts"] += reel.get("artifacts", [])
+            metrics["errors"] += reel.get("errors", [])
 
-        # ---------------- Part B.2: real neural video ---------------- #
-        source = by_index.get(int(SVD_SOURCE_SLIDE)) or slide_images[-1][1]
-        source_name = SLIDES[int(SVD_SOURCE_SLIDE) - 2]["filename"] if int(SVD_SOURCE_SLIDE) - 2 < len(SLIDES) else "master"
-        log(f"video source: slide {SVD_SOURCE_SLIDE} ({source_name}) {source.size[0]}x{source.size[1]}")
+        # ---------------- verification ---------------- #
+        required = [CAROUSEL_SHEET, REEL_MP4, VOICE_MP3, METRICS_FILENAME]
+        missing = [n for n in required if not (output_dir / n).is_file()]
+        if missing:
+            raise RuntimeError(f"required artifacts missing: {missing}")
 
-        # Free the SDXL pipeline before SVD: two fp16 UNets will not fit in 16 GB.
-        log("releasing SDXL pipeline to make room for Stable Video Diffusion")
-        try:
-            pipe.to("cpu")
-        except Exception:
-            pass
-        del pipe
-        release_memory()
+        verdicts = []
+        for name, value in (metrics.get("identity_cosine") or {}).items():
+            if value is None:
+                verdicts.append(f"{name}:unmeasured")
+            elif value >= 0.45:
+                verdicts.append(f"{name}:MATCH")
+            else:
+                verdicts.append(f"{name}:DRIFT")
+        metrics["identity_verdicts"] = verdicts
+        log(f"identity verdicts: {verdicts}", tag="main")
 
-        svd_pipe = build_video_pipeline(timings)
-        neural_frames, video_info = generate_neural_frames(svd_pipe, source, timings)
+        video = metrics.get("video") or {}
+        active = (metrics.get("envelope") or {}).get("active_fraction")
+        log(f"reel: {video.get('frames')} frames @ {video.get('fps')} fps "
+            f"({video.get('duration_s')}s), shots={video.get('shot_boundaries')}, "
+            f"mouth-active={active}", tag="main")
 
-        looped, loop_info = retime_to_duration(
-            neural_frames, video_info["source_fps"], SVD_FPS, target_seconds
-        )
-        video_info.update(loop_info)
-        video_info["audio_duration_s"] = target_seconds
-        video_info["motion_source"] = "100% Stable Video Diffusion (no procedural animation)"
-
-        mp4_path = output_dir / REEL_MP4
-        encode_video(looped, audio, voice["sample_rate"], mp4_path, timings, fps=SVD_FPS)
-        metrics["artifacts"].append(REEL_MP4)
-
-        with timed("build_video_sheet", timings):
-            build_video_sheet(
-                looped, output_dir / VIDEO_SHEET,
-                f"{len(neural_frames)} SVD frames · ping-pong loop → {len(looped)} frames "
-                f"@ {SVD_FPS} fps · {video_info['duration_s']}s audio-matched",
-            )
-        metrics["artifacts"].append(VIDEO_SHEET)
-
-        with timed("probe_outputs", timings):
-            metrics["video"] = {**video_info, "probe": probe_video(mp4_path)}
-
-        try:
-            svd_pipe.to("cpu")
-        except Exception:
-            pass
-        del svd_pipe
-        release_memory()
-
-        metrics["status"] = "success"
+        metrics["status"] = "success" if not metrics["errors"] else "success_with_errors"
 
     except Exception as exc:
         detail = f"{type(exc).__name__}: {exc}"
@@ -1537,11 +2251,10 @@ def main() -> int:
     finally:
         metrics["total_seconds"] = round(time.perf_counter() - t_start, 1)
         metrics["finished_at"] = datetime.now(timezone.utc).isoformat()
-        metrics["artifacts"] = sorted(set(metrics["artifacts"]) | {METRICS_FILENAME, BUILD_LOG})
-
-        metrics_path = output_dir / METRICS_FILENAME
-        with open(metrics_path, "w", encoding="utf-8") as handle:
-            json.dump(metrics, handle, indent=2, default=str)
+        metrics["artifacts"] = sorted(set(metrics["artifacts"]) |
+                                       {METRICS_FILENAME, BUILD_LOG})
+        with open(output_dir / METRICS_FILENAME, "w", encoding="utf-8") as fh:
+            json.dump(metrics, fh, indent=2, default=str)
 
         log("=" * 78)
         log(f"status: {metrics['status']} · total {metrics['total_seconds']}s")
@@ -1549,13 +2262,52 @@ def main() -> int:
             candidate = output_dir / name
             if candidate.exists():
                 log(f"  ✓ {name} ({candidate.stat().st_size / 1024:.0f} KB)")
-        log(f"artifacts written to {output_dir}")
         log("=" * 78)
-
         sys.stdout = tee._stream  # type: ignore[assignment]
         tee.close()
 
     return exit_code
+
+
+# ---- worker entry points (spawn-safe: module level, no closures) ---------- #
+
+
+def _worker_carousel(output_dir: Path, timings: Dict[str, float],
+                     models: Dict[str, Path], queue: Any) -> None:
+    try:
+        result = run_carousel(output_dir, timings, models, queue)
+    except Exception as exc:
+        log(f"carousel worker crashed: {type(exc).__name__}: {exc}", "ERROR", tag="gpu0")
+        log(traceback.format_exc(), "ERROR", tag="gpu0")
+        # Never leave cuda:1 blocked on the queue.
+        try:
+            queue.put({"slides": {}})
+        except Exception:
+            pass
+        result = {"errors": [f"{type(exc).__name__}: {exc}"],
+                  "artifacts": ["build.log"]}
+    try:
+        (output_dir / "_metrics_carousel.json").write_text(
+            json.dumps(result, default=str), encoding="utf-8")
+    except Exception as exc:
+        log(f"could not write carousel sidecar: {exc}", "WARN", tag="gpu0")
+    raise SystemExit(0 if not result.get("errors") else 1)
+
+
+def _worker_reel(output_dir: Path, timings: Dict[str, float],
+                 models: Dict[str, Path], queue: Any) -> None:
+    try:
+        result = run_reel(output_dir, timings, models, queue)
+    except Exception as exc:
+        log(f"reel worker crashed: {type(exc).__name__}: {exc}", "ERROR", tag="gpu1")
+        log(traceback.format_exc(), "ERROR", tag="gpu1")
+        result = {"errors": [f"{type(exc).__name__}: {exc}"], "artifacts": ["build.log"]}
+    try:
+        (output_dir / "_metrics_reel.json").write_text(
+            json.dumps(result, default=str), encoding="utf-8")
+    except Exception as exc:
+        log(f"could not write reel sidecar: {exc}", "WARN", tag="gpu1")
+    raise SystemExit(0 if not result.get("errors") else 1)
 
 
 if __name__ == "__main__":

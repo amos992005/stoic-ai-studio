@@ -130,33 +130,48 @@ def summarize(orchestrator) -> None:
     voice = data.get("voice") or {}
     video = data.get("video") or {}
     slides = data.get("slides") or []
+    envelope = data.get("envelope") or {}
 
-    ok_slides = [s for s in slides if s.get("status") == "ok"]
-    masked = [s for s in slides if s.get("masked_ip_adapter")]
+    ok = [s for s in slides if not s.get("error")]
+    swapped = [s for s in slides if (s.get("stage2") or {}).get("swapped")]
+    refined = [s for s in slides if (s.get("stage3") or {}).get("adetailer")]
     orchestrator.log(
-        f"carousel: {len(ok_slides)}/{len(slides)} slides · "
-        f"{len(masked)} with spatially masked IP-Adapter (anti-bleed)"
+        f"carousel: {len(ok)}/{len(slides)} slides · {len(swapped)} biometric swaps · "
+        f"{len(refined)} 1024px adetailer passes"
     )
     for slide in slides:
+        stage2 = slide.get("stage2") or {}
+        stage3 = slide.get("stage3") or {}
         orchestrator.log(
-            f"  {slide.get('filename')}: mask={slide.get('ip_mask')} "
-            f"masked_ip={slide.get('masked_ip_adapter')} status={slide.get('status')}"
+            f"  {slide.get('filename')}: people={slide.get('expected_people')} "
+            f"genders={stage2.get('genders')} swapped={stage2.get('swapped')} "
+            f"adetailer={stage3.get('adetailer')} "
+            f"identity={slide.get('identity_cosine')}"
         )
+    verdicts = data.get("identity_verdicts") or []
+    orchestrator.log(f"identity verdicts (cosine ≥ 0.45 = MATCH): {verdicts}")
     orchestrator.log(
         f"voice: {voice.get('duration_s')}s @ {voice.get('sample_rate')} Hz · "
-        f"peak {voice.get('peak_dbfs')} dBFS · voice={voice.get('voice')} · "
-        f"processing={voice.get('processing')}"
+        f"{voice.get('engine')} {voice.get('voice')} · peak {voice.get('peak_dbfs')} dBFS"
+    )
+    mix = data.get("audio_mix") or {}
+    orchestrator.log(
+        f"reel audio: {mix.get('duration_s')}s · {mix.get('bpm')} BPM bed · {mix.get('bed')}"
     )
     orchestrator.log(
-        f"video: {video.get('num_frames')} neural frames → "
-        f"{video.get('looped_frames')} @ {video.get('fps')} fps · "
-        f"{video.get('duration_s')}s (audio {video.get('audio_duration_s')}s) · "
-        f"backend={video.get('backend')}"
+        f"video: {video.get('frames')} frames @ {video.get('fps')} fps · "
+        f"{video.get('duration_s')}s · shots={video.get('shots')} · "
+        f"boundaries={video.get('shot_boundaries')} · "
+        f"ping_pong={video.get('ping_pong')} cross_fade={video.get('cross_fade_retime')}"
     )
     orchestrator.log(
-        f"banned techniques — procedural_animation={data.get('config', {}).get('procedural_animation')} · "
-        f"wsola_time_stretch={data.get('config', {}).get('wsola_time_stretch')} · "
-        f"custom_biquad_filters={data.get('config', {}).get('custom_biquad_filters')}"
+        f"mouth articulation: {envelope.get('active_fraction')} of frames active · "
+        f"mean {envelope.get('mouth_open_mean')} · band {envelope.get('vocal_band_hz')} Hz"
+    )
+    orchestrator.log(
+        f"banned techniques — procedural_animation={video.get('procedural_animation')} · "
+        f"wsola={(data.get('voice') or {}).get('wsola_time_stretch')} · "
+        f"biquad_eq={(data.get('voice') or {}).get('biquad_or_parametric_eq')}"
     )
     orchestrator.log(f"kernel total: {total:.0f}s")
     if total > MAX_RUNTIME_SECONDS:
