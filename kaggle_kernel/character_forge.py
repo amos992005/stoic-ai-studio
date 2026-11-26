@@ -424,13 +424,15 @@ def build_pipeline(timings: Dict[str, float]):
         )
         _first_available(pipe, ["set_use_resolution_binning"], "resolution binning")
 
-        # fp32 VAE avoids NaNs / colour blooming on several SDXL checkpoints.
+        # Keep the VAE in the pipeline dtype. Upcasting it to fp32 makes the
+        # decode step receive half latents and crash with
+        # "Input type (c10::Half) and bias type (float) should be the same".
         try:
             if getattr(pipe, "vae", None) is not None:
-                pipe.vae.to(dtype=torch.float32)
-                log("vae upcast to float32 (numerical stability)")
+                pipe.vae.to(device=device, dtype=torch.float16)
+                log("vae kept in float16 (matches unet dtype)")
         except Exception as exc:
-            log(f"vae upcast skipped: {exc}", "WARN")
+            log(f"vae dtype check skipped: {exc}", "WARN")
 
     return pipe, device
 
@@ -552,8 +554,27 @@ def _generate(
         kwargs["ip_adapter_image"] = ip_adapter_image
 
     log(f"sampling {label}: {width}x{height} · seed={seed} · steps={steps} · cfg={cfg}")
-    with torch.inference_mode():
-        result = pipe(**kwargs)
+
+    def _run():
+        with torch.inference_mode():
+            return pipe(**kwargs)
+
+    try:
+        result = _run()
+    except RuntimeError as exc:
+        # Classic half/float mismatch at VAE decode: align the VAE with the UNet
+        # and retry exactly once before giving up.
+        if "should be the same" not in str(exc):
+            raise
+        log(f"{label}: dtype mismatch at decode ({exc}); aligning VAE dtype", "WARN")
+        vae = getattr(pipe, "vae", None)
+        unet = getattr(pipe, "unet", None)
+        if vae is None or unet is None:
+            raise
+        vae.to(device=device, dtype=unet.dtype)
+        gc.collect()
+        torch.cuda.empty_cache()
+        result = _run()
 
     if not result or not getattr(result, "images", None):
         raise RuntimeError(f"Pipeline returned no images for {label}")
