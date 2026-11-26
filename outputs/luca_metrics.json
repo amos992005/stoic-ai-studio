@@ -1,7 +1,7 @@
 {
   "phase": "phase-3-luca-moretti",
   "character": "Luca Moretti \u00b7 27 \u00b7 young-millionaire playboy",
-  "started_at": "2026-11-26T20:33:54.588417+00:00",
+  "started_at": "2026-11-26T20:47:56.953431+00:00",
   "status": "success",
   "config": {
     "model_id": "SG161222/RealVisXL_V5.0",
@@ -66,28 +66,28 @@
     "luca_voice.wav"
   ],
   "timings_seconds": {
-    "pip_install_deps": 11.975,
-    "load_sdxl_pipeline": 40.524,
-    "configure_scheduler_and_vram": 2.331,
-    "generate_master": 32.934,
-    "load_clip_vision": 26.458,
-    "load_ip_adapter": 9.352,
-    "generate_slide_02": 25.103,
-    "generate_slide_03": 25.99,
-    "generate_slide_04": 26.82,
-    "generate_slide_05": 25.962,
-    "build_carousel_sheet": 1.305,
-    "download_kokoro_assets": 2.563,
-    "load_kokoro": 1.047,
-    "synthesize_speech": 2.573,
+    "pip_install_deps": 22.134,
+    "load_sdxl_pipeline": 37.071,
+    "configure_scheduler_and_vram": 2.325,
+    "generate_master": 31.376,
+    "load_clip_vision": 23.463,
+    "load_ip_adapter": 8.032,
+    "generate_slide_02": 24.91,
+    "generate_slide_03": 26.258,
+    "generate_slide_04": 28.693,
+    "generate_slide_05": 28.71,
+    "build_carousel_sheet": 1.25,
+    "download_kokoro_assets": 1.31,
+    "load_kokoro": 1.07,
+    "synthesize_speech": 4.63,
     "normalize_peak": 0.0,
-    "write_audio": 1.464,
-    "load_svd_pipeline": 26.488,
-    "configure_svd_vram": 0.066,
-    "svd_generate_f25_c4": 373.739,
-    "encode_video": 2.592,
-    "build_video_sheet": 1.148,
-    "probe_outputs": 0.137
+    "write_audio": 0.702,
+    "load_svd_pipeline": 24.021,
+    "configure_svd_vram": 0.064,
+    "svd_generate_f25_c4": 404.979,
+    "encode_video": 2.585,
+    "build_video_sheet": 1.111,
+    "probe_outputs": 0.133
   },
   "slides": [
     {
@@ -113,6 +113,7 @@
       "jpeg": "luca_slide_02.jpg",
       "title": "02 \u00b7 MONACO \u00b7 YACHT",
       "mask": "left",
+      "expected_people": 2,
       "status": "ok",
       "seed": 779,
       "steps": 30,
@@ -126,7 +127,7 @@
       "masked_ip_adapter": true,
       "unmasked_retry": false,
       "peak_vram_gb": 11.15,
-      "jpeg_kb": 191.7
+      "jpeg_kb": 192.5
     },
     {
       "index": 3,
@@ -134,6 +135,7 @@
       "jpeg": "luca_slide_03.jpg",
       "title": "03 \u00b7 IBIZA \u00b7 VIP",
       "mask": "left",
+      "expected_people": 2,
       "status": "ok",
       "seed": 780,
       "steps": 30,
@@ -147,7 +149,7 @@
       "masked_ip_adapter": true,
       "unmasked_retry": false,
       "peak_vram_gb": 11.15,
-      "jpeg_kb": 168.7
+      "jpeg_kb": 165.3
     },
     {
       "index": 4,
@@ -155,6 +157,7 @@
       "jpeg": "luca_slide_04.jpg",
       "title": "04 \u00b7 AMALFI \u00b7 GT3",
       "mask": "full",
+      "expected_people": 1,
       "status": "ok",
       "seed": 781,
       "steps": 30,
@@ -176,6 +179,7 @@
       "jpeg": "luca_slide_05.jpg",
       "title": "05 \u00b7 EXTREME",
       "mask": "full",
+      "expected_people": 1,
       "status": "ok",
       "seed": 782,
       "steps": 30,
@@ -264,6 +268,6 @@
       "audio_layout": "mono"
     }
   },
-  "total_seconds": 693.1,
-  "finished_at": "2026-11-26T20:45:27.651024+00:00"
+  "total_seconds": 719.3,
+  "finished_at": "2026-11-26T20:59:56.251025+00:00"
 }
