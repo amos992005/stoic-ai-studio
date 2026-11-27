@@ -1,0 +1,645 @@
+===== stoic-ai-studio · orchestrator run · 2026-11-27 10:11:59Z =====
+===== (previous log was 650 bytes and has been rotated) =====
+[2026-11-27 10:11:59Z] [INFO ] rotated outputs/build.log (previous size: 650 bytes)
+[2026-11-27 10:11:59Z] [INFO ] ==============================================================================
+[2026-11-27 10:11:59Z] [INFO ] stoic-ai-studio · Kaggle orchestrator · THE CHARACTER FORGE
+[2026-11-27 10:11:59Z] [INFO ] ==============================================================================
+[2026-11-27 10:11:59Z] [INFO ] username: amosovadia
+[2026-11-27 10:11:59Z] [INFO ] key: KGAT…48 (len=37)
+[2026-11-27 10:11:59Z] [INFO ] detected KGAT_ API token — using the access-token auth path
+[2026-11-27 10:11:59Z] [INFO ] auth mode: access token (KAGGLE_API_TOKEN + ~/.kaggle/access_token)
+[2026-11-27 10:11:59Z] [INFO ] wrote /home/runner/.kaggle/access_token (mode 0o600)
+[2026-11-27 10:11:59Z] [INFO ] wrote /home/runner/.kaggle/username (mode 0o600)
+::group::kaggle CLI version
+[2026-11-27 10:11:59Z] [INFO ] $ kaggle --version
+    | Kaggle CLI 2.2.5
+::endgroup::
+[2026-11-27 10:11:59Z] [INFO ] generated kaggle_kernel_luca/kernel-metadata.json:
+    | {
+    |   "id": "amosovadia/stoic-luca-studio",
+    |   "title": "stoic-luca-studio",
+    |   "code_file": "luca_studio.py",
+    |   "language": "python",
+    |   "kernel_type": "script",
+    |   "is_private": "true",
+    |   "enable_gpu": "true",
+    |   "machine_shape": "NvidiaTeslaT4x2",
+    |   "enable_internet": "true",
+    |   "enable_tpu": "false",
+    |   "dataset_sources": [],
+    |   "competition_sources": [],
+    |   "kernel_sources": [],
+    |   "model_sources": []
+    | }
+::group::pushing kernel amosovadia/stoic-luca-studio
+[2026-11-27 10:11:59Z] [INFO ] $ kaggle kernels push -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/kaggle_kernel_luca
+    | Kernel version 22 successfully pushed.  Please check progress at https://www.kaggle.com/code/amosovadia/stoic-luca-studio
+::endgroup::
+[2026-11-27 10:12:01Z] [INFO ] kernel push accepted — Kaggle is provisioning a T4.
+[2026-11-27 10:12:01Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:12:02Z] [INFO ] status → queued
+[2026-11-27 10:12:02Z] [INFO ] ★ status transition: (none) → queued
+[2026-11-27 10:12:02Z] [INFO ] still queued · 4499s of budget left · sleeping 25s
+[2026-11-27 10:12:27Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:12:27Z] [INFO ] status → running
+[2026-11-27 10:12:27Z] [INFO ] ★ status transition: queued → running
+[2026-11-27 10:12:27Z] [INFO ] still running · 4474s of budget left · sleeping 25s
+[2026-11-27 10:12:52Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:12:53Z] [INFO ] status → running
+[2026-11-27 10:12:53Z] [INFO ] still running · 4448s of budget left · sleeping 25s
+[2026-11-27 10:13:18Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:13:18Z] [INFO ] status → running
+[2026-11-27 10:13:18Z] [INFO ] still running · 4423s of budget left · sleeping 25s
+[2026-11-27 10:13:43Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:13:44Z] [INFO ] status → running
+[2026-11-27 10:13:44Z] [INFO ] still running · 4398s of budget left · sleeping 25s
+[2026-11-27 10:14:09Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:14:09Z] [INFO ] status → running
+[2026-11-27 10:14:09Z] [INFO ] still running · 4372s of budget left · sleeping 25s
+[2026-11-27 10:14:34Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:14:35Z] [INFO ] status → running
+[2026-11-27 10:14:35Z] [INFO ] still running · 4347s of budget left · sleeping 25s
+[2026-11-27 10:15:00Z] [INFO ] $ kaggle kernels status amosovadia/stoic-luca-studio
+[2026-11-27 10:15:00Z] [INFO ] status → error
+[2026-11-27 10:15:00Z] [INFO ] ★ status transition: running → error
+[2026-11-27 10:15:00Z] [ERROR] kernel ended with failure status: error
+[2026-11-27 10:15:00Z] [INFO ] status timeline: [{"at": "2026-11-27 10:12:02Z", "status": "queued"}, {"at": "2026-11-27 10:12:27Z", "status": "running"}, {"at": "2026-11-27 10:15:00Z", "status": "error"}]
+::group::downloading kernel outputs
+[2026-11-27 10:15:00Z] [INFO ] $ kaggle kernels output amosovadia/stoic-luca-studio -p /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | Downloading .pip.lock to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/.pip.lock
+    | Downloading 01_luca_master.png to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/01_luca_master.png
+    | Downloading build.lock to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/build.lock
+    | build.log: Skipping, found more recently modified local copy (use --force to force download)
+    | Downloading 1k3d68.onnx to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/1k3d68.onnx
+    | Downloading 2d106det.onnx to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/2d106det.onnx
+    | Downloading genderage.onnx to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/genderage.onnx
+    | Downloading glintr100.onnx to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/glintr100.onnx
+    | Downloading scrfd_10g_bnkps.onnx to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/scrfd_10g_bnkps.onnx
+    | Downloading luca_metrics.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_metrics.json
+    | Downloading luca_metrics.lock to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_metrics.lock
+    | Downloading luca_metrics_images.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_metrics_images.json
+    | Downloading luca_metrics_video.json to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_metrics_video.json
+    | Downloading luca_character.cpython-313.pyc to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_character.cpython-313.pyc
+    | Downloading luca_common.cpython-313.pyc to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_common.cpython-313.pyc
+    | Downloading luca_lora.cpython-313.pyc to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_lora.cpython-313.pyc
+    | Downloading pipeline_stable_diffusion_xl_instantid.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/_vendor
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/_vendor/pipeline_stable_diffusion_xl_instantid.py
+    | Downloading fetch_instantid.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/fetch_instantid.py
+    | Downloading generate_images.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_images.py
+    | Downloading generate_video.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_video.py
+    | Downloading instantid_pipeline.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/instantid_pipeline.py
+    | Downloading luca_character.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_character.py
+    | Downloading luca_common.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_common.py
+    | Downloading luca_lora.py to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers
+    | 
+    | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_lora.py
+    | Kernel log downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/stoic-luca-studio.log 
+    ! 
+    ! 0.00B [00:00, ?B/s]
+    ! 0.00B [00:00, ?B/s]
+    ! 
+    !   0%|          | 0.00/1.28M [00:00<?, ?B/s]
+    !  78%|███████▊  | 1.00M/1.28M [00:00<00:00, 9.69MB/s]
+    ! 100%|██████████| 1.28M/1.28M [00:00<00:00, 11.7MB/s]
+    ! 
+    ! 0.00B [00:00, ?B/s]
+    ! 0.00B [00:00, ?B/s]
+    ! 
+    !   0%|          | 0.00/137M [00:00<?, ?B/s]
+    !   1%|          | 1.00M/137M [00:00<00:17, 8.11MB/s]
+    !   6%|▌         | 8.00M/137M [00:00<00:03, 40.8MB/s]
+    !  11%|█         | 15.0M/137M [00:00<00:02, 53.3MB/s]
+    !  15%|█▌        | 21.0M/137M [00:00<00:02, 55.5MB/s]
+    !  23%|██▎       | 31.0M/137M [00:00<00:01, 67.8MB/s]
+    !  28%|██▊       | 38.0M/137M [00:00<00:01, 65.8MB/s]
+    !  33%|███▎      | 45.0M/137M [00:00<00:01, 66.3MB/s]
+    !  39%|███▊      | 53.0M/137M [00:00<00:01, 69.8MB/s]
+    !  44%|████▍     | 60.0M/137M [00:01<00:01, 66.1MB/s]
+    !  49%|████▉     | 67.0M/137M [00:01<00:01, 67.3MB/s]
+    !  55%|█████▍    | 75.0M/137M [00:01<00:00, 69.6MB/s]
+    !  61%|██████▏   | 84.0M/137M [00:01<00:00, 76.3MB/s]
+    !  67%|██████▋   | 92.0M/137M [00:01<00:00, 70.8MB/s]
+    !  74%|███████▎  | 101M/137M [00:01<00:00, 76.9MB/s] 
+    !  81%|████████  | 111M/137M [00:01<00:00, 83.5MB/s]
+    !  88%|████████▊ | 121M/137M [00:01<00:00, 87.2MB/s]
+    !  95%|█████████▍| 130M/137M [00:01<00:00, 76.1MB/s]
+    ! 100%|██████████| 137M/137M [00:02<00:00, 69.4MB/s]
+    ! 
+    !   0%|          | 0.00/4.80M [00:00<?, ?B/s]
+    !  21%|██        | 1.00M/4.80M [00:00<00:00, 8.45MB/s]
+    ! 100%|██████████| 4.80M/4.80M [00:00<00:00, 26.1MB/s]
+    ! 
+    !   0%|          | 0.00/1.26M [00:00<?, ?B/s]
+    !  79%|███████▉  | 1.00M/1.26M [00:00<00:00, 9.94MB/s]
+    ! 100%|██████████| 1.26M/1.26M [00:00<00:00, 11.9MB/s]
+    ! 
+    !   0%|          | 0.00/249M [00:00<?, ?B/s]
+    !   0%|          | 1.00M/249M [00:00<00:25, 10.1MB/s]
+    !   4%|▍         | 10.0M/249M [00:00<00:04, 58.6MB/s]
+    !   8%|▊         | 21.0M/249M [00:00<00:02, 82.5MB/s]
+    !  13%|█▎        | 32.0M/249M [00:00<00:02, 93.4MB/s]
+    !  17%|█▋        | 43.0M/249M [00:00<00:02, 98.2MB/s]
+    !  22%|██▏       | 54.0M/249M [00:00<00:01, 102MB/s] 
+    !  26%|██▌       | 65.0M/249M [00:00<00:01, 103MB/s]
+    !  31%|███       | 76.0M/249M [00:00<00:01, 106MB/s]
+    !  35%|███▍      | 87.0M/249M [00:00<00:01, 106MB/s]
+    !  39%|███▉      | 98.0M/249M [00:01<00:01, 107MB/s]
+    !  44%|████▍     | 109M/249M [00:01<00:01, 106MB/s] 
+    !  48%|████▊     | 120M/249M [00:01<00:01, 107MB/s]
+    !  53%|█████▎    | 131M/249M [00:01<00:01, 107MB/s]
+    !  57%|█████▋    | 142M/249M [00:01<00:01, 108MB/s]
+    !  62%|██████▏   | 153M/249M [00:01<00:00, 107MB/s]
+    !  66%|██████▌   | 164M/249M [00:01<00:00, 107MB/s]
+    !  70%|███████   | 175M/249M [00:01<00:00, 106MB/s]
+    !  75%|███████▍  | 186M/249M [00:01<00:00, 107MB/s]
+    !  79%|███████▉  | 197M/249M [00:02<00:00, 107MB/s]
+    !  84%|████████▎ | 208M/249M [00:02<00:00, 107MB/s]
+    !  88%|████████▊ | 219M/249M [00:02<00:00, 106MB/s]
+    !  93%|█████████▎| 230M/249M [00:02<00:00, 107MB/s]
+    !  97%|█████████▋| 241M/249M [00:02<00:00, 107MB/s]
+    ! 100%|██████████| 249M/249M [00:02<00:00, 103MB/s]
+    ! 
+    !   0%|          | 0.00/16.1M [00:00<?, ?B/s]
+    !   6%|▌         | 1.00M/16.1M [00:00<00:02, 6.08MB/s]
+    !  25%|██▍       | 4.00M/16.1M [00:00<00:00, 17.6MB/s]
+    !  74%|███████▍  | 12.0M/16.1M [00:00<00:00, 43.6MB/s]
+    ! 100%|██████████| 16.1M/16.1M [00:00<00:00, 34.7MB/s]
+    ! 
+    !   0%|          | 0.00/2.51k [00:00<?, ?B/s]
+    ! 100%|██████████| 2.51k/2.51k [00:00<00:00, 24.5MB/s]
+    ! 
+    ! 0.00B [00:00, ?B/s]
+    ! 0.00B [00:00, ?B/s]
+    ! 
+    !   0%|          | 0.00/1.70k [00:00<?, ?B/s]
+    ! 100%|██████████| 1.70k/1.70k [00:00<00:00, 18.2MB/s]
+    ! 
+    !   0%|          | 0.00/609 [00:00<?, ?B/s]
+    ! 100%|██████████| 609/609 [00:00<00:00, 9.22MB/s]
+    ! 
+    !   0%|          | 0.00/7.14k [00:00<?, ?B/s]
+    ! 100%|██████████| 7.14k/7.14k [00:00<00:00, 74.3MB/s]
+    ! 
+    !   0%|          | 0.00/14.5k [00:00<?, ?B/s]
+    ! 100%|██████████| 14.5k/14.5k [00:00<00:00, 4.72MB/s]
+    ! 
+    !   0%|          | 0.00/19.5k [00:00<?, ?B/s]
+    ! 100%|██████████| 19.5k/19.5k [00:00<00:00, 1.19MB/s]
+    ! 
+    !   0%|          | 0.00/49.7k [00:00<?, ?B/s]
+    ! 100%|██████████| 49.7k/49.7k [00:00<00:00, 1.66MB/s]
+    ! 
+    !   0%|          | 0.00/5.62k [00:00<?, ?B/s]
+    ! 100%|██████████| 5.62k/5.62k [00:00<00:00, 53.9MB/s]
+    ! 
+    !   0%|          | 0.00/23.6k [00:00<?, ?B/s]
+    ! 100%|██████████| 23.6k/23.6k [00:00<00:00, 1.34MB/s]
+    ! 
+    !   0%|          | 0.00/33.5k [00:00<?, ?B/s]
+    ! 100%|██████████| 33.5k/33.5k [00:00<00:00, 1.44MB/s]
+    ! 
+    !   0%|          | 0.00/49.9k [00:00<?, ?B/s]
+    ! 100%|██████████| 49.9k/49.9k [00:00<00:00, 1.64MB/s]
+    ! 
+    !   0%|          | 0.00/9.55k [00:00<?, ?B/s]
+    ! 100%|██████████| 9.55k/9.55k [00:00<00:00, 7.70MB/s]
+    ! 
+    !   0%|          | 0.00/8.96k [00:00<?, ?B/s]
+    ! 100%|██████████| 8.96k/8.96k [00:00<00:00, 11.5MB/s]
+    ! 
+    !   0%|          | 0.00/16.3k [00:00<?, ?B/s]
+    ! 100%|██████████| 16.3k/16.3k [00:00<00:00, 1.06MB/s]
+[2026-11-27 10:15:11Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+::endgroup::
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/2d106det.onnx → 2d106det.onnx
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/glintr100.onnx → glintr100.onnx
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/scrfd_10g_bnkps.onnx → scrfd_10g_bnkps.onnx
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/genderage.onnx → genderage.onnx
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/face_models/models/antelopev2/1k3d68.onnx → 1k3d68.onnx
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_video.py → generate_video.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_common.py → luca_common.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_lora.py → luca_lora.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/luca_character.py → luca_character.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/fetch_instantid.py → fetch_instantid.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_images.py → generate_images.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/instantid_pipeline.py → instantid_pipeline.py
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_lora.cpython-313.pyc → luca_lora.cpython-313.pyc
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_character.cpython-313.pyc → luca_character.cpython-313.pyc
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/luca_common.cpython-313.pyc → luca_common.cpython-313.pyc
+[2026-11-27 10:15:11Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/_vendor/pipeline_stable_diffusion_xl_instantid.py → pipeline_stable_diffusion_xl_instantid.py
+[2026-11-27 10:15:11Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-luca-studio
+
+===== kaggle kernels logs · fetched 2026-11-27 10:15:12Z =====
+[{"stream_name":"stdout","time":0.814699378,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.814740629,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
+,{"stream_name":"stdout","time":0.81474624,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.815128171,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_common.py (9.0 KB)\n"}
+,{"stream_name":"stdout","time":0.815339033,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_character.py (9.5 KB)\n"}
+,{"stream_name":"stdout","time":0.815545646,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_lora.py (16.3 KB)\n"}
+,{"stream_name":"stdout","time":0.815825159,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote generate_images.py (23.6 KB)\n"}
+,{"stream_name":"stdout","time":0.816179043,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote generate_video.py (33.5 KB)\n"}
+,{"stream_name":"stdout","time":0.816406698,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote fetch_instantid.py (5.6 KB)\n"}
+,{"stream_name":"stdout","time":0.816807376,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote _vendor/pipeline_stable_diffusion_xl_instantid.py (49.7 KB)\n"}
+,{"stream_name":"stdout","time":0.818617497,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] embedded payload verified: shared modules, both workers, bootstrapper and vendored pipeline are intact on disk\n"}
+,{"stream_name":"stdout","time":0.850233379,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
+,{"stream_name":"stdout","time":1.016374645,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] [instantid] using committed vendored pipeline (pipeline_stable_diffusion_xl_instantid.py)\n"}
+,{"stream_name":"stdout","time":1.016401585,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
+,{"stream_name":"stdout","time":1.016633213,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.016642485,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
+,{"stream_name":"stdout","time":1.016647481,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher]   images → physical GPU 0 (cuda:0) : /usr/bin/python3 generate_images.py\n"}
+,{"stream_name":"stdout","time":1.017123018,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher]   video  → physical GPU 1 (cuda:0) : /usr/bin/python3 generate_video.py\n"}
+,{"stream_name":"stdout","time":1.017137656,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.017510597,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] started images (pid 10)\n"}
+,{"stream_name":"stdout","time":1.018267493,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] started video (pid 11)\n"}
+,{"stream_name":"stdout","time":7.714729018,"data":"[images] [2026-11-27T10:12:12Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":8.108656586,"data":"[video] [2026-11-27T10:12:12Z] [INFO ] [img] device: cuda:0 (1 visible; pinned device is cuda:1)\n"}
+,{"stream_name":"stdout","time":8.108728487,"data":"[video] [2026-11-27T10:12:12Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":8.925835486,"data":"[video] [2026-11-27T10:12:13Z] [INFO ] [img] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
+,{"stream_name":"stdout","time":14.158295732,"data":"[video] [2026-11-27T10:12:18Z] [INFO ] [img] pip install chatterbox-tts (no-deps)\n"}
+,{"stream_name":"stdout","time":15.114229978,"data":"[video] [2026-11-27T10:12:19Z] [INFO ] [img] chatterbox dependencies ready\n"}
+,{"stream_name":"stdout","time":16.371128893,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:300: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371154153,"data":"[video]   m = re.match('([su]([0-9]{1,2})p?) \\(([0-9]{1,2}) bit\\)$', token)\n"}
+,{"stream_name":"stdout","time":16.371159557,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:301: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371163747,"data":"[video]   m2 = re.match('([su]([0-9]{1,2})p?)( \\(default\\))?$', token)\n"}
+,{"stream_name":"stdout","time":16.371294838,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:310: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371303084,"data":"[video]   elif re.match('(flt)p?( \\(default\\))?$', token):\n"}
+,{"stream_name":"stdout","time":16.371307055,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:314: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371310873,"data":"[video]   elif re.match('(dbl)p?( \\(default\\))?$', token):\n"}
+,{"stream_name":"stdout","time":18.182029484,"data":"[video] [2026-11-27T10:12:22Z] [INFO ] [img] pip install face_alignment resampy yacs scikit-image facexlib gfpgan av\n"}
+,{"stream_name":"stdout","time":22.531031713,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] pip failed:   error: subprocess-exited-with-error\n"}
+,{"stream_name":"stdout","time":22.531073088,"data":"[video]   \n"}
+,{"stream_name":"stdout","time":22.53107919,"data":"[video]   × Getting requirements to build wheel did not run successfully.\n"}
+,{"stream_name":"stdout","time":22.531085518,"data":"[video]   │ exit code: 1\n"}
+,{"stream_name":"stdout","time":22.531090301,"data":"[video]   ╰─\u003e No available output.\n"}
+,{"stream_name":"stdout","time":22.531112362000002,"data":"[video]   \n"}
+,{"stream_name":"stdout","time":22.531116731,"data":"[video]   note: This error originates from a subprocess, and is likely not a problem with pip.\n"}
+,{"stream_name":"stdout","time":22.531120754,"data":"[video] ERROR: Failed to build 'basicsr' when getting requirements to build wheel\n"}
+,{"stream_name":"stdout","time":22.531136046,"data":"[video] \n"}
+,{"stream_name":"stdout","time":22.531512139,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ✔ done:  pip_install_deps (14.4s)\n"}
+,{"stream_name":"stdout","time":22.531688575,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] FATAL — RuntimeError: SadTalker dependency install failed — see above\n"}
+,{"stream_name":"stdout","time":22.53255198,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":22.53257077,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 789, in main\n"}
+,{"stream_name":"stdout","time":22.532576495,"data":"[video]     ensure_video_deps(timings)\n"}
+,{"stream_name":"stdout","time":22.532580822,"data":"[video]     ~~~~~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":22.532585578,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 752, in ensure_video_deps\n"}
+,{"stream_name":"stdout","time":22.532590649,"data":"[video]     raise RuntimeError(\"SadTalker dependency install failed — see above\")\n"}
+,{"stream_name":"stdout","time":22.53260382,"data":"[video] RuntimeError: SadTalker dependency install failed — see above\n"}
+,{"stream_name":"stdout","time":22.532608,"data":"[video] \n"}
+,{"stream_name":"stdout","time":22.53340885,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":22.533557034,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] video pipeline status: failed · 21.4s\n"}
+,{"stream_name":"stdout","time":22.533698553,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":31.130480502,"data":"[images] [2026-11-27T10:12:35Z] [INFO ] [img] pip install compel\u003e=2.0.2 onnxruntime-gpu==1.22.0\n"}
+,{"stream_name":"stdout","time":40.29305729,"data":"[images] [2026-11-27T10:12:44Z] [INFO ] [img] pip install insightface==2.1 (no-deps)\n"}
+,{"stream_name":"stdout","time":41.719076124,"data":"[images] [2026-11-27T10:12:46Z] [INFO ] [img] pip install scikit-image requests scipy\n"}
+,{"stream_name":"stdout","time":43.384751666,"data":"[images] [2026-11-27T10:12:47Z] [INFO ] [img] pip install --force-reinstall --no-deps opencv-python-headless\n"}
+,{"stream_name":"stdout","time":52.221054723,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] image dependencies import cleanly\n"}
+,{"stream_name":"stdout","time":52.221165702,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] ✔ done:  pip_install_deps (44.5s)\n"}
+,{"stream_name":"stdout","time":52.221470616,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"peft\": \"0.21.2\", \"cuda_available\": true}\n"}
+,{"stream_name":"stdout","time":52.43148208,"data":"[images] [2026-11-27T10:12:57Z] [INFO ] [img] ▶ start: build_master\n"}
+,{"stream_name":"stdout","time":52.431926213,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stdout","time":52.431947551,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stdout","time":52.548864588,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":52.586772386,"data":"[images] \n"}
+,{"stream_name":"stdout","time":52.689672446,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":52.79344763,"data":"[images] Fetching 18 files:  17%|█▋        | 3/18 [00:00\u003c00:00, 29.21it/s]\n"}
+,{"stream_name":"stdout","time":72.561559667,"data":"[images] Fetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 74.58it/s]\n"}
+,{"stream_name":"stdout","time":88.155111977,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00, 74.58it/s]\n"}
+,{"stream_name":"stdout","time":88.165200189,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:35\u003c00:02,  2.92s/it]\n"}
+,{"stream_name":"stdout","time":88.165222219,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.98s/it]\n"}
+,{"stream_name":"stdout","time":88.167913456,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.451076144,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":88.614223012,"data":"[images] Loading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:01,  3.54it/s]\n"}
+,{"stream_name":"stdout","time":88.745904978,"data":"[images] Loading pipeline components...:  43%|████▎     | 3/7 [00:00\u003c00:00,  7.47it/s]\n"}
+,{"stream_name":"stdout","time":88.745936368,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.824869254,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":88.824898875,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2488.93it/s]\n"}
+,{"stream_name":"stdout","time":88.831217065,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.952275995,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:00\u003c00:00,  6.15it/s]\n"}
+,{"stream_name":"stdout","time":88.952411308,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.053035816,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.053445186,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.156572947,"data":"[images] Loading weights:  48%|████▊     | 246/517 [00:00\u003c00:00, 2450.08it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.156641495,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.164199084,"data":"[images] Loading weights:  95%|█████████▌| 492/517 [00:00\u003c00:00, 2405.78it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.164225938,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2444.17it/s]\n"}
+,{"stream_name":"stdout","time":89.176772005,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.422943594,"data":"[images] Loading pipeline components...:  71%|███████▏  | 5/7 [00:01\u003c00:00,  4.48it/s]\n"}
+,{"stream_name":"stdout","time":89.482150692,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:01\u003c00:00,  4.34it/s]\n"}
+,{"stream_name":"stdout","time":89.482188219,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:01\u003c00:00,  5.33it/s]\n"}
+,{"stream_name":"stdout","time":93.022289392,"data":"[images] [transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (138 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stdout","time":93.66317346700001,"data":"[images] [transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (138 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stdout","time":93.761870366,"data":"[images] \n"}
+,{"stream_name":"stdout","time":97.313806199,"data":"[images]   0%|          | 0/30 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":97.709438722,"data":"[images]   3%|▎         | 1/30 [00:03\u003c01:43,  3.55s/it]\n"}
+,{"stream_name":"stdout","time":98.520876309,"data":"[images]   7%|▋         | 2/30 [00:03\u003c00:47,  1.70s/it]\n"}
+,{"stream_name":"stdout","time":99.338467622,"data":"[images]  10%|█         | 3/30 [00:04\u003c00:34,  1.29s/it]\n"}
+,{"stream_name":"stdout","time":100.15674496,"data":"[images]  13%|█▎        | 4/30 [00:05\u003c00:28,  1.10s/it]\n"}
+,{"stream_name":"stdout","time":100.981711852,"data":"[images]  17%|█▋        | 5/30 [00:06\u003c00:25,  1.00s/it]\n"}
+,{"stream_name":"stdout","time":101.812079717,"data":"[images]  20%|██        | 6/30 [00:07\u003c00:22,  1.06it/s]\n"}
+,{"stream_name":"stdout","time":102.640956828,"data":"[images]  23%|██▎       | 7/30 [00:08\u003c00:20,  1.10it/s]\n"}
+,{"stream_name":"stdout","time":103.470997421,"data":"[images]  27%|██▋       | 8/30 [00:08\u003c00:19,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":104.309303001,"data":"[images]  30%|███       | 9/30 [00:09\u003c00:18,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":105.152515042,"data":"[images]  33%|███▎      | 10/30 [00:10\u003c00:17,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":105.995236261,"data":"[images]  37%|███▋      | 11/30 [00:11\u003c00:16,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":106.842820498,"data":"[images]  40%|████      | 12/30 [00:12\u003c00:15,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":107.689829451,"data":"[images]  43%|████▎     | 13/30 [00:13\u003c00:14,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":108.54218213,"data":"[images]  47%|████▋     | 14/30 [00:13\u003c00:13,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":109.402887415,"data":"[images]  50%|█████     | 15/30 [00:14\u003c00:12,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":110.263825569,"data":"[images]  53%|█████▎    | 16/30 [00:15\u003c00:11,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":111.131770431,"data":"[images]  57%|█████▋    | 17/30 [00:16\u003c00:11,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":112.003282055,"data":"[images]  60%|██████    | 18/30 [00:17\u003c00:10,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":112.875521627,"data":"[images]  63%|██████▎   | 19/30 [00:18\u003c00:09,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":113.752802735,"data":"[images]  67%|██████▋   | 20/30 [00:19\u003c00:08,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":114.638479222,"data":"[images]  70%|███████   | 21/30 [00:19\u003c00:07,  1.15it/s]\n"}
+,{"stream_name":"stdout","time":115.52033426,"data":"[images]  73%|███████▎  | 22/30 [00:20\u003c00:06,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":116.404898724,"data":"[images]  77%|███████▋  | 23/30 [00:21\u003c00:06,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":117.294813018,"data":"[images]  80%|████████  | 24/30 [00:22\u003c00:05,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":118.184444886,"data":"[images]  83%|████████▎ | 25/30 [00:23\u003c00:04,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":119.077787823,"data":"[images]  87%|████████▋ | 26/30 [00:24\u003c00:03,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":119.981638619,"data":"[images]  90%|█████████ | 27/30 [00:25\u003c00:02,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":120.891914037,"data":"[images]  93%|█████████▎| 28/30 [00:26\u003c00:01,  1.12it/s]\n"}
+,{"stream_name":"stdout","time":121.796322891,"data":"[images]  97%|█████████▋| 29/30 [00:27\u003c00:00,  1.11it/s]\n"}
+,{"stream_name":"stdout","time":121.796412164,"data":"[images] 100%|██████████| 30/30 [00:28\u003c00:00,  1.11it/s]\n"}
+,{"stream_name":"stdout","time":121.796435777,"data":"[images] 100%|██████████| 30/30 [00:28\u003c00:00,  1.07it/s]\n"}
+,{"stream_name":"stdout","time":121.797853909,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stdout","time":121.797889995,"data":"[images]   deprecate(\n"}
+,{"stream_name":"stdout","time":121.798034627,"data":"[images] There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":124.50591857,"data":"[images] There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":128.133697125,"data":"[images] [2026-11-27T10:14:12Z] [INFO ] [img] master portrait written (1306 KB)\n"}
+,{"stream_name":"stdout","time":128.133948402,"data":"[images] [2026-11-27T10:14:12Z] [INFO ] [img] ✔ done:  build_master (75.7s)\n"}
+,{"stream_name":"stdout","time":128.867448857,"data":"[images] [2026-11-27T10:14:13Z] [INFO ] [img] ▶ start: build_dataset\n"}
+,{"stream_name":"stdout","time":134.919841944,"data":"[images] [2026-11-27T10:14:19Z] [INFO ] [img] antelopev2 staged (/kaggle/working/face_models/models/antelopev2)\n"}
+,{"stream_name":"stdout","time":134.920071482,"data":"[images] [2026-11-27T10:14:19Z] [INFO ] [img] onnxruntime providers available=['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider'] → using=['CUDAExecutionProvider', 'CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":136.209373396,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ✔ done:  build_dataset (7.3s)\n"}
+,{"stream_name":"stdout","time":136.209619425,"data":"[images] [2026-11-27T10:14:20Z] [ERROR] [img] FATAL — AttributeError: type object 'Image' has no attribute 'open'\n"}
+,{"stream_name":"stdout","time":136.210843281,"data":"[images] [2026-11-27T10:14:20Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":136.210855475,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 510, in main\n"}
+,{"stream_name":"stdout","time":136.210859427,"data":"[images]     dataset = build_dataset(timings, OUTPUT_DIR / MASTER_FILENAME)\n"}
+,{"stream_name":"stdout","time":136.210862519,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 308, in build_dataset\n"}
+,{"stream_name":"stdout","time":136.210865701,"data":"[images]     master = __import__(\"PIL.Image\", fromlist=[\"Image\"]).Image.open(master_path)\n"}
+,{"stream_name":"stdout","time":136.210868875,"data":"[images]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":136.210871923,"data":"[images] AttributeError: type object 'Image' has no attribute 'open'\n"}
+,{"stream_name":"stdout","time":136.210970576,"data":"[images] \n"}
+,{"stream_name":"stdout","time":136.25265612,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":136.253264407,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] image pipeline status: failed · 128.5s\n"}
+,{"stream_name":"stdout","time":136.253287192,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img]   ✓ 01_luca_master.png (1306 KB)\n"}
+,{"stream_name":"stdout","time":136.253290318,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":139.506890464,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] images exited with code 1\n"}
+,{"stream_name":"stdout","time":139.506919653,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] video exited with code 1\n"}
+,{"stream_name":"stdout","time":139.50716316,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
+,{"stream_name":"stdout","time":139.507393834,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✓ 01_luca_master.png (1306 KB)\n"}
+,{"stream_name":"stdout","time":139.50746165,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
+,{"stream_name":"stdout","time":139.507529246,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
+,{"stream_name":"stdout","time":139.507581027,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
+,{"stream_name":"stdout","time":139.507623641,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
+,{"stream_name":"stdout","time":139.507700275,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
+,{"stream_name":"stdout","time":139.507740864,"data":"[2026-11-27T10:14:24Z] [WARN ] [launcher]   ✗ luca_lora.safetensors — training did not produce an adapter; the carousel came from the base model\n"}
+,{"stream_name":"stdout","time":139.508327025,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✓ dataset/ (0 training image(s))\n"}
+,{"stream_name":"stdout","time":139.50833937,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
+,{"stream_name":"stderr","time":141.457536424,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":141.45756338,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":141.689653868,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":141.689681564,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":142.524191105,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":143.500708968,"data":"[NbConvertApp] Writing 637414 bytes to __results__.html\n"}
+]
+[2026-11-27 10:15:12Z] [INFO ] appended kaggle kernels logs → outputs/build.log (24097 chars)
+
+===== kernel log file stoic-luca-studio.log · fetched 2026-11-27 10:15:12Z =====
+[{"stream_name":"stdout","time":0.814699378,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.814740629,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
+,{"stream_name":"stdout","time":0.81474624,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.815128171,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_common.py (9.0 KB)\n"}
+,{"stream_name":"stdout","time":0.815339033,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_character.py (9.5 KB)\n"}
+,{"stream_name":"stdout","time":0.815545646,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote luca_lora.py (16.3 KB)\n"}
+,{"stream_name":"stdout","time":0.815825159,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote generate_images.py (23.6 KB)\n"}
+,{"stream_name":"stdout","time":0.816179043,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote generate_video.py (33.5 KB)\n"}
+,{"stream_name":"stdout","time":0.816406698,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote fetch_instantid.py (5.6 KB)\n"}
+,{"stream_name":"stdout","time":0.816807376,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] wrote _vendor/pipeline_stable_diffusion_xl_instantid.py (49.7 KB)\n"}
+,{"stream_name":"stdout","time":0.818617497,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] embedded payload verified: shared modules, both workers, bootstrapper and vendored pipeline are intact on disk\n"}
+,{"stream_name":"stdout","time":0.850233379,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
+,{"stream_name":"stdout","time":1.016374645,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] [instantid] using committed vendored pipeline (pipeline_stable_diffusion_xl_instantid.py)\n"}
+,{"stream_name":"stdout","time":1.016401585,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
+,{"stream_name":"stdout","time":1.016633213,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.016642485,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
+,{"stream_name":"stdout","time":1.016647481,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher]   images → physical GPU 0 (cuda:0) : /usr/bin/python3 generate_images.py\n"}
+,{"stream_name":"stdout","time":1.017123018,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher]   video  → physical GPU 1 (cuda:0) : /usr/bin/python3 generate_video.py\n"}
+,{"stream_name":"stdout","time":1.017137656,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.017510597,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] started images (pid 10)\n"}
+,{"stream_name":"stdout","time":1.018267493,"data":"[2026-11-27T10:12:05Z] [INFO ] [launcher] started video (pid 11)\n"}
+,{"stream_name":"stdout","time":7.714729018,"data":"[images] [2026-11-27T10:12:12Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":8.108656586,"data":"[video] [2026-11-27T10:12:12Z] [INFO ] [img] device: cuda:0 (1 visible; pinned device is cuda:1)\n"}
+,{"stream_name":"stdout","time":8.108728487,"data":"[video] [2026-11-27T10:12:12Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":8.925835486,"data":"[video] [2026-11-27T10:12:13Z] [INFO ] [img] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
+,{"stream_name":"stdout","time":14.158295732,"data":"[video] [2026-11-27T10:12:18Z] [INFO ] [img] pip install chatterbox-tts (no-deps)\n"}
+,{"stream_name":"stdout","time":15.114229978,"data":"[video] [2026-11-27T10:12:19Z] [INFO ] [img] chatterbox dependencies ready\n"}
+,{"stream_name":"stdout","time":16.371128893,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:300: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371154153,"data":"[video]   m = re.match('([su]([0-9]{1,2})p?) \\(([0-9]{1,2}) bit\\)$', token)\n"}
+,{"stream_name":"stdout","time":16.371159557,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:301: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371163747,"data":"[video]   m2 = re.match('([su]([0-9]{1,2})p?)( \\(default\\))?$', token)\n"}
+,{"stream_name":"stdout","time":16.371294838,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:310: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371303084,"data":"[video]   elif re.match('(flt)p?( \\(default\\))?$', token):\n"}
+,{"stream_name":"stdout","time":16.371307055,"data":"[video] /usr/local/lib/python3.13/dist-packages/pydub/utils.py:314: SyntaxWarning: invalid escape sequence '\\('\n"}
+,{"stream_name":"stdout","time":16.371310873,"data":"[video]   elif re.match('(dbl)p?( \\(default\\))?$', token):\n"}
+,{"stream_name":"stdout","time":18.182029484,"data":"[video] [2026-11-27T10:12:22Z] [INFO ] [img] pip install face_alignment resampy yacs scikit-image facexlib gfpgan av\n"}
+,{"stream_name":"stdout","time":22.531031713,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] pip failed:   error: subprocess-exited-with-error\n"}
+,{"stream_name":"stdout","time":22.531073088,"data":"[video]   \n"}
+,{"stream_name":"stdout","time":22.53107919,"data":"[video]   × Getting requirements to build wheel did not run successfully.\n"}
+,{"stream_name":"stdout","time":22.531085518,"data":"[video]   │ exit code: 1\n"}
+,{"stream_name":"stdout","time":22.531090301,"data":"[video]   ╰─\u003e No available output.\n"}
+,{"stream_name":"stdout","time":22.531112362000002,"data":"[video]   \n"}
+,{"stream_name":"stdout","time":22.531116731,"data":"[video]   note: This error originates from a subprocess, and is likely not a problem with pip.\n"}
+,{"stream_name":"stdout","time":22.531120754,"data":"[video] ERROR: Failed to build 'basicsr' when getting requirements to build wheel\n"}
+,{"stream_name":"stdout","time":22.531136046,"data":"[video] \n"}
+,{"stream_name":"stdout","time":22.531512139,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ✔ done:  pip_install_deps (14.4s)\n"}
+,{"stream_name":"stdout","time":22.531688575,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] FATAL — RuntimeError: SadTalker dependency install failed — see above\n"}
+,{"stream_name":"stdout","time":22.53255198,"data":"[video] [2026-11-27T10:12:27Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":22.53257077,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 789, in main\n"}
+,{"stream_name":"stdout","time":22.532576495,"data":"[video]     ensure_video_deps(timings)\n"}
+,{"stream_name":"stdout","time":22.532580822,"data":"[video]     ~~~~~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":22.532585578,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 752, in ensure_video_deps\n"}
+,{"stream_name":"stdout","time":22.532590649,"data":"[video]     raise RuntimeError(\"SadTalker dependency install failed — see above\")\n"}
+,{"stream_name":"stdout","time":22.53260382,"data":"[video] RuntimeError: SadTalker dependency install failed — see above\n"}
+,{"stream_name":"stdout","time":22.532608,"data":"[video] \n"}
+,{"stream_name":"stdout","time":22.53340885,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":22.533557034,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] video pipeline status: failed · 21.4s\n"}
+,{"stream_name":"stdout","time":22.533698553,"data":"[video] [2026-11-27T10:12:27Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":31.130480502,"data":"[images] [2026-11-27T10:12:35Z] [INFO ] [img] pip install compel\u003e=2.0.2 onnxruntime-gpu==1.22.0\n"}
+,{"stream_name":"stdout","time":40.29305729,"data":"[images] [2026-11-27T10:12:44Z] [INFO ] [img] pip install insightface==2.1 (no-deps)\n"}
+,{"stream_name":"stdout","time":41.719076124,"data":"[images] [2026-11-27T10:12:46Z] [INFO ] [img] pip install scikit-image requests scipy\n"}
+,{"stream_name":"stdout","time":43.384751666,"data":"[images] [2026-11-27T10:12:47Z] [INFO ] [img] pip install --force-reinstall --no-deps opencv-python-headless\n"}
+,{"stream_name":"stdout","time":52.221054723,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] image dependencies import cleanly\n"}
+,{"stream_name":"stdout","time":52.221165702,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] ✔ done:  pip_install_deps (44.5s)\n"}
+,{"stream_name":"stdout","time":52.221470616,"data":"[images] [2026-11-27T10:12:56Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"peft\": \"0.21.2\", \"cuda_available\": true}\n"}
+,{"stream_name":"stdout","time":52.43148208,"data":"[images] [2026-11-27T10:12:57Z] [INFO ] [img] ▶ start: build_master\n"}
+,{"stream_name":"stdout","time":52.431926213,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stdout","time":52.431947551,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stdout","time":52.548864588,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":52.586772386,"data":"[images] \n"}
+,{"stream_name":"stdout","time":52.689672446,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":52.79344763,"data":"[images] Fetching 18 files:  17%|█▋        | 3/18 [00:00\u003c00:00, 29.21it/s]\n"}
+,{"stream_name":"stdout","time":72.561559667,"data":"[images] Fetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 74.58it/s]\n"}
+,{"stream_name":"stdout","time":88.155111977,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00, 74.58it/s]\n"}
+,{"stream_name":"stdout","time":88.165200189,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:35\u003c00:02,  2.92s/it]\n"}
+,{"stream_name":"stdout","time":88.165222219,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:35\u003c00:00,  1.98s/it]\n"}
+,{"stream_name":"stdout","time":88.167913456,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.451076144,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":88.614223012,"data":"[images] Loading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:01,  3.54it/s]\n"}
+,{"stream_name":"stdout","time":88.745904978,"data":"[images] Loading pipeline components...:  43%|████▎     | 3/7 [00:00\u003c00:00,  7.47it/s]\n"}
+,{"stream_name":"stdout","time":88.745936368,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.824869254,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":88.824898875,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2488.93it/s]\n"}
+,{"stream_name":"stdout","time":88.831217065,"data":"[images] \n"}
+,{"stream_name":"stdout","time":88.952275995,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:00\u003c00:00,  6.15it/s]\n"}
+,{"stream_name":"stdout","time":88.952411308,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.053035816,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.053445186,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.156572947,"data":"[images] Loading weights:  48%|████▊     | 246/517 [00:00\u003c00:00, 2450.08it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.156641495,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.164199084,"data":"[images] Loading weights:  95%|█████████▌| 492/517 [00:00\u003c00:00, 2405.78it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":89.164225938,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2444.17it/s]\n"}
+,{"stream_name":"stdout","time":89.176772005,"data":"[images] \n"}
+,{"stream_name":"stdout","time":89.422943594,"data":"[images] Loading pipeline components...:  71%|███████▏  | 5/7 [00:01\u003c00:00,  4.48it/s]\n"}
+,{"stream_name":"stdout","time":89.482150692,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:01\u003c00:00,  4.34it/s]\n"}
+,{"stream_name":"stdout","time":89.482188219,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:01\u003c00:00,  5.33it/s]\n"}
+,{"stream_name":"stdout","time":93.022289392,"data":"[images] [transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (138 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stdout","time":93.66317346700001,"data":"[images] [transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (138 \u003e 77). Running this sequence through the model will result in indexing errors\n"}
+,{"stream_name":"stdout","time":93.761870366,"data":"[images] \n"}
+,{"stream_name":"stdout","time":97.313806199,"data":"[images]   0%|          | 0/30 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":97.709438722,"data":"[images]   3%|▎         | 1/30 [00:03\u003c01:43,  3.55s/it]\n"}
+,{"stream_name":"stdout","time":98.520876309,"data":"[images]   7%|▋         | 2/30 [00:03\u003c00:47,  1.70s/it]\n"}
+,{"stream_name":"stdout","time":99.338467622,"data":"[images]  10%|█         | 3/30 [00:04\u003c00:34,  1.29s/it]\n"}
+,{"stream_name":"stdout","time":100.15674496,"data":"[images]  13%|█▎        | 4/30 [00:05\u003c00:28,  1.10s/it]\n"}
+,{"stream_name":"stdout","time":100.981711852,"data":"[images]  17%|█▋        | 5/30 [00:06\u003c00:25,  1.00s/it]\n"}
+,{"stream_name":"stdout","time":101.812079717,"data":"[images]  20%|██        | 6/30 [00:07\u003c00:22,  1.06it/s]\n"}
+,{"stream_name":"stdout","time":102.640956828,"data":"[images]  23%|██▎       | 7/30 [00:08\u003c00:20,  1.10it/s]\n"}
+,{"stream_name":"stdout","time":103.470997421,"data":"[images]  27%|██▋       | 8/30 [00:08\u003c00:19,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":104.309303001,"data":"[images]  30%|███       | 9/30 [00:09\u003c00:18,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":105.152515042,"data":"[images]  33%|███▎      | 10/30 [00:10\u003c00:17,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":105.995236261,"data":"[images]  37%|███▋      | 11/30 [00:11\u003c00:16,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":106.842820498,"data":"[images]  40%|████      | 12/30 [00:12\u003c00:15,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":107.689829451,"data":"[images]  43%|████▎     | 13/30 [00:13\u003c00:14,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":108.54218213,"data":"[images]  47%|████▋     | 14/30 [00:13\u003c00:13,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":109.402887415,"data":"[images]  50%|█████     | 15/30 [00:14\u003c00:12,  1.18it/s]\n"}
+,{"stream_name":"stdout","time":110.263825569,"data":"[images]  53%|█████▎    | 16/30 [00:15\u003c00:11,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":111.131770431,"data":"[images]  57%|█████▋    | 17/30 [00:16\u003c00:11,  1.17it/s]\n"}
+,{"stream_name":"stdout","time":112.003282055,"data":"[images]  60%|██████    | 18/30 [00:17\u003c00:10,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":112.875521627,"data":"[images]  63%|██████▎   | 19/30 [00:18\u003c00:09,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":113.752802735,"data":"[images]  67%|██████▋   | 20/30 [00:19\u003c00:08,  1.16it/s]\n"}
+,{"stream_name":"stdout","time":114.638479222,"data":"[images]  70%|███████   | 21/30 [00:19\u003c00:07,  1.15it/s]\n"}
+,{"stream_name":"stdout","time":115.52033426,"data":"[images]  73%|███████▎  | 22/30 [00:20\u003c00:06,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":116.404898724,"data":"[images]  77%|███████▋  | 23/30 [00:21\u003c00:06,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":117.294813018,"data":"[images]  80%|████████  | 24/30 [00:22\u003c00:05,  1.14it/s]\n"}
+,{"stream_name":"stdout","time":118.184444886,"data":"[images]  83%|████████▎ | 25/30 [00:23\u003c00:04,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":119.077787823,"data":"[images]  87%|████████▋ | 26/30 [00:24\u003c00:03,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":119.981638619,"data":"[images]  90%|█████████ | 27/30 [00:25\u003c00:02,  1.13it/s]\n"}
+,{"stream_name":"stdout","time":120.891914037,"data":"[images]  93%|█████████▎| 28/30 [00:26\u003c00:01,  1.12it/s]\n"}
+,{"stream_name":"stdout","time":121.796322891,"data":"[images]  97%|█████████▋| 29/30 [00:27\u003c00:00,  1.11it/s]\n"}
+,{"stream_name":"stdout","time":121.796412164,"data":"[images] 100%|██████████| 30/30 [00:28\u003c00:00,  1.11it/s]\n"}
+,{"stream_name":"stdout","time":121.796435777,"data":"[images] 100%|██████████| 30/30 [00:28\u003c00:00,  1.07it/s]\n"}
+,{"stream_name":"stdout","time":121.797853909,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stdout","time":121.797889995,"data":"[images]   deprecate(\n"}
+,{"stream_name":"stdout","time":121.798034627,"data":"[images] There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":124.50591857,"data":"[images] There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":128.133697125,"data":"[images] [2026-11-27T10:14:12Z] [INFO ] [img] master portrait written (1306 KB)\n"}
+,{"stream_name":"stdout","time":128.133948402,"data":"[images] [2026-11-27T10:14:12Z] [INFO ] [img] ✔ done:  build_master (75.7s)\n"}
+,{"stream_name":"stdout","time":128.867448857,"data":"[images] [2026-11-27T10:14:13Z] [INFO ] [img] ▶ start: build_dataset\n"}
+,{"stream_name":"stdout","time":134.919841944,"data":"[images] [2026-11-27T10:14:19Z] [INFO ] [img] antelopev2 staged (/kaggle/working/face_models/models/antelopev2)\n"}
+,{"stream_name":"stdout","time":134.920071482,"data":"[images] [2026-11-27T10:14:19Z] [INFO ] [img] onnxruntime providers available=['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider'] → using=['CUDAExecutionProvider', 'CPUExecutionProvider']\n"}
+,{"stream_name":"stdout","time":136.209373396,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ✔ done:  build_dataset (7.3s)\n"}
+,{"stream_name":"stdout","time":136.209619425,"data":"[images] [2026-11-27T10:14:20Z] [ERROR] [img] FATAL — AttributeError: type object 'Image' has no attribute 'open'\n"}
+,{"stream_name":"stdout","time":136.210843281,"data":"[images] [2026-11-27T10:14:20Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":136.210855475,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 510, in main\n"}
+,{"stream_name":"stdout","time":136.210859427,"data":"[images]     dataset = build_dataset(timings, OUTPUT_DIR / MASTER_FILENAME)\n"}
+,{"stream_name":"stdout","time":136.210862519,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 308, in build_dataset\n"}
+,{"stream_name":"stdout","time":136.210865701,"data":"[images]     master = __import__(\"PIL.Image\", fromlist=[\"Image\"]).Image.open(master_path)\n"}
+,{"stream_name":"stdout","time":136.210868875,"data":"[images]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":136.210871923,"data":"[images] AttributeError: type object 'Image' has no attribute 'open'\n"}
+,{"stream_name":"stdout","time":136.210970576,"data":"[images] \n"}
+,{"stream_name":"stdout","time":136.25265612,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":136.253264407,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] image pipeline status: failed · 128.5s\n"}
+,{"stream_name":"stdout","time":136.253287192,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img]   ✓ 01_luca_master.png (1306 KB)\n"}
+,{"stream_name":"stdout","time":136.253290318,"data":"[images] [2026-11-27T10:14:20Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":139.506890464,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] images exited with code 1\n"}
+,{"stream_name":"stdout","time":139.506919653,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] video exited with code 1\n"}
+,{"stream_name":"stdout","time":139.50716316,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
+,{"stream_name":"stdout","time":139.507393834,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✓ 01_luca_master.png (1306 KB)\n"}
+,{"stream_name":"stdout","time":139.50746165,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
+,{"stream_name":"stdout","time":139.507529246,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
+,{"stream_name":"stdout","time":139.507581027,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
+,{"stream_name":"stdout","time":139.507623641,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
+,{"stream_name":"stdout","time":139.507700275,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
+,{"stream_name":"stdout","time":139.507740864,"data":"[2026-11-27T10:14:24Z] [WARN ] [launcher]   ✗ luca_lora.safetensors — training did not produce an adapter; the carousel came from the base model\n"}
+,{"stream_name":"stdout","time":139.508327025,"data":"[2026-11-27T10:14:24Z] [INFO ] [launcher]   ✓ dataset/ (0 training image(s))\n"}
+,{"stream_name":"stdout","time":139.50833937,"data":"[2026-11-27T10:14:24Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
+,{"stream_name":"stderr","time":141.457536424,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":141.45756338,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":141.689653868,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":141.689681564,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":142.524191105,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":143.500708968,"data":"[NbConvertApp] Writing 637414 bytes to __results__.html\n"}
+]
+[2026-11-27 10:15:12Z] [INFO ] appended kernel log file stoic-luca-studio.log → outputs/build.log (24097 chars)
+[2026-11-27 10:15:12Z] [INFO ] artifact ✔ 01_luca_master.png (1306 KB)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ 02_luca_yacht.png (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ 03_luca_porsche.png (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ 04_luca_party.png (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ luca_lora.safetensors (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ luca_voice.wav (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ luca_reel.mp4 (missing)
+[2026-11-27 10:15:12Z] [INFO ] artifact ✔ luca_metrics.json (3 KB)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ luca_raw.mp4 (missing)
+[2026-11-27 10:15:12Z] [WARN ] artifact ✘ dataset (missing)
+[2026-11-27 10:15:12Z] [INFO ] artifact ✔ luca_metrics_images.json (2 KB)
+[2026-11-27 10:15:12Z] [INFO ] artifact ✔ luca_metrics_video.json (1 KB)
+[2026-11-27 10:15:12Z] [INFO ] artifact ✔ build.log (67 KB)
+[2026-11-27 10:15:12Z] [INFO ] artifact ○ luca_metrics_images.json (2 KB, optional)
+[2026-11-27 10:15:12Z] [INFO ] artifact ○ luca_metrics_video.json (1 KB, optional)
+[2026-11-27 10:15:12Z] [INFO ] artifact ○ build.log (67 KB, optional)
+[2026-11-27 10:15:12Z] [ERROR] required artifacts absent: 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_lora.safetensors, luca_voice.wav, luca_reel.mp4
+[2026-11-27 10:15:12Z] [WARN ] missing artifacts: 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_lora.safetensors, luca_voice.wav, luca_reel.mp4, luca_raw.mp4, dataset
+::error::character forge did not produce a complete result (status=error, downloaded=True). See outputs/build.log.
+[2026-11-27 10:15:12Z] [ERROR] ✘ job failed — inspect outputs/build.log

@@ -1,0 +1,24 @@
+{
+  "process": "video",
+  "device": "cuda:0",
+  "status": "failed",
+  "started_at": "2026-11-27T10:12:05Z",
+  "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
+  "prohibitions_honoured": {
+    "celebrity_name_in_prompts": false,
+    "lip_sync_face_swap": false,
+    "pipe.to_cpu": false
+  },
+  "timings_seconds": {
+    "img/pip_install_deps": 14.423
+  },
+  "errors": [
+    {
+      "stage": "fatal",
+      "error": "RuntimeError: SadTalker dependency install failed \u2014 see above"
+    }
+  ],
+  "artifacts": [],
+  "total_seconds": 21.4,
+  "finished_at": "2026-11-27T10:12:27Z"
+}

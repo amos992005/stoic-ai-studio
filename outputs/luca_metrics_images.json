@@ -1,0 +1,51 @@
+{
+  "process": "images",
+  "device": "cuda:0",
+  "status": "failed",
+  "started_at": "2026-11-27T10:12:12Z",
+  "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
+  "base_model": "SG161222/RealVisXL_V5.0",
+  "identity": {
+    "method": "SDXL LoRA on the UNet (instantid only builds the dataset)",
+    "trigger_word": "ohwx",
+    "age": 27,
+    "description": "ohwx 27-year-old Italian man, athletic build, sun-kissed dirty blonde tousled hair, piercing blue-green eyes, sharp jawline, light 3-day stubble",
+    "lora_scale": 0.85
+  },
+  "prohibitions_honoured": {
+    "celebrity_name_in_prompts": false,
+    "instantid_at_inference": false,
+    "pipe.to_cpu": false,
+    "inswapper_128": false,
+    "svd_xt": false,
+    "sdxl_img2img_adetailer": false
+  },
+  "timings_seconds": {
+    "img/pip_install_deps": 44.506,
+    "img/build_master": 75.702,
+    "img/build_dataset": 7.342
+  },
+  "errors": [
+    {
+      "stage": "fatal",
+      "error": "AttributeError: type object 'Image' has no attribute 'open'"
+    }
+  ],
+  "artifacts": [
+    "01_luca_master.png"
+  ],
+  "environment": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cu130",
+    "diffusers": "0.42.0",
+    "peft": "0.21.2",
+    "cuda_available": true
+  },
+  "master": {
+    "file": "01_luca_master.png",
+    "prompt": "ohwx 27-year-old Italian man, athletic build, sun-kissed dirty blonde tousled hair, piercing blue-green eyes, sharp jawline, light 3-day stubble, close-up portrait facing the camera, soft window light, relaxed neutral expression, plain white linen shirt, no hands near the face, blurred Mediterranean harbour behind him",
+    "bytes": 1337549
+  },
+  "total_seconds": 128.5,
+  "finished_at": "2026-11-27T10:14:20Z"
+}
