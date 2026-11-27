@@ -303,9 +303,9 @@ def reel_gate():
     script.write_text('''#!/bin/sh
 case "$FAKE_MODE" in
   good) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","width":1080,"height":1920,"duration":"7.04"},{"codec_type":"audio","codec_name":"aac","sample_rate":"44100","channels":2,"duration":"7.04"}],"format":{"duration":"7.04"}}';;
-  pix) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv444p","duration":"7.04"},{"codec_type":"audio","codec_name":"aac","duration":"7.04"}],"format":{"duration":"7.04"}}';;
-  drift) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","duration":"7.04"},{"codec_type":"audio","codec_name":"aac","duration":"4.10"}],"format":{"duration":"7.04"}}';;
-  mute) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","duration":"7.04"}],"format":{"duration":"7.04"}}';;
+  pix) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv444p","width":1080,"height":1920,"duration":"7.04"},{"codec_type":"audio","codec_name":"aac","sample_rate":"44100","channels":2,"duration":"7.04"}],"format":{"duration":"7.04"}}';;
+  drift) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","width":1080,"height":1920,"duration":"7.04"},{"codec_type":"audio","codec_name":"aac","sample_rate":"44100","channels":2,"duration":"4.10"}],"format":{"duration":"7.04"}}';;
+  mute) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","width":1080,"height":1920,"duration":"7.04"}],"format":{"duration":"7.04"}}';;
 esac
 ''')
     script.chmod(0o755)
@@ -348,6 +348,75 @@ check("reel gate verifies h264/yuv420p/aac + sync", reel_gate)
 
 
 # --------------------------------------------------------------------------- #
+# 6b. The no-ffprobe fallback must be exactly as strict
+# --------------------------------------------------------------------------- #
+
+
+def ffmpeg_report_parser():
+    """
+    Kaggle ships ffmpeg but not necessarily ffprobe.
+
+    The fallback parses ffmpeg's `-i` table instead of ffprobe's JSON, and it
+    must reject the same things — otherwise the gate that guarantees an
+    iPhone-playable reel depends on which binary happens to exist.
+    """
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    fake = tmp / "ffmpeg"
+    report = (
+        "#!/bin/sh\n"
+        "cat <<REPORT >&2\n"
+        "Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'x.mp4':\n"
+        "  Duration: 00:00:07.04, start: 0.000000, bitrate: 812 kb/s\n"
+        "  Stream #0:0[0x1](und): Video: ${FAKE_VCODEC:-h264} (High), "
+        "${FAKE_PIX:-yuv420p}(progressive), ${FAKE_SIZE:-1080x1920}, 25 fps\n"
+        "  Stream #0:1[0x2](und): Audio: ${FAKE_ACODEC:-aac} (LC), 44100 Hz, "
+        "stereo, fltp, 160 kb/s\n"
+        "REPORT\n"
+    )
+    fake.write_text(report)
+    fake.chmod(0o755)
+    reel = tmp / "luca_reel.mp4"
+    reel.write_bytes(b"\0" * 2048)
+
+    original = video.ffmpeg_bin
+    video.ffmpeg_bin = lambda: str(fake)
+    for name in ("FAKE_VCODEC", "FAKE_PIX", "FAKE_SIZE", "FAKE_ACODEC"):
+        os.environ.pop(name, None)
+    try:
+        info = video.probe_media(reel)
+        assert info["tool"] == "ffmpeg", info["tool"]
+        assert info["video"]["codec"] == "h264", info["video"]
+        assert info["video"]["pix_fmt"] == "yuv420p", info["video"]
+        assert (info["video"]["width"], info["video"]["height"]) == (1080, 1920)
+        assert info["audio"]["codec"] == "aac", info["audio"]
+        assert abs(info["duration_s"] - 7.04) < 0.01, info["duration_s"]
+        assert video.verify_reel(reel, {})["iphone_compatible"] is True
+
+        for name, value, expected in (("FAKE_PIX", "yuv444p", "yuv420p"),
+                                      ("FAKE_ACODEC", "mp2", "aac"),
+                                      ("FAKE_VCODEC", "mpeg4", "h264")):
+            os.environ[name] = value
+            try:
+                video.verify_reel(reel, {})
+            except RuntimeError as exc:
+                assert expected in str(exc), (name, str(exc))
+            else:
+                raise AssertionError(f"the fallback accepted a bad {name}")
+            finally_names = os.environ.pop(name)
+    finally:
+        video.ffmpeg_bin = original
+        for name in ("FAKE_VCODEC", "FAKE_PIX", "FAKE_SIZE", "FAKE_ACODEC"):
+            os.environ.pop(name, None)
+    return "parsed ffmpeg's stream table, rejected 3 bad reels on it"
+
+
+check("no-ffprobe fallback is as strict as ffprobe", ffmpeg_report_parser)
+
+
+# --------------------------------------------------------------------------- #
 # 7. SadTalker invocation: flags, weights, and the two import-time shims
 # --------------------------------------------------------------------------- #
 
@@ -380,19 +449,56 @@ def sadtalker_invocation():
                  "detection_Resnet50_Final.pth"):
         assert name in video, f"missing weight {name}"
 
-    # basicsr cannot build on a current image; it is only needed for realesrgan
+    # basicsr cannot be built with pip's default isolation (its setup.py
+    # imports torch); it must be installed separately, without isolation, and
+    # the enhancer must be skipped rather than crashing if it never lands.
     deps = re.search(r"SADTALKER_DEPS = \[(.*?)\]", video, re.S).group(1)
-    assert "basicsr" not in deps, "basicsr must not be installed (no CUDA toolkit build)"
+    assert "basicsr" not in deps, \
+        "basicsr needs its own no-build-isolation install, not the plain batch"
+    assert "no_build_isolation=True" in body, \
+        "basicsr must be installed with --no-build-isolation"
+    assert "GFPGAN_DEPS" in body and "gfpgan==1.3.8" in body
+    assert "enhancer = None" in body, \
+        "a missing gfpgan must downgrade the enhancer, not kill the render"
 
     # The two import-time shims must be applied before gfpgan/SadTalker load.
     assert "functional_tensor" in body and "VisibleDeprecationWarning" in body
     main_body = video[video.index("def main()"):]
-    assert main_body.index("apply_legacy_shims()") < main_body.index("synth_voice(")
+    # Shims first: the dep probe imports every candidate package, so shimming
+    # after probing makes an installed basicsr look uninstallable.
+    assert main_body.index("apply_legacy_shims()") < \
+        main_body.index("ensure_video_deps(") < main_body.index("synth_voice("), \
+        "apply_legacy_shims() must run before the dependency probe and the TTS"
     return (f"{len(urls)} release-asset weights, crop+512+gfpgan, no --still, "
             f"shims applied before any import")
 
 
 check("SadTalker invocation and weights", sadtalker_invocation)
+
+
+# --------------------------------------------------------------------------- #
+# 7b. Resolution mismatches: the LoRA resizes internally, the avatar cannot
+# --------------------------------------------------------------------------- #
+
+
+def resolution_contract():
+    """
+    A 1024² master is right for SDXL and wrong for SadTalker.
+
+    SadTalker's face renderer resizes every frame to ``--size``, so the reel is
+    512 px wide whatever the portrait. Logging the source resolution is what
+    makes that visible in the metrics instead of a surprise in the output.
+    """
+    images = source("generate_images.py")
+    assert "width=1024, height=1024" in images, "the master is no longer 1024²"
+    video = source("generate_video.py")
+    assert "SADTALKER_SIZE = int(os.environ.get(\"SADTALKER_SIZE\", \"512\"))" in video
+    assert "master_source_px" in video, \
+        "the reel metrics must record the source resolution the avatar cropped from"
+    return "master 1024², avatar 512, source resolution recorded in the metrics"
+
+
+check("resolution contract (master vs avatar)", resolution_contract)
 
 
 # --------------------------------------------------------------------------- #

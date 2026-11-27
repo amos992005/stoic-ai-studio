@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import gc
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -78,7 +79,18 @@ CHATTERBOX_DEPS = ["soundfile", "librosa", "einops", "omegaconf", "tqdm",
 #: toolkit download at build time).
 SADTALKER_DEPS = ["librosa", "face_alignment", "imageio", "imageio-ffmpeg",
                   "numba", "resampy", "pydub", "scipy", "kornia", "yacs",
-                  "scikit-image", "facexlib", "gfpgan", "av", "safetensors"]
+                  "scikit-image", "facexlib", "av", "safetensors"]
+
+#: Installed separately, and *lastly*, because their build is the fragile part.
+#: ``basicsr``'s setup.py imports torch and torchvision at build time, so pip's
+#: default build isolation cannot install it ("Getting requirements to build
+#: wheel did not run successfully ... No available output" — run 45980036759).
+#: ``gfpgan`` depends on basicsr, so both go in the same no-isolation call.
+GFPGAN_DEPS = ["basicsr==1.4.2", "gfpgan==1.3.8"]
+#: basicsr is imported by the SadTalker shim, not by gfpgan's own metadata.
+GFPGAN_BUILD_DEPS = ["numpy", "opencv-python-headless", "torchvision", "scipy",
+                     "tqdm", "yapf", "addict", "future", "lmdb", "pyyaml",
+                     "requests", "scikit-image", "tqdm"]
 
 SADTALKER_REPO = "https://github.com/OpenTalker/SadTalker.git"
 
@@ -426,6 +438,10 @@ def ensure_sadtalker(timings: Dict[str, float]) -> Path:
 
     with timed("fetch_sadtalker_weights", timings):
         for url_template, subdir in SADTALKER_WEIGHTS:
+            # The safetensors name carries the render size. If only the other
+            # size is present, init_path() still finds a *.safetensors and then
+            # asks for exactly SadTalker_V0.0.2_<size>.safetensors, so a size
+            # mismatch is a hard failure rather than a fallback.
             url = url_template.format(size=SADTALKER_SIZE)
             destination = SADTALKER_DIR / subdir / Path(url).name
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -483,8 +499,19 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
         "--expression_scale", "1.0",
         "--verbose",
     ]
-    if SADTALKER_ENHANCER:
-        command += ["--enhancer", SADTALKER_ENHANCER]
+    enhancer = SADTALKER_ENHANCER
+    if enhancer:
+        # Never pass --enhancer for a package that is not installed: SadTalker
+        # imports gfpgan lazily inside the render loop and the whole run dies
+        # there, minutes in, instead of degrading here, immediately.
+        try:
+            __import__("gfpgan")
+        except Exception as exc:
+            log(f"gfpgan unavailable ({type(exc).__name__}) — rendering "
+                f"without the face enhancer", "WARN")
+            enhancer = None
+    if enhancer:
+        command += ["--enhancer", enhancer]
 
     with timed("sadtalker_inference", timings):
         log(f"SadTalker: {' '.join(command[1:])}")
@@ -507,14 +534,26 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
     enhanced = [p for p in candidates if p.stem.endswith("_enhanced")]
     pool = enhanced or candidates
     result = max(pool, key=lambda p: p.stat().st_mtime)
+
+    # Record what the renderer actually consumed. SadTalker resizes every frame
+    # to --size, so a 1024² portrait becomes a 512 px reel; logging the source
+    # keeps that visible in the metrics instead of a surprise in the output.
+    try:
+        from PIL import Image as _PilImage
+
+        with _PilImage.open(master) as probe:
+            source_px = list(probe.size)
+    except Exception:
+        source_px = None
+    log(f"avatar source {source_px} -> render {SADTALKER_SIZE}px wide")
     if not enhanced:
         log("SadTalker produced no *_enhanced.mp4 — using the raw render "
             f"({result.name})", "WARN")
     log(f"SadTalker wrote {result.name} ({result.stat().st_size / 1024:.0f} KB)")
     return {"engine": "SadTalker", "raw": str(result),
             "enhanced": bool(enhanced), "size": SADTALKER_SIZE,
-            "preprocess": "crop", "enhancer": SADTALKER_ENHANCER or None,
-            "still": False, "fps": 25}
+            "preprocess": "crop", "enhancer": enhancer,
+            "still": False, "fps": 25, "master_source_px": source_px}
 
 
 # --------------------------------------------------------------------------- #
@@ -668,13 +707,61 @@ def probe_media(path: Path) -> Dict[str, Any]:
                 "duration_s": float((data.get("format") or {}).get("duration") or 0.0),
             }
 
-    table = subprocess.run([ffmpeg_bin(), "-i", str(path)],
-                           capture_output=True, text=True).stderr
+    return _parse_ffmpeg_report(path)
+
+
+def _parse_ffmpeg_report(path: Path) -> Dict[str, Any]:
+    """
+    Read ffmpeg's stream table when ffprobe is not available.
+
+    Kaggle has ffmpeg (via imageio-ffmpeg) but not necessarily ffprobe, so the
+    fallback has to verify the *same* contract, not a weaker one. ffmpeg's
+    `-i` report is less structured but still states the codec and pixel format::
+
+        Stream #0:0: Video: h264 (High), yuv420p(progressive), 1080x1920, 25 fps
+        Stream #0:1: Audio: aac (LC), 44100 Hz, stereo, fltp, 160 kb/s
+
+    Anything this cannot read is returned as ``None``, and the caller treats
+    None as a failure rather than as "probably fine" — a reel we could not
+    verify is not a reel we should ship.
+    """
+    report = subprocess.run([ffmpeg_bin(), "-hide_banner", "-i", str(path)],
+                            capture_output=True, text=True).stderr
+    video: Dict[str, Any] = {}
+    audio: Dict[str, Any] = {}
+    duration = 0.0
+
+    for line in report.splitlines():
+        text = line.strip()
+        if text.startswith("Stream") and "Video:" in text:
+            video["codec"] = text.split("Video:")[1].strip().split(" ")[0].split(",")[0]
+            match = re.search(r"\b(yuv\w+|rgb\w+)(?:\(\w+\))?", text)
+            video["pix_fmt"] = match.group(1) if match else None
+            size = re.search(r"\b(\d{2,5})x(\d{2,5})\b", text)
+            if size:
+                video["width"], video["height"] = int(size.group(1)), int(size.group(2))
+            fps = re.search(r"([\d.]+) fps", text)
+            video["fps"] = fps.group(1) if fps else None
+        elif text.startswith("Stream") and "Audio:" in text:
+            audio["codec"] = text.split("Audio:")[1].strip().split(" ")[0].split(",")[0]
+            rate = re.search(r"(\d{4,6}) Hz", text)
+            audio["sample_rate"] = rate.group(1) if rate else None
+        elif text.startswith("Duration:"):
+            match = re.search(r"Duration: (\d+):(\d+):([\d.]+)", text)
+            if match:
+                hours, minutes, seconds = match.groups()
+                duration = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+
+    if not video and not audio:
+        return {"tool": "ffmpeg", "video": None, "audio": None,
+                "duration_s": duration,
+                "report_tail": "\n".join(report.strip().splitlines()[-12:])}
     return {
         "tool": "ffmpeg",
-        "report_tail": "\n".join(table.strip().splitlines()[-12:]),
-        "has_video": "Video:" in table,
-        "has_audio": "Audio:" in table,
+        "video": video or None,
+        "audio": audio or None,
+        "duration_s": duration,
+        "report_tail": "\n".join(report.strip().splitlines()[-12:]),
     }
 
 
@@ -690,10 +777,8 @@ def verify_reel(reel: Path, timings: Dict[str, float]) -> Dict[str, Any]:
     with timed("verify_reel", timings):
         info = probe_media(reel)
         if info.get("tool") != "ffprobe":
-            if not info.get("has_video") or not info.get("has_audio"):
-                raise RuntimeError(f"reel streams invalid: {info}")
-            log("verified via ffmpeg stream detection (ffprobe unavailable)", "WARN")
-            return info
+            log("ffprobe unavailable — verifying from ffmpeg's stream report",
+                "WARN")
 
         video, audio = info.get("video"), info.get("audio")
         if video is None:
@@ -706,6 +791,8 @@ def verify_reel(reel: Path, timings: Dict[str, float]) -> Dict[str, Any]:
             problems.append(f"video codec is {video.get('codec')}, not h264")
         if video.get("pix_fmt") != "yuv420p":
             problems.append(f"pixel format is {video.get('pix_fmt')}, not yuv420p")
+        if not video.get("width") or not video.get("height"):
+            problems.append("video dimensions could not be read")
         if audio.get("codec") != "aac":
             problems.append(f"audio codec is {audio.get('codec')}, not aac")
         if problems:
@@ -750,6 +837,20 @@ def ensure_video_deps(timings: Dict[str, float]) -> None:
         if sadtalker_missing:
             if not pip_install(sadtalker_missing):
                 raise RuntimeError("SadTalker dependency install failed — see above")
+
+        # gfpgan + basicsr: a source build whose metadata import needs the torch
+        # stack we already have, so isolation has to be off.  --no-deps is not
+        # used here: gfpgan's own runtime needs basicsr, facexlib and torch,
+        # and the build deps above are cheap to resolve.
+        if missing_packages(GFPGAN_DEPS):
+            pip_install([d for d in GFPGAN_BUILD_DEPS
+                         if missing_packages([d])],
+                        no_build_isolation=True)
+            if not pip_install(GFPGAN_DEPS, no_build_isolation=True):
+                # A missing enhancer costs sharpness, not the reel: SadTalker
+                # renders fine without --enhancer, so degrade instead of dying.
+                log("gfpgan/basicsr could not be installed — the reel will be "
+                    "rendered without the face enhancer", "WARN")
         log("SadTalker dependencies ready")
 
 
@@ -786,8 +887,13 @@ def main() -> int:
         log(f"device: {device} ({torch.cuda.device_count()} visible; "
             f"pinned device is {PINNED_DEVICE})")
 
-        ensure_video_deps(timings)
+        # The shims go first: they exist because `import basicsr` fails on this
+        # torchvision/numpy, and the dependency probe below imports every
+        # candidate package to decide what to install. Probing before shimming
+        # makes an installed package look missing, and reinstalling it does not
+        # help.
         apply_legacy_shims()
+        ensure_video_deps(timings)
 
         # ---- voice ---------------------------------------------------------- #
         metrics["voice"] = synth_voice(timings)

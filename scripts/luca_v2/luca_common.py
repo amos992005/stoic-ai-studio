@@ -120,7 +120,7 @@ def torch_fingerprint() -> Tuple[Optional[str], Optional[str]]:
 
 
 def pip_install(packages: Iterable[str], *, no_deps: bool = False,
-                tag: str = "img") -> bool:
+                no_build_isolation: bool = False, tag: str = "img") -> bool:
     """
     Install packages under a cross-process lock, never letting torch move.
 
@@ -135,6 +135,11 @@ def pip_install(packages: Iterable[str], *, no_deps: bool = False,
     command = [sys.executable, "-m", "pip", "install", "-q", "--no-cache-dir"]
     if no_deps:
         command.append("--no-deps")
+    if no_build_isolation:
+        # basicsr's setup.py expects torch and torchvision to be importable
+        # already; in an isolated build environment they are not, and the wheel
+        # fails with "No available output" before any compilation happens.
+        command.append("--no-build-isolation")
     command.extend(packages)
 
     log(f"pip install {' '.join(packages)}{' (no-deps)' if no_deps else ''}",

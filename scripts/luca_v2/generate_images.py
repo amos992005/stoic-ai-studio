@@ -305,7 +305,12 @@ def build_dataset(timings: Dict[str, float], master_path: Path) -> Dict[str, Any
     with timed("build_dataset", timings):
         root = Path(os.environ.get("FACE_MODEL_ROOT", "/kaggle/working/face_models"))
         app = load_face_app(root)
-        master = __import__("PIL.Image", fromlist=["Image"]).Image.open(master_path)
+        # NB: `__import__("PIL.Image").Image` is the *class*, not the module —
+        # Pillow sets `PIL.Image.Image` as an attribute of itself. Import the
+        # module explicitly. (Run 45980036759 died on exactly this.)
+        from PIL import Image as PilImage
+
+        master = PilImage.open(master_path)
         master_face, found = detect_face(app, master)
         if master_face is None:
             raise RuntimeError("no face detected in the master portrait")
@@ -538,7 +543,7 @@ def main() -> int:
                 lora_path = None
         else:
             log(f"only {dataset['images']} dataset images — need at least 8 to "
-                f"train, skipping", "WARN")
+                f"train, skipping", "ERROR")
             metrics["errors"].append({"stage": "train",
                                       "error": "insufficient dataset"})
             lora_path = None
