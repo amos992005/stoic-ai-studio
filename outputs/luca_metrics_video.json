@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:1",
   "status": "failed",
-  "started_at": "2026-11-27T06:30:33Z",
+  "started_at": "2026-11-27T06:39:23Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,17 +10,37 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 6.733,
-    "vid/load_chatterbox": 103.767,
-    "vid/generate_speech": 12.565
+    "vid/pip_install_deps": 7.864,
+    "vid/load_chatterbox": 128.389,
+    "vid/generate_speech": 25.94,
+    "vid/release_tts_vram": 0.525,
+    "vid/wait_for_master": 35.007,
+    "vid/clone_musetalk": 2.002,
+    "vid/fetch_musetalk_weights": 44.398,
+    "vid/load_musetalk": 13.906,
+    "vid/prepare_avatar": 6.139,
+    "vid/musetalk_inference": 0.153
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "RuntimeError: Input type (float) and bias type (c10::Half) should be the same"
+      "error": "RuntimeError: expected mat1 and mat2 to have the same dtype, but got: float != c10::Half"
     }
   ],
-  "artifacts": [],
-  "total_seconds": 123.9,
-  "finished_at": "2026-11-27T06:32:37Z"
+  "artifacts": [
+    "luca_voice.wav"
+  ],
+  "voice": {
+    "engine": "chatterbox-tts",
+    "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
+    "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
+    "dtype": "float16",
+    "sample_rate": 24000,
+    "duration_s": 5.56,
+    "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
+    "normalisation": "peak to -1.0 dBFS",
+    "file": "luca_voice.wav"
+  },
+  "total_seconds": 278.7,
+  "finished_at": "2026-11-27T06:44:01Z"
 }

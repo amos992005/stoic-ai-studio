@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T06:30:26Z",
+  "started_at": "2026-11-27T06:39:23Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,21 +14,26 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 39.757,
-    "img/load_controlnet": 35.414,
-    "img/load_sdxl": 37.617,
-    "img/load_identity_adapter": 20.961,
-    "img/configure_pipeline": 16.592,
-    "img/configure_scheduler": 0.007,
-    "img/build_master_pipe": 0.179
+    "img/pip_install_deps": 59.468,
+    "img/load_controlnet": 38.273,
+    "img/load_sdxl": 38.732,
+    "img/load_identity_adapter": 18.632,
+    "img/configure_pipeline": 17.748,
+    "img/configure_scheduler": 0.011,
+    "img/build_master_pipe": 0.045,
+    "img/master_portrait": 35.702,
+    "img/stage_antelopev2": 5.343,
+    "img/scene_02_luca_yacht": 0.749
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 50.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 22.81 MiB is free. Including non-PyTorch memory, this process has 14.54 GiB memory in use. Of the allocated memory 14.40 GiB is allocated by PyTorch, and 19.43 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+      "error": "TypeError: For single controlnet: `controlnet_conditioning_scale` must be type `float`."
     }
   ],
-  "artifacts": [],
+  "artifacts": [
+    "01_luca_master.png"
+  ],
   "identity": {},
   "environment": {
     "python": "3.13.16",
@@ -37,6 +42,18 @@
     "cuda_available": true,
     "gpu_count": 2
   },
-  "total_seconds": 150.8,
-  "finished_at": "2026-11-27T06:32:57Z"
+  "master_prompt_tokens": 78,
+  "master_face": {
+    "faces": 1,
+    "male_index": 0,
+    "bbox": [
+      361,
+      161,
+      733,
+      684
+    ],
+    "sex": "M"
+  },
+  "total_seconds": 234.6,
+  "finished_at": "2026-11-27T06:43:17Z"
 }
