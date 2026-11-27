@@ -147,6 +147,16 @@ jobs:
               "the launcher must fail fast on a banned construct"
           assert "preflight_instantid" in launcher, \
               "the InstantID pipeline must be staged before the GPU work starts"
+          # `kaggle kernels push` uploads ONLY the code file, so the workers must
+          # arrive as a mounted dataset. Run 45947135155 died on exactly this.
+          assert "/kaggle/input" in launcher, \
+              "the launcher must probe /kaggle/input for the worker dataset"
+          assert "worker script not found" in launcher, \
+              "a missing worker must fail loudly, not mysteriously"
+          driver = pathlib.Path("scripts/run_luca_job.py").read_text()
+          assert "publish_dataset" in driver and "dataset_sources" in driver, \
+              ("the driver must publish the workers as a dataset and mount it — "
+               "kernels push drops sibling files")
           assert '"cuda:0"' in images, "image pipeline must pin cuda:0"
           assert '"cuda:1"' in video, "voice/avatar pipeline must pin cuda:1"
 
