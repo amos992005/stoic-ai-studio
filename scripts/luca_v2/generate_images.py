@@ -24,6 +24,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -51,6 +52,11 @@ INSTANTID_REPO = "InstantX/InstantID"
 INSTANTID_ADAPTER = "ip-adapter.bin"
 INSTANTID_CONTROLNET = "ControlNetModel"
 FACE_ANALYSIS_ROOT = Path(os.environ.get("FACE_MODEL_ROOT", "/kaggle/working/face_models"))
+#: HF mirror of the antelopev2 model-zoo package, and the files FaceAnalysis globs.
+#: antelopev2 has no detector of its own in some copies, so scrfd is included.
+ANTELOPEV2_REPO = "DIAMONIK7777/antelopev2"
+ANTELOPEV2_FILES = ("scrfd_10g_bnkps.onnx", "glintr100.onnx",
+                    "2d106det.onnx", "1k3d68.onnx", "genderage.onnx")
 
 MASTER_FILENAME = "01_luca_master.png"
 SCENE_FILES = {
@@ -287,6 +293,37 @@ def face_providers() -> List[str]:
 # --------------------------------------------------------------------------- #
 
 
+def stage_antelopev2(timings: Dict[str, float]) -> Path:
+    """
+    Put the antelopev2 ONNX files where insightface expects them, from HF.
+
+    `FaceAnalysis(name="antelopev2")` shells out to insightface's own model zoo,
+    which fetches a zip from a GitHub *release* asset. That host is not something
+    to depend on from a Kaggle worker (and a GitHub release can be rate-limited
+    or blocked independently of the HF hub), so the five ONNX files are pulled
+    from the hub mirror instead. InsightFace short-circuits when the model
+    directory already exists, so this makes it skip its own download entirely.
+    """
+    from huggingface_hub import hf_hub_download
+
+    model_dir = FACE_ANALYSIS_ROOT / "models" / "antelopev2"
+    with timed("stage_antelopev2", timings):
+        if all((model_dir / name).is_file() for name in ANTELOPEV2_FILES):
+            log(f"antelopev2 already staged at {model_dir}")
+            return model_dir
+        model_dir.mkdir(parents=True, exist_ok=True)
+        for name in ANTELOPEV2_FILES:
+            local = hf_hub_download(ANTELOPEV2_REPO, name)
+            destination = model_dir / name
+            if not destination.is_file() or \
+                    destination.stat().st_size != Path(local).stat().st_size:
+                shutil.copy2(local, destination)
+        total = sum((model_dir / n).stat().st_size for n in ANTELOPEV2_FILES)
+        log(f"antelopev2 staged from {ANTELOPEV2_REPO} "
+            f"({total / 1e6:.0f} MB, {len(ANTELOPEV2_FILES)} files)")
+    return model_dir
+
+
 def load_face_app():
     """antelopev2 — InstantID's 512-d face encoder, prepared at 640px."""
     from insightface.app import FaceAnalysis
@@ -296,7 +333,7 @@ def load_face_app():
     app = FaceAnalysis(name="antelopev2", root=str(root),
                        providers=face_providers())
     app.prepare(ctx_id=0, det_size=(640, 640))
-    log("antelopev2 ready")
+    log(f"antelopev2 ready (providers={face_providers()})")
     return app
 
 
@@ -663,6 +700,7 @@ def main() -> int:
         metrics["master_prompt_tokens"] = len(master_prompt.split())
 
         # ---- identity from the master ---------------------------------------
+        stage_antelopev2(timings)
         app = load_face_app()
         master_faces = detect_faces(app, master)
         master_face, master_idx = pick_identity_face(master_faces)
