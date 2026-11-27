@@ -1,9 +1,60 @@
 {
+  "video": {
+    "process": "video",
+    "device": "cuda:1",
+    "status": "failed",
+    "started_at": "2026-11-27T07:12:06Z",
+    "prohibitions_honoured": {
+      "pipe.to_cpu": false,
+      "inswapper_128": false,
+      "svd_xt": false,
+      "sdxl_img2img_adetailer": false
+    },
+    "timings_seconds": {
+      "vid/pip_install_deps": 6.333,
+      "vid/load_chatterbox": 99.186,
+      "vid/generate_speech": 23.751,
+      "vid/release_tts_vram": 0.552,
+      "vid/wait_for_master": 55.008,
+      "vid/clone_musetalk": 0.897,
+      "vid/fetch_musetalk_weights": 39.616,
+      "vid/load_musetalk": 11.232
+    },
+    "errors": [
+      {
+        "stage": "fatal",
+        "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 46.81 MiB is free. Including non-PyTorch memory, this process has 756.00 MiB memory in use. Process 10 has 13.78 GiB memory in use. Of the allocated memory 653.17 MiB is allocated by PyTorch, and 850.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+      }
+    ],
+    "artifacts": [
+      "luca_voice.wav"
+    ],
+    "voice": {
+      "engine": "chatterbox-tts",
+      "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
+      "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
+      "dtype": "float16",
+      "sample_rate": 24000,
+      "duration_s": 5.24,
+      "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
+      "normalisation": "peak to -1.0 dBFS",
+      "file": "luca_voice.wav"
+    },
+    "total_seconds": 244.5,
+    "finished_at": "2026-11-27T07:16:10Z"
+  },
+  "artifacts": [
+    "01_luca_master.png",
+    "02_luca_yacht.png",
+    "03_luca_porsche.png",
+    "04_luca_party.png",
+    "luca_voice.wav"
+  ],
   "images": {
     "process": "images",
     "device": "cuda:0",
-    "status": "failed",
-    "started_at": "2026-11-27T06:54:27Z",
+    "status": "success",
+    "started_at": "2026-11-27T07:12:06Z",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
     "face_encoder": "insightface antelopev2",
@@ -15,27 +66,46 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 39.916,
-      "img/load_controlnet": 36.21,
-      "img/load_sdxl": 40.217,
-      "img/load_identity_adapter": 17.983,
-      "img/configure_pipeline": 9.924,
+      "img/pip_install_deps": 38.894,
+      "img/load_controlnet": 34.822,
+      "img/load_sdxl": 35.662,
+      "img/load_identity_adapter": 18.665,
+      "img/configure_pipeline": 21.371,
       "img/configure_scheduler": 0.005,
       "img/build_master_pipe": 0.04,
-      "img/master_portrait": 43.634,
-      "img/stage_antelopev2": 5.288,
-      "img/scene_02_luca_yacht": 16.233
+      "img/master_portrait": 39.849,
+      "img/stage_antelopev2": 5.023,
+      "img/scene_02_luca_yacht": 50.903,
+      "img/scene_03_luca_porsche": 47.918,
+      "img/scene_04_luca_party": 50.101
     },
-    "errors": [
-      {
-        "stage": "fatal",
-        "error": "RuntimeError: Expected all tensors to be on the same device, but got mat1 is on cuda:0, different from other tensors on cpu (when checking argument in method wrapper_CUDA_addmm)"
-      }
-    ],
+    "errors": [],
     "artifacts": [
-      "01_luca_master.png"
+      "01_luca_master.png",
+      "02_luca_yacht.png",
+      "03_luca_porsche.png",
+      "04_luca_party.png"
     ],
-    "identity": {},
+    "identity": {
+      "02_luca_yacht.png": {
+        "faces": 1,
+        "male_index": 0,
+        "cosine": 0.7137,
+        "verdict": "MATCH"
+      },
+      "03_luca_porsche.png": {
+        "faces": 1,
+        "male_index": 0,
+        "cosine": 0.5769,
+        "verdict": "MATCH"
+      },
+      "04_luca_party.png": {
+        "faces": 1,
+        "male_index": 0,
+        "cosine": 0.655,
+        "verdict": "MATCH"
+      }
+    },
     "environment": {
       "python": "3.13.16",
       "torch": "2.11.0+cu130",
@@ -55,96 +125,7 @@
       ],
       "sex": "M"
     },
-    "total_seconds": 218.4,
-    "finished_at": "2026-11-27T06:58:05Z"
-  },
-  "artifacts": [
-    "01_luca_master.png",
-    "luca_reel.mp4",
-    "luca_voice.wav"
-  ],
-  "video": {
-    "process": "video",
-    "device": "cuda:1",
-    "status": "success",
-    "started_at": "2026-11-27T06:54:27Z",
-    "prohibitions_honoured": {
-      "pipe.to_cpu": false,
-      "inswapper_128": false,
-      "svd_xt": false,
-      "sdxl_img2img_adetailer": false
-    },
-    "timings_seconds": {
-      "vid/pip_install_deps": 6.921,
-      "vid/load_chatterbox": 103.341,
-      "vid/generate_speech": 23.349,
-      "vid/release_tts_vram": 0.518,
-      "vid/wait_for_master": 50.007,
-      "vid/clone_musetalk": 3.414,
-      "vid/fetch_musetalk_weights": 42.829,
-      "vid/load_musetalk": 12.77,
-      "vid/prepare_avatar": 4.445,
-      "vid/musetalk_inference": 29.564,
-      "vid/encode_talking": 3.603,
-      "vid/mux_reel": 0.209,
-      "vid/verify_reel": 0.224
-    },
-    "errors": [],
-    "artifacts": [
-      "luca_voice.wav",
-      "luca_reel.mp4"
-    ],
-    "voice": {
-      "engine": "chatterbox-tts",
-      "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
-      "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
-      "dtype": "float16",
-      "sample_rate": 24000,
-      "duration_s": 6.0,
-      "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
-      "normalisation": "peak to -1.0 dBFS",
-      "file": "luca_voice.wav"
-    },
-    "musetalk": {
-      "engine": "MuseTalk v1.5 (fp16)",
-      "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
-      "fps": 25,
-      "frames": 150,
-      "face_box": [
-        362,
-        161,
-        734,
-        694
-      ],
-      "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
-      "mmpose_bypassed": true,
-      "silent_video": "/kaggle/working/luca_work/talking_silent.mp4"
-    },
-    "reel_probe": {
-      "tool": "ffprobe",
-      "video": {
-        "codec": "h264",
-        "width": 1024,
-        "height": 1024,
-        "frames": "150",
-        "duration_s": 6.0,
-        "fps": "25/1"
-      },
-      "audio": {
-        "codec": "aac",
-        "sample_rate": "24000",
-        "channels": 1,
-        "duration_s": 6.0
-      },
-      "duration_s": 6.0,
-      "sync": {
-        "video_s": 6.0,
-        "audio_s": 6.0,
-        "drift_s": 0.0,
-        "ok": true
-      }
-    },
-    "total_seconds": 289.3,
-    "finished_at": "2026-11-27T06:59:16Z"
+    "total_seconds": 371.4,
+    "finished_at": "2026-11-27T07:18:17Z"
   }
 }

@@ -1,8 +1,8 @@
 {
   "process": "images",
   "device": "cuda:0",
-  "status": "failed",
-  "started_at": "2026-11-27T06:54:27Z",
+  "status": "success",
+  "started_at": "2026-11-27T07:12:06Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,27 +14,46 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 39.916,
-    "img/load_controlnet": 36.21,
-    "img/load_sdxl": 40.217,
-    "img/load_identity_adapter": 17.983,
-    "img/configure_pipeline": 9.924,
+    "img/pip_install_deps": 38.894,
+    "img/load_controlnet": 34.822,
+    "img/load_sdxl": 35.662,
+    "img/load_identity_adapter": 18.665,
+    "img/configure_pipeline": 21.371,
     "img/configure_scheduler": 0.005,
     "img/build_master_pipe": 0.04,
-    "img/master_portrait": 43.634,
-    "img/stage_antelopev2": 5.288,
-    "img/scene_02_luca_yacht": 16.233
+    "img/master_portrait": 39.849,
+    "img/stage_antelopev2": 5.023,
+    "img/scene_02_luca_yacht": 50.903,
+    "img/scene_03_luca_porsche": 47.918,
+    "img/scene_04_luca_party": 50.101
   },
-  "errors": [
-    {
-      "stage": "fatal",
-      "error": "RuntimeError: Expected all tensors to be on the same device, but got mat1 is on cuda:0, different from other tensors on cpu (when checking argument in method wrapper_CUDA_addmm)"
-    }
-  ],
+  "errors": [],
   "artifacts": [
-    "01_luca_master.png"
+    "01_luca_master.png",
+    "02_luca_yacht.png",
+    "03_luca_porsche.png",
+    "04_luca_party.png"
   ],
-  "identity": {},
+  "identity": {
+    "02_luca_yacht.png": {
+      "faces": 1,
+      "male_index": 0,
+      "cosine": 0.7137,
+      "verdict": "MATCH"
+    },
+    "03_luca_porsche.png": {
+      "faces": 1,
+      "male_index": 0,
+      "cosine": 0.5769,
+      "verdict": "MATCH"
+    },
+    "04_luca_party.png": {
+      "faces": 1,
+      "male_index": 0,
+      "cosine": 0.655,
+      "verdict": "MATCH"
+    }
+  },
   "environment": {
     "python": "3.13.16",
     "torch": "2.11.0+cu130",
@@ -54,6 +73,6 @@
     ],
     "sex": "M"
   },
-  "total_seconds": 218.4,
-  "finished_at": "2026-11-27T06:58:05Z"
+  "total_seconds": 371.4,
+  "finished_at": "2026-11-27T07:18:17Z"
 }

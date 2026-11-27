@@ -1,8 +1,8 @@
 {
   "process": "video",
   "device": "cuda:1",
-  "status": "success",
-  "started_at": "2026-11-27T06:54:27Z",
+  "status": "failed",
+  "started_at": "2026-11-27T07:12:06Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,24 +10,23 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 6.921,
-    "vid/load_chatterbox": 103.341,
-    "vid/generate_speech": 23.349,
-    "vid/release_tts_vram": 0.518,
-    "vid/wait_for_master": 50.007,
-    "vid/clone_musetalk": 3.414,
-    "vid/fetch_musetalk_weights": 42.829,
-    "vid/load_musetalk": 12.77,
-    "vid/prepare_avatar": 4.445,
-    "vid/musetalk_inference": 29.564,
-    "vid/encode_talking": 3.603,
-    "vid/mux_reel": 0.209,
-    "vid/verify_reel": 0.224
+    "vid/pip_install_deps": 6.333,
+    "vid/load_chatterbox": 99.186,
+    "vid/generate_speech": 23.751,
+    "vid/release_tts_vram": 0.552,
+    "vid/wait_for_master": 55.008,
+    "vid/clone_musetalk": 0.897,
+    "vid/fetch_musetalk_weights": 39.616,
+    "vid/load_musetalk": 11.232
   },
-  "errors": [],
+  "errors": [
+    {
+      "stage": "fatal",
+      "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 46.81 MiB is free. Including non-PyTorch memory, this process has 756.00 MiB memory in use. Process 10 has 13.78 GiB memory in use. Of the allocated memory 653.17 MiB is allocated by PyTorch, and 850.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+    }
+  ],
   "artifacts": [
-    "luca_voice.wav",
-    "luca_reel.mp4"
+    "luca_voice.wav"
   ],
   "voice": {
     "engine": "chatterbox-tts",
@@ -35,50 +34,11 @@
     "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
     "dtype": "float16",
     "sample_rate": 24000,
-    "duration_s": 6.0,
+    "duration_s": 5.24,
     "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
     "normalisation": "peak to -1.0 dBFS",
     "file": "luca_voice.wav"
   },
-  "musetalk": {
-    "engine": "MuseTalk v1.5 (fp16)",
-    "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
-    "fps": 25,
-    "frames": 150,
-    "face_box": [
-      362,
-      161,
-      734,
-      694
-    ],
-    "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
-    "mmpose_bypassed": true,
-    "silent_video": "/kaggle/working/luca_work/talking_silent.mp4"
-  },
-  "reel_probe": {
-    "tool": "ffprobe",
-    "video": {
-      "codec": "h264",
-      "width": 1024,
-      "height": 1024,
-      "frames": "150",
-      "duration_s": 6.0,
-      "fps": "25/1"
-    },
-    "audio": {
-      "codec": "aac",
-      "sample_rate": "24000",
-      "channels": 1,
-      "duration_s": 6.0
-    },
-    "duration_s": 6.0,
-    "sync": {
-      "video_s": 6.0,
-      "audio_s": 6.0,
-      "drift_s": 0.0,
-      "ok": true
-    }
-  },
-  "total_seconds": 289.3,
-  "finished_at": "2026-11-27T06:59:16Z"
+  "total_seconds": 244.5,
+  "finished_at": "2026-11-27T07:16:10Z"
 }
