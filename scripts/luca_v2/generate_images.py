@@ -36,7 +36,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -457,6 +457,124 @@ def unload_instantid(timings: Dict[str, float]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def check_no_meta(pipe) -> None:
+    """
+    Fail early if any UNet parameter is a placeholder.
+
+    A ``meta`` parameter holds no storage, and ``.to()`` on one raises
+    "Cannot copy out of meta tensor; no data!". That is what the adapter load
+    reported in run 45999895543, and the message says nothing about where the
+    real problem is.
+    """
+    meta = [name for name, parameter in pipe.unet.named_parameters()
+            if getattr(parameter, "is_meta", False)]
+    if meta:
+        raise RuntimeError(
+            f"{len(meta)} UNet parameters are placeholders on the 'meta' device "
+            f"(first: {meta[0]}) — the pipeline was not materialised")
+
+
+def load_adapter(pipe, lora_path: Path) -> Tuple[bool, str]:
+    """
+    Attach the trained adapter, trying the two loaders that can do it.
+
+    diffusers' own loader first. If it refuses — which it does when the state
+    dict is peft-shaped rather than diffusers-shaped, and the error surfaces as
+    a meta-tensor copy — the adapter is split per attention module and applied
+    through peft directly, which is the shape ``luca_lora.save_adapter``
+    actually wrote.
+    """
+    try:
+        check_no_meta(pipe)
+    except RuntimeError as exc:
+        log(str(exc), "ERROR")
+        return False, str(exc)
+
+    try:
+        pipe.load_lora_weights(str(lora_path.parent), weight_name=lora_path.name,
+                               adapter_name="luca")
+        pipe.set_adapters(["luca"], [LORA_SCALE])
+        return True, "diffusers.load_lora_weights"
+    except Exception as exc:
+        log(f"diffusers LoRA loader refused ({type(exc).__name__}: {exc}) — "
+            f"retrying through peft", "WARN")
+
+    try:
+        from safetensors.torch import load_file
+
+        state = load_file(str(lora_path))
+        loaded = _peft_fallback(pipe, state)
+        if loaded == 0:
+            return False, "peft fallback matched no attention modules"
+        pipe.set_adapters(["luca"], [LORA_SCALE])
+        return True, f"peft direct ({loaded} modules)"
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+
+def _peft_fallback(pipe, state: Dict[str, Any]) -> int:
+    """
+    Attach our adapter without diffusers' loader.
+
+    ``luca_lora.save_adapter`` writes keys of the form
+    ``unet.<module path>.lora_A.default.weight`` (and the B side), tensors in
+    float32. Each one belongs to exactly one linear layer in the UNet, so the
+    adapter can be rebuilt per module with peft's ``LoraLayer`` (r=rank,
+    alpha=alpha) and the weights copied in. Returns how many modules were
+    matched.
+    """
+    import re
+
+    from peft import LoraConfig
+    from peft.tuners.lora.layer import Linear as LoraLinearLayer
+
+    entries: Dict[str, Dict[str, Any]] = {}
+    pattern = re.compile(r"^unet\.(?P<module>.+)\.lora_(?P<side>[AB])\."
+                         r"(?:default\.)?weight$")
+    for key, tensor in state.items():
+        match = pattern.match(key)
+        if not match:
+            continue
+        module = match.group("module")
+        entries.setdefault(module, {})[match.group("side")] = tensor
+
+    rank = LORA_RANK
+    for sides in entries.values():
+        if "A" in sides:
+            rank = int(sides["A"].shape[0])
+            break
+
+    modules = dict(pipe.unet.named_modules())
+    attached = 0
+    for module_name, sides in entries.items():
+        target = modules.get(module_name)
+        if target is None or "A" not in sides or "B" not in sides:
+            continue
+        try:
+            # peft >=0.15 takes the config explicitly; older signatures inferred
+            # it. Build one per module so the tuner knows what it is wrapping.
+            config = LoraConfig(r=rank, lora_alpha=LORA_ALPHA, lora_dropout=0.0,
+                                target_modules=[module_name.rsplit(".", 1)[-1]])
+            layer = LoraLinearLayer(target, "luca", config=config, r=rank,
+                                    lora_alpha=LORA_ALPHA)
+            layer.update_layer("luca", r=rank, lora_alpha=LORA_ALPHA,
+                               config=config, lora_dropout=0.0,
+                               init_lora_weights=False)
+            with __import__("torch").no_grad():
+                layer.lora_A["luca"].weight.copy_(sides["A"])
+                layer.lora_B["luca"].weight.copy_(sides["B"])
+            parent_name, _, child = module_name.rpartition(".")
+            parent = modules[parent_name]
+            setattr(parent, child, layer)
+            attached += 1
+        except Exception as exc:
+            log(f"  peft fallback skipped {module_name}: {exc}", "WARN")
+            continue
+    log(f"peft fallback attached {attached}/{len(entries)} adapter modules "
+        f"(r={rank}, alpha={LORA_ALPHA})")
+    return attached
+
+
 def cast_lora_to_unet(pipe) -> Dict[str, Any]:
     """
     Move every adapter tensor onto the UNet's dtype and device, explicitly.
@@ -558,22 +676,24 @@ def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
         if hasattr(pipe.vae, "enable_slicing"):
             pipe.vae.enable_slicing()
         set_scheduler(pipe)
-        compel = build_compel(pipe)
 
         if lora_path is not None and lora_path.is_file():
-            try:
-                pipe.load_lora_weights(
-                    str(lora_path.parent), weight_name=lora_path.name,
-                    adapter_name="luca")
-                pipe.set_adapters(["luca"], [LORA_SCALE])
+            load_ok, how = load_adapter(pipe, lora_path)
+            produced["lora_load"] = how
+            if load_ok:
                 produced["adapter_cast"] = cast_lora_to_unet(pipe)
-                log(f"LoRA loaded from {lora_path.name} at scale {LORA_SCALE}")
-            except Exception as exc:
-                log(f"LoRA could not be applied ({type(exc).__name__}: {exc}) — "
-                    f"falling back to the un-adapted model", "ERROR")
+                log(f"LoRA loaded from {lora_path.name} at scale {LORA_SCALE} "
+                    f"via {how}")
+            else:
+                log(f"LoRA could not be applied ({how}) — falling back to the "
+                    f"un-adapted model", "ERROR")
                 produced["lora_used"] = False
         else:
             log("no adapter available — generating with the base model", "WARN")
+
+        # Compel after the adapter: it reads the text encoders, not the UNet,
+        # but building it once here keeps the load order obvious.
+        compel = build_compel(pipe)
 
     adapter_attached = produced["lora_used"]
     used_scale = LORA_SCALE

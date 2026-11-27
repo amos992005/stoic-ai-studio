@@ -559,6 +559,15 @@ try:
 except Exception:
     pass
 
+try:
+    import os
+    import sys as _sys
+
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import sadtalker_numpy2_patch  # noqa: F401  (applied on import)
+except Exception as _exc:  # pragma: no cover - reported, never fatal
+    print(f"[wrapper] numpy-2 patch skipped: {_exc}", flush=True)
+
 entry = sys.argv[1]
 # inference.py resolves src/config relative to sys.argv[0], and does `from src...`
 # imports, so both the argv and sys.path have to look like a direct run.
@@ -593,6 +602,7 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
     output_dir.mkdir(parents=True, exist_ok=True)
 
     runner = write_sadtalker_runner()
+    write_sadtalker_numpy2_patch()
     command = [
         sys.executable, str(runner), str(SADTALKER_DIR / "inference.py"),
         "--driven_audio", str(voice),
@@ -669,6 +679,66 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
 # --------------------------------------------------------------------------- #
 # Mux + verification
 # --------------------------------------------------------------------------- #
+
+
+#: numpy>=2 changed ``np.linalg.lstsq``'s broadcasting, and
+#: ``src/face3d/util/preprocess.py``'s ``POS()`` returns a ``(2, 1)`` array where
+#: a pair of scalars is expected. The failure is a long way from the cause::
+#:
+#:     trans_params = np.array([w0, h0, s, t[0], t[1]])
+#:     ValueError: setting an array element with a sequence...
+#:
+#: So the wrapper wraps ``lstsq`` rather than editing the cloned repo, and wraps
+#: ``align_img`` as a guaranteed-correct fallback for the call site that matters.
+SADTALKER_NUMPY2_PATCH = '''
+"""Runtime patches for a 2023 face pipeline on numpy 2."""
+import numpy as np
+
+
+def _install() -> None:
+    real_lstsq = np.linalg.lstsq
+
+    def lstsq(a, b, rcond=None):
+        # Old numpy dropped the trailing singleton dimension; new numpy keeps
+        # it, and SadTalker's POS() then indexes scalars out of a (2, 1) array.
+        solution, residuals, rank, singular = real_lstsq(a, b, rcond=rcond)
+        if getattr(solution, "ndim", 1) == 2 and solution.shape[1] == 1:
+            solution = solution.reshape(-1)
+        return solution, residuals, rank, singular
+
+    np.linalg.lstsq = lstsq
+
+    # ``lstsq`` is the root cause and is patched unconditionally. Wrapping
+    # ``align_img`` needs SadTalker itself on the path; if the clone is missing
+    # the patch still stands, it just has nothing else to fix.
+    try:
+        import src.face3d.util.preprocess as face_preprocess
+    except Exception:
+        return
+
+    real_align = face_preprocess.align_img
+
+    def align_img(img, lm, lm3D, mask=None, target_size=224., rescale_factor=102.):
+        trans_params, img_new, lm_new, mask_new = real_align(
+            img, lm, lm3D, mask=mask, target_size=target_size,
+            rescale_factor=rescale_factor)
+        params = np.asarray(
+            [float(v) for v in np.ravel(trans_params)]).reshape(5)
+        return params, img_new, lm_new, mask_new
+
+    face_preprocess.align_img = align_img
+
+
+_install()
+'''
+
+
+def write_sadtalker_numpy2_patch() -> Path:
+    """Write the numpy-2 patch the wrapper applies before running SadTalker."""
+    patch = WORK_DIR / "sadtalker_numpy2_patch.py"
+    patch.parent.mkdir(parents=True, exist_ok=True)
+    patch.write_text(SADTALKER_NUMPY2_PATCH, encoding="utf-8")
+    return patch
 
 
 #: SadTalker imports ``from gfpgan import GFPGANer`` at *module scope* from

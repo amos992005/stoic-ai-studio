@@ -341,6 +341,142 @@ check("adapter cast finds and converts the adapter", adapter_cast)
 
 
 # --------------------------------------------------------------------------- #
+# 4d. The adapter really attaches, and the numpy-2 alignment patch really works
+# --------------------------------------------------------------------------- #
+
+
+def adapter_attaches():
+    """
+    Regression for run 45999895543, which logged
+    "LoRA could not be applied (NotImplementedError: Cannot copy out of meta
+    tensor; no data!)" and rendered the whole carousel from the base model.
+
+    Two things were wrong: nothing checked the pipeline for placeholder
+    parameters, and there was no second way in when diffusers' loader refuses.
+    The peft fallback is exercised here against a real fp16 UNet and an adapter
+    written by ``luca_lora.save_adapter``.
+    """
+    images = load("generate_images", WORKER_DIR / "generate_images.py")
+    images.log = lambda *a, **k: None
+    images.DEVICE = "cpu"
+    images.LORA_RANK, images.LORA_ALPHA = 16, 16
+
+    import torch
+    from diffusers import UNet2DConditionModel
+    from safetensors.torch import load_file
+
+    import luca_lora
+
+    config = dict(sample_size=16, in_channels=4, out_channels=4,
+                  layers_per_block=1, block_out_channels=(32, 64),
+                  down_block_types=("DownBlock2D", "CrossAttnDownBlock2D"),
+                  up_block_types=("CrossAttnUpBlock2D", "UpBlock2D"),
+                  cross_attention_dim=32, norm_num_groups=32,
+                  attention_head_dim=8)
+    trained = UNet2DConditionModel(**config)
+    luca_lora.build_adapter(trained, rank=16, alpha=16)
+    checkpoint = pathlib.Path(tempfile.mkdtemp()) / "luca_lora.safetensors"
+    luca_lora.save_adapter(trained, checkpoint)
+
+    base = UNet2DConditionModel.from_config(trained.config).half()
+    loaded = UNet2DConditionModel.from_config(trained.config).half()
+    attached = images._peft_fallback(
+        types.SimpleNamespace(unet=loaded), load_file(str(checkpoint)))
+    assert attached > 0, "the peft fallback attached nothing"
+
+    x = torch.randn(1, 4, 16, 16, dtype=torch.float16) * 0.5
+    ctx = torch.randn(1, 77, 32, dtype=torch.float16) * 0.5
+    with torch.no_grad():
+        a = base(x, timestep=1, encoder_hidden_states=ctx).sample
+        b = loaded(x, timestep=1, encoder_hidden_states=ctx).sample
+    assert torch.isfinite(b).all(), "the adapted UNet produced non-finite output"
+    assert not torch.allclose(a, b), "the adapter changed nothing"
+
+    # a placeholder parameter must be reported as such, not as a cryptic copy
+    with torch.device("meta"):
+        meta = UNet2DConditionModel.from_config(trained.config)
+    try:
+        images.check_no_meta(types.SimpleNamespace(unet=meta))
+    except RuntimeError as exc:
+        assert "meta" in str(exc)
+    else:
+        raise AssertionError("check_no_meta accepted a meta-device pipeline")
+
+    body = code_of(source("generate_images.py"))
+    assert "def load_adapter" in body and "diffusers.load_lora_weights" in body
+    return (f"{attached} modules attached via peft, output differs from base, "
+            f"meta tensors rejected up front")
+
+
+check("adapter attaches even when diffusers refuses", adapter_attaches)
+
+
+def numpy2_alignment():
+    """
+    Regression for run 45999895543's SadTalker crash.
+
+    numpy 2 changed ``lstsq``'s broadcasting, so SadTalker's ``POS()`` returns a
+    ``(2, 1)`` array and ``np.array([w0, h0, s, t[0], t[1]])`` raises
+    "setting an array element with a sequence". The wrapper patches ``lstsq``
+    and wraps ``align_img``; the patch must leave a real (5,) parameter array.
+    """
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+    video.WORK_DIR = pathlib.Path(tempfile.mkdtemp())
+
+    import numpy as np
+
+    patch_file = video.write_sadtalker_numpy2_patch()
+    assert patch_file.is_file()
+
+    # a stand-in for SadTalker's package, with the same broken call site
+    sandbox = pathlib.Path(tempfile.mkdtemp())
+    pkg = sandbox / "src" / "face3d" / "util"
+    pkg.mkdir(parents=True)
+    for parent in (sandbox / "src", sandbox / "src" / "face3d"):
+        (parent / "__init__.py").write_text("")
+    (pkg / "__init__.py").write_text("")
+    (pkg / "preprocess.py").write_text(
+        "import numpy as np\n"
+        "def align_img(img, lm, lm3D, mask=None, target_size=224.,\n"
+        "              rescale_factor=102.):\n"
+        "    w0, h0 = img\n"
+        "    k = np.linalg.lstsq(np.random.rand(10, 8),\n"
+        "                       np.random.rand(10, 1), rcond=None)[0]\n"
+        "    s, t = k[3], np.stack([k[3], k[7]], axis=0)\n"
+        "    return np.array([w0, h0, s, t[0], t[1]]), 'img', 'lm', None\n")
+
+    probe = subprocess.run(
+        [sys.executable, "-c",
+         "import sys, numpy as np;"
+         f"sys.path[:0] = [{str(patch_file.parent)!r}, {str(sandbox)!r}];"
+         "import sadtalker_numpy2_patch;"
+         "A = np.random.rand(10, 8); b = np.random.rand(10, 1);"
+         "k = np.linalg.lstsq(A, b, rcond=None)[0];"
+         "assert k.ndim == 1, k.shape;"
+         "print('LSTSQ', k.shape);"
+         "from src.face3d.util import preprocess as pp;"
+         "params = pp.align_img((512, 512), None, None)[0];"
+         "assert params.shape == (5,), params.shape;"
+         "assert params.dtype == np.float64, params.dtype;"
+         "print('ALIGN', params.shape, np.isfinite(params).all())"],
+        capture_output=True, text=True)
+    assert "LSTSQ (8,)" in probe.stdout, (probe.stdout, probe.stderr[-400:])
+    assert "ALIGN (5,) True" in probe.stdout, (probe.stdout, probe.stderr[-400:])
+
+    body = code_of(source("generate_video.py"))
+    assert "SADTALKER_NUMPY2_PATCH" in body
+    assert "face_preprocess.align_img = align_img" in body, \
+        "align_img must be wrapped: the call site needs a flat 5-vector"
+    assert "import sadtalker_numpy2_patch" in body, \
+        "the runner must apply the patch inside the child"
+    return "lstsq returns (8,) again and align_img is normalised to 5 scalars"
+
+
+check("numpy-2 alignment patch", numpy2_alignment)
+
+
+# --------------------------------------------------------------------------- #
 # 5. Stage order: InstantID builds the dataset and is gone before training
 # --------------------------------------------------------------------------- #
 

@@ -292,6 +292,16 @@ jobs:
                    f"carousel calls {token!r} — inference must be LoRA-only")
           want("load_lora_weights" in carousel and "set_adapters" in carousel,
                "the carousel must load and weight the trained adapter")
+          # diffusers' loader refuses our peft-shaped state dict in practice —
+          # run 45999895543 died on "Cannot copy out of meta tensor" and
+          # rendered the whole carousel from the base model. There must be a
+          # second way in, and placeholders must be named for what they are.
+          want("def load_adapter" in images and "def _peft_fallback" in images,
+               "the adapter needs a fallback loader (diffusers can refuse it)")
+          want("def check_no_meta" in images,
+               "meta-device parameters must be diagnosed, not copied")
+          want("produced[\"lora_load\"]" in images,
+               "the metrics must record how the adapter was attached")
           want("LORA_SCALE = float(os.environ.get(\"LUCA_LORA_SCALE\", \"0.85\"))" in images,
                "LoRA inference scale must default to 0.85")
           # NO hands near the face, and explicit framing tokens, are what stop
@@ -349,6 +359,14 @@ jobs:
           # The two import-time shims must precede any gfpgan/SadTalker import.
           want("functional_tensor" in video, "the torchvision 0.17 shim is missing")
           want("VisibleDeprecationWarning" in video, "the numpy 2.0 shim is missing")
+          # numpy 2 also changed lstsq's broadcasting, which breaks SadTalker's
+          # POS()/align_img pair at "setting an array element with a sequence".
+          # The alias shim does not touch that, so the wrapper must patch it.
+          want("SADTALKER_NUMPY2_PATCH" in video and
+               "np.linalg.lstsq = lstsq" in video,
+               "SadTalker needs the numpy-2 lstsq/alignment patch")
+          want("import sadtalker_numpy2_patch" in video,
+               "the wrapper must apply the numpy-2 patch inside the child")
 
           # -- 6. the launcher ships every file both workers import ----------
           for constant in ("LUCA_COMMON_PY", "LUCA_CHARACTER_PY", "LUCA_LORA_PY",
