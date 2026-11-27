@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T12:35:56Z",
+  "started_at": "2026-11-27T13:14:12Z",
   "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity": {
@@ -21,18 +21,17 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 44.333,
-    "img/build_master": 94.171,
-    "img/load_instantid": 47.902,
-    "img/build_dataset": 778.895,
-    "img/unload_instantid": 0.63,
-    "img/load_carousel_pipe": 31.032,
-    "img/generate_01_luca_master.png": 36.427
+    "img/pip_install_deps": 73.401,
+    "img/build_master": 73.598,
+    "img/load_instantid": 41.518,
+    "img/build_dataset": 660.087,
+    "img/unload_instantid": 0.615,
+    "img/load_carousel_pipe": 31.873
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "RuntimeError: 01_luca_master.png is degenerate even without the LoRA ({'mean': 0.0, 'std': 0.0, 'unique_colors': 1}) \u2014 the pipeline, not the adapter, is broken"
+      "error": "NotImplementedError: Cannot copy out of meta tensor; no data!"
     }
   ],
   "artifacts": [
@@ -113,18 +112,18 @@
     "images": 15,
     "precision": "float16 with gradient checkpointing",
     "loss_first_25": 0.1187,
-    "loss_last_25": 0.0782,
+    "loss_last_25": 0.0781,
     "loss_decreasing": true,
     "adapter_mb": 93.07,
-    "train_seconds": 581.0,
+    "train_seconds": 552.0,
     "timings_seconds": {
-      "img/lora_load_text_encoders": 21.481,
-      "img/lora_encode_prompts": 0.402,
-      "img/lora_cache_latents": 7.025,
-      "img/lora_load_unet": 94.186,
-      "img/lora_save": 0.199
+      "img/lora_load_text_encoders": 22.579,
+      "img/lora_encode_prompts": 0.387,
+      "img/lora_cache_latents": 6.884,
+      "img/lora_load_unet": 93.099,
+      "img/lora_save": 0.192
     }
   },
-  "total_seconds": 1568.2,
-  "finished_at": "2026-11-27T13:02:04Z"
+  "total_seconds": 1393.1,
+  "finished_at": "2026-11-27T13:37:26Z"
 }

@@ -2,8 +2,8 @@
   "video": {
     "process": "video",
     "device": "cuda:0",
-    "status": "failed",
-    "started_at": "2026-11-27T12:35:49Z",
+    "status": "success",
+    "started_at": "2026-11-27T13:14:03Z",
     "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
     "prohibitions_honoured": {
       "celebrity_name_in_prompts": false,
@@ -11,25 +11,23 @@
       "pipe.to_cpu": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 22.135,
-      "img/load_chatterbox": 79.819,
-      "img/generate_speech": 12.236,
-      "img/release_tts_vram": 0.526,
-      "img/wait_for_master": 20.007,
-      "img/clone_sadtalker": 3.436,
-      "img/fetch_sadtalker_weights": 7.019,
-      "img/ffmpeg_on_path": 35.569,
-      "img/sadtalker_face_models": 0.305,
-      "img/sadtalker_inference": 14.994
+      "img/pip_install_deps": 25.642,
+      "img/load_chatterbox": 78.955,
+      "img/generate_speech": 14.07,
+      "img/release_tts_vram": 0.508,
+      "img/wait_for_master": 20.006,
+      "img/clone_sadtalker": 3.205,
+      "img/fetch_sadtalker_weights": 40.471,
+      "img/ffmpeg_on_path": 12.446,
+      "img/sadtalker_face_models": 0.325,
+      "img/sadtalker_inference": 97.415,
+      "img/mux_reel": 0.718,
+      "img/verify_reel": 0.123
     },
-    "errors": [
-      {
-        "stage": "fatal",
-        "error": "RuntimeError: SadTalker failed (exit 1): ^^^^\n                                                                             source_image_flag=True, pic_size=args.size)\n                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/preprocess.py\", line 146, in generate\n    trans_params, im1, lm1, _ = align_img(frame, lm1, self.lm3d_std)\n                                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/face3d/util/preprocess.py\", line 101, in align_img\n    trans_params = np.array([w0, h0, s, t[0], t[1]])\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (5,) + inhomogeneous part.\n"
-      }
-    ],
+    "errors": [],
     "artifacts": [
-      "luca_voice.wav"
+      "luca_voice.wav",
+      "luca_reel.mp4"
     ],
     "voice": {
       "engine": "chatterbox-tts",
@@ -37,23 +35,64 @@
       "dtype": "float16",
       "s3gen_dtype": "float32 (STFT has no fp16 path)",
       "sample_rate": 24000,
-      "duration_s": 5.92,
+      "duration_s": 5.96,
       "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
       "file": "luca_voice.wav"
     },
-    "total_seconds": 209.0,
-    "finished_at": "2026-11-27T12:39:18Z"
+    "sadtalker": {
+      "engine": "SadTalker",
+      "raw": "/kaggle/working/luca_work/sadtalker_out/2026_11_27_13.17.40.mp4",
+      "enhanced": false,
+      "size": 256,
+      "preprocess": "crop",
+      "enhancer": null,
+      "still": false,
+      "fps": 25,
+      "master_source_px": [
+        1024,
+        1024
+      ]
+    },
+    "reel_probe": {
+      "tool": "ffprobe",
+      "video": {
+        "codec": "h264",
+        "profile": "High",
+        "pix_fmt": "yuv420p",
+        "width": 256,
+        "height": 256,
+        "duration_s": 5.96,
+        "fps": "25/1"
+      },
+      "audio": {
+        "codec": "aac",
+        "sample_rate": "44100",
+        "channels": 2,
+        "duration_s": 5.943991
+      },
+      "duration_s": 5.96,
+      "sync": {
+        "video_s": 5.96,
+        "audio_s": 5.944,
+        "drift_s": 0.016,
+        "ok": true
+      },
+      "iphone_compatible": true
+    },
+    "total_seconds": 310.7,
+    "finished_at": "2026-11-27T13:19:13Z"
   },
   "artifacts": [
     "01_luca_master.png",
     "luca_lora.safetensors",
+    "luca_reel.mp4",
     "luca_voice.wav"
   ],
   "images": {
     "process": "images",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T12:35:56Z",
+    "started_at": "2026-11-27T13:14:12Z",
     "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity": {
@@ -72,18 +111,17 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 44.333,
-      "img/build_master": 94.171,
-      "img/load_instantid": 47.902,
-      "img/build_dataset": 778.895,
-      "img/unload_instantid": 0.63,
-      "img/load_carousel_pipe": 31.032,
-      "img/generate_01_luca_master.png": 36.427
+      "img/pip_install_deps": 73.401,
+      "img/build_master": 73.598,
+      "img/load_instantid": 41.518,
+      "img/build_dataset": 660.087,
+      "img/unload_instantid": 0.615,
+      "img/load_carousel_pipe": 31.873
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "RuntimeError: 01_luca_master.png is degenerate even without the LoRA ({'mean': 0.0, 'std': 0.0, 'unique_colors': 1}) \u2014 the pipeline, not the adapter, is broken"
+        "error": "NotImplementedError: Cannot copy out of meta tensor; no data!"
       }
     ],
     "artifacts": [
@@ -164,19 +202,19 @@
       "images": 15,
       "precision": "float16 with gradient checkpointing",
       "loss_first_25": 0.1187,
-      "loss_last_25": 0.0782,
+      "loss_last_25": 0.0781,
       "loss_decreasing": true,
       "adapter_mb": 93.07,
-      "train_seconds": 581.0,
+      "train_seconds": 552.0,
       "timings_seconds": {
-        "img/lora_load_text_encoders": 21.481,
-        "img/lora_encode_prompts": 0.402,
-        "img/lora_cache_latents": 7.025,
-        "img/lora_load_unet": 94.186,
-        "img/lora_save": 0.199
+        "img/lora_load_text_encoders": 22.579,
+        "img/lora_encode_prompts": 0.387,
+        "img/lora_cache_latents": 6.884,
+        "img/lora_load_unet": 93.099,
+        "img/lora_save": 0.192
       }
     },
-    "total_seconds": 1568.2,
-    "finished_at": "2026-11-27T13:02:04Z"
+    "total_seconds": 1393.1,
+    "finished_at": "2026-11-27T13:37:26Z"
   }
 }
