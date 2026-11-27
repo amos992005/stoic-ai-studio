@@ -3,7 +3,7 @@
     "process": "images",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T06:39:23Z",
+    "started_at": "2026-11-27T06:54:27Z",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
     "face_encoder": "insightface antelopev2",
@@ -15,21 +15,21 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 59.468,
-      "img/load_controlnet": 38.273,
-      "img/load_sdxl": 38.732,
-      "img/load_identity_adapter": 18.632,
-      "img/configure_pipeline": 17.748,
-      "img/configure_scheduler": 0.011,
-      "img/build_master_pipe": 0.045,
-      "img/master_portrait": 35.702,
-      "img/stage_antelopev2": 5.343,
-      "img/scene_02_luca_yacht": 0.749
+      "img/pip_install_deps": 39.916,
+      "img/load_controlnet": 36.21,
+      "img/load_sdxl": 40.217,
+      "img/load_identity_adapter": 17.983,
+      "img/configure_pipeline": 9.924,
+      "img/configure_scheduler": 0.005,
+      "img/build_master_pipe": 0.04,
+      "img/master_portrait": 43.634,
+      "img/stage_antelopev2": 5.288,
+      "img/scene_02_luca_yacht": 16.233
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "TypeError: For single controlnet: `controlnet_conditioning_scale` must be type `float`."
+        "error": "RuntimeError: Expected all tensors to be on the same device, but got mat1 is on cuda:0, different from other tensors on cpu (when checking argument in method wrapper_CUDA_addmm)"
       }
     ],
     "artifacts": [
@@ -55,18 +55,19 @@
       ],
       "sex": "M"
     },
-    "total_seconds": 234.6,
-    "finished_at": "2026-11-27T06:43:17Z"
+    "total_seconds": 218.4,
+    "finished_at": "2026-11-27T06:58:05Z"
   },
   "artifacts": [
     "01_luca_master.png",
+    "luca_reel.mp4",
     "luca_voice.wav"
   ],
   "video": {
     "process": "video",
     "device": "cuda:1",
-    "status": "failed",
-    "started_at": "2026-11-27T06:39:23Z",
+    "status": "success",
+    "started_at": "2026-11-27T06:54:27Z",
     "prohibitions_honoured": {
       "pipe.to_cpu": false,
       "inswapper_128": false,
@@ -74,25 +75,24 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "vid/pip_install_deps": 7.864,
-      "vid/load_chatterbox": 128.389,
-      "vid/generate_speech": 25.94,
-      "vid/release_tts_vram": 0.525,
-      "vid/wait_for_master": 35.007,
-      "vid/clone_musetalk": 2.002,
-      "vid/fetch_musetalk_weights": 44.398,
-      "vid/load_musetalk": 13.906,
-      "vid/prepare_avatar": 6.139,
-      "vid/musetalk_inference": 0.153
+      "vid/pip_install_deps": 6.921,
+      "vid/load_chatterbox": 103.341,
+      "vid/generate_speech": 23.349,
+      "vid/release_tts_vram": 0.518,
+      "vid/wait_for_master": 50.007,
+      "vid/clone_musetalk": 3.414,
+      "vid/fetch_musetalk_weights": 42.829,
+      "vid/load_musetalk": 12.77,
+      "vid/prepare_avatar": 4.445,
+      "vid/musetalk_inference": 29.564,
+      "vid/encode_talking": 3.603,
+      "vid/mux_reel": 0.209,
+      "vid/verify_reel": 0.224
     },
-    "errors": [
-      {
-        "stage": "fatal",
-        "error": "RuntimeError: expected mat1 and mat2 to have the same dtype, but got: float != c10::Half"
-      }
-    ],
+    "errors": [],
     "artifacts": [
-      "luca_voice.wav"
+      "luca_voice.wav",
+      "luca_reel.mp4"
     ],
     "voice": {
       "engine": "chatterbox-tts",
@@ -100,12 +100,51 @@
       "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
       "dtype": "float16",
       "sample_rate": 24000,
-      "duration_s": 5.56,
+      "duration_s": 6.0,
       "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
       "normalisation": "peak to -1.0 dBFS",
       "file": "luca_voice.wav"
     },
-    "total_seconds": 278.7,
-    "finished_at": "2026-11-27T06:44:01Z"
+    "musetalk": {
+      "engine": "MuseTalk v1.5 (fp16)",
+      "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
+      "fps": 25,
+      "frames": 150,
+      "face_box": [
+        362,
+        161,
+        734,
+        694
+      ],
+      "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
+      "mmpose_bypassed": true,
+      "silent_video": "/kaggle/working/luca_work/talking_silent.mp4"
+    },
+    "reel_probe": {
+      "tool": "ffprobe",
+      "video": {
+        "codec": "h264",
+        "width": 1024,
+        "height": 1024,
+        "frames": "150",
+        "duration_s": 6.0,
+        "fps": "25/1"
+      },
+      "audio": {
+        "codec": "aac",
+        "sample_rate": "24000",
+        "channels": 1,
+        "duration_s": 6.0
+      },
+      "duration_s": 6.0,
+      "sync": {
+        "video_s": 6.0,
+        "audio_s": 6.0,
+        "drift_s": 0.0,
+        "ok": true
+      }
+    },
+    "total_seconds": 289.3,
+    "finished_at": "2026-11-27T06:59:16Z"
   }
 }

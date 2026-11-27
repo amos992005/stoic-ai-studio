@@ -1,8 +1,8 @@
 {
   "process": "video",
   "device": "cuda:1",
-  "status": "failed",
-  "started_at": "2026-11-27T06:39:23Z",
+  "status": "success",
+  "started_at": "2026-11-27T06:54:27Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,25 +10,24 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 7.864,
-    "vid/load_chatterbox": 128.389,
-    "vid/generate_speech": 25.94,
-    "vid/release_tts_vram": 0.525,
-    "vid/wait_for_master": 35.007,
-    "vid/clone_musetalk": 2.002,
-    "vid/fetch_musetalk_weights": 44.398,
-    "vid/load_musetalk": 13.906,
-    "vid/prepare_avatar": 6.139,
-    "vid/musetalk_inference": 0.153
+    "vid/pip_install_deps": 6.921,
+    "vid/load_chatterbox": 103.341,
+    "vid/generate_speech": 23.349,
+    "vid/release_tts_vram": 0.518,
+    "vid/wait_for_master": 50.007,
+    "vid/clone_musetalk": 3.414,
+    "vid/fetch_musetalk_weights": 42.829,
+    "vid/load_musetalk": 12.77,
+    "vid/prepare_avatar": 4.445,
+    "vid/musetalk_inference": 29.564,
+    "vid/encode_talking": 3.603,
+    "vid/mux_reel": 0.209,
+    "vid/verify_reel": 0.224
   },
-  "errors": [
-    {
-      "stage": "fatal",
-      "error": "RuntimeError: expected mat1 and mat2 to have the same dtype, but got: float != c10::Half"
-    }
-  ],
+  "errors": [],
   "artifacts": [
-    "luca_voice.wav"
+    "luca_voice.wav",
+    "luca_reel.mp4"
   ],
   "voice": {
     "engine": "chatterbox-tts",
@@ -36,11 +35,50 @@
     "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
     "dtype": "float16",
     "sample_rate": 24000,
-    "duration_s": 5.56,
+    "duration_s": 6.0,
     "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
     "normalisation": "peak to -1.0 dBFS",
     "file": "luca_voice.wav"
   },
-  "total_seconds": 278.7,
-  "finished_at": "2026-11-27T06:44:01Z"
+  "musetalk": {
+    "engine": "MuseTalk v1.5 (fp16)",
+    "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
+    "fps": 25,
+    "frames": 150,
+    "face_box": [
+      362,
+      161,
+      734,
+      694
+    ],
+    "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
+    "mmpose_bypassed": true,
+    "silent_video": "/kaggle/working/luca_work/talking_silent.mp4"
+  },
+  "reel_probe": {
+    "tool": "ffprobe",
+    "video": {
+      "codec": "h264",
+      "width": 1024,
+      "height": 1024,
+      "frames": "150",
+      "duration_s": 6.0,
+      "fps": "25/1"
+    },
+    "audio": {
+      "codec": "aac",
+      "sample_rate": "24000",
+      "channels": 1,
+      "duration_s": 6.0
+    },
+    "duration_s": 6.0,
+    "sync": {
+      "video_s": 6.0,
+      "audio_s": 6.0,
+      "drift_s": 0.0,
+      "ok": true
+    }
+  },
+  "total_seconds": 289.3,
+  "finished_at": "2026-11-27T06:59:16Z"
 }

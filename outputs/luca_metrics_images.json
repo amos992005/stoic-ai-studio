@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T06:39:23Z",
+  "started_at": "2026-11-27T06:54:27Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,21 +14,21 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 59.468,
-    "img/load_controlnet": 38.273,
-    "img/load_sdxl": 38.732,
-    "img/load_identity_adapter": 18.632,
-    "img/configure_pipeline": 17.748,
-    "img/configure_scheduler": 0.011,
-    "img/build_master_pipe": 0.045,
-    "img/master_portrait": 35.702,
-    "img/stage_antelopev2": 5.343,
-    "img/scene_02_luca_yacht": 0.749
+    "img/pip_install_deps": 39.916,
+    "img/load_controlnet": 36.21,
+    "img/load_sdxl": 40.217,
+    "img/load_identity_adapter": 17.983,
+    "img/configure_pipeline": 9.924,
+    "img/configure_scheduler": 0.005,
+    "img/build_master_pipe": 0.04,
+    "img/master_portrait": 43.634,
+    "img/stage_antelopev2": 5.288,
+    "img/scene_02_luca_yacht": 16.233
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "TypeError: For single controlnet: `controlnet_conditioning_scale` must be type `float`."
+      "error": "RuntimeError: Expected all tensors to be on the same device, but got mat1 is on cuda:0, different from other tensors on cpu (when checking argument in method wrapper_CUDA_addmm)"
     }
   ],
   "artifacts": [
@@ -54,6 +54,6 @@
     ],
     "sex": "M"
   },
-  "total_seconds": 234.6,
-  "finished_at": "2026-11-27T06:43:17Z"
+  "total_seconds": 218.4,
+  "finished_at": "2026-11-27T06:58:05Z"
 }
