@@ -1,8 +1,8 @@
 {
   "process": "images",
   "device": "cuda:0",
-  "status": "failed",
-  "started_at": "2026-11-27T10:12:12Z",
+  "status": "success_with_errors",
+  "started_at": "2026-11-27T10:18:56Z",
   "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity": {
@@ -21,18 +21,29 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 44.506,
-    "img/build_master": 75.702,
-    "img/build_dataset": 7.342
+    "img/pip_install_deps": 49.644,
+    "img/build_master": 92.638,
+    "img/load_instantid": 47.309,
+    "img/build_dataset": 651.305,
+    "img/unload_instantid": 0.644,
+    "img/load_carousel_pipe": 3.167,
+    "img/generate_01_luca_master.png": 31.162,
+    "img/generate_02_luca_yacht.png": 26.143,
+    "img/generate_03_luca_porsche.png": 26.454,
+    "img/generate_04_luca_party.png": 25.816
   },
   "errors": [
     {
-      "stage": "fatal",
-      "error": "AttributeError: type object 'Image' has no attribute 'open'"
+      "stage": "train",
+      "error": "insufficient dataset"
     }
   ],
   "artifacts": [
-    "01_luca_master.png"
+    "01_luca_master.png",
+    "01_luca_master.png",
+    "02_luca_yacht.png",
+    "03_luca_porsche.png",
+    "04_luca_party.png"
   ],
   "environment": {
     "python": "3.13.16",
@@ -46,6 +57,45 @@
     "prompt": "ohwx 27-year-old Italian man, athletic build, sun-kissed dirty blonde tousled hair, piercing blue-green eyes, sharp jawline, light 3-day stubble, close-up portrait facing the camera, soft window light, relaxed neutral expression, plain white linen shirt, no hands near the face, blurred Mediterranean harbour behind him",
     "bytes": 1337549
   },
-  "total_seconds": 128.5,
-  "finished_at": "2026-11-27T10:14:20Z"
+  "dataset": {
+    "images": 3,
+    "files": [
+      "train_03_profile.png",
+      "train_06_full_body.png",
+      "train_13_over_shoulder.png"
+    ],
+    "method": "master from RealVisXL, 15 variants anchored by InstantID",
+    "instantid_scales": {
+      "ip_adapter": 0.8,
+      "controlnet": 0.55
+    },
+    "master_face": {
+      "detected": 1,
+      "bbox": [
+        516,
+        194,
+        843,
+        667
+      ],
+      "det_size": [
+        843,
+        667
+      ]
+    }
+  },
+  "vram_after_unload": {
+    "free_mb": 14721,
+    "total_mb": 14912
+  },
+  "carousel": {
+    "files": [
+      "01_luca_master.png",
+      "02_luca_yacht.png",
+      "03_luca_porsche.png",
+      "04_luca_party.png"
+    ],
+    "lora_used": false
+  },
+  "total_seconds": 908.6,
+  "finished_at": "2026-11-27T10:34:05Z"
 }
