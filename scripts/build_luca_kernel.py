@@ -227,12 +227,23 @@ def run_parallel(workdir: Path) -> Dict[str, int]:
 
         python generate_images.py & python generate_video.py & wait
     """
-    env = dict(os.environ)
-    env["PYTHONUNBUFFERED"] = "1"
-    env["OUTPUT_DIR"] = str(OUTPUT_DIR)
-    env.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
+    base_env = dict(os.environ)
+    base_env["PYTHONUNBUFFERED"] = "1"
+    base_env["OUTPUT_DIR"] = str(OUTPUT_DIR)
     # Keep fragmentation from turning a 14.5 GB card into a 12 GB one.
-    env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    base_env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
+    # One GPU each, enforced by the OS rather than trusted to set_device().
+    # Both children used to inherit CUDA_VISIBLE_DEVICES=0,1 and rely on
+    # torch.cuda.set_device(1); third-party code that allocates without an
+    # explicit device (MuseTalk's torch.load(..., map_location=None)) then landed
+    # on GPU 0 and OOM'd against the image pipeline (run 45956577517 — the very
+    # steps that had passed a run earlier). Hiding the other card makes that
+    # impossible: inside each worker its own GPU is the only one, always cuda:0.
+    envs = {
+        "images": {**base_env, "CUDA_VISIBLE_DEVICES": "0"},
+        "video": {**base_env, "CUDA_VISIBLE_DEVICES": "1"},
+    }
 
     commands = {
         "images": [sys.executable, "generate_images.py"],
@@ -240,14 +251,14 @@ def run_parallel(workdir: Path) -> Dict[str, int]:
     }
     banner("=" * 70)
     banner("launching both pipelines in parallel")
-    banner(f"  images → cuda:0 : {' '.join(commands['images'])}")
-    banner(f"  video  → cuda:1 : {' '.join(commands['video'])}")
+    banner(f"  images → physical GPU 0 (cuda:0) : {' '.join(commands['images'])}")
+    banner(f"  video  → physical GPU 1 (cuda:0) : {' '.join(commands['video'])}")
     banner("=" * 70)
 
     procs = {}
     for name, command in commands.items():
         procs[name] = subprocess.Popen(
-            command, cwd=str(workdir), env=env,
+            command, cwd=str(workdir), env=envs[name],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, bufsize=1,
         )

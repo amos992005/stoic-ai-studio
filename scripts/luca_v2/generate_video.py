@@ -677,7 +677,7 @@ def run_musetalk(master: Path, voice: Path, timings: Dict[str, float]) -> Dict[s
         from musetalk.utils.blending import get_image_blending, get_crop_box
         from musetalk.utils.utils import datagen
     
-        device = torch.device(DEVICE)
+        device = torch.device(f"cuda:{torch.cuda.current_device()}")
         weight_dtype = torch.float16
 
         # MuseTalk's VAE takes (model_path, resized_img, use_float16) — it has no
@@ -1013,11 +1013,19 @@ def main() -> int:
 
         if not torch.cuda.is_available():
             raise RuntimeError("no CUDA device — enable a Kaggle GPU accelerator")
-        if torch.cuda.device_count() < 2:
-            log(f"only {torch.cuda.device_count()} GPU(s) visible — the two "
-                f"processes will share one device", "WARN")
-        torch.cuda.set_device(torch.cuda.device_count() > 1 and 1 or 0)
-        metrics["device"] = DEVICE if torch.cuda.device_count() > 1 else "cuda:0"
+        # The launcher gives each worker its own card via CUDA_VISIBLE_DEVICES, so
+        # inside this process the GPU is always cuda:0 and nothing can spill onto
+        # the card the image pipeline is using. Falling back to device 1 only
+        # applies when both cards are visible (running this file by hand).
+        visible = torch.cuda.device_count()
+        index = 0 if visible < 2 else 1
+        torch.cuda.set_device(index)
+        effective_device = f"cuda:{index}"
+        if DEVICE != effective_device:
+            log(f"device: {DEVICE} is not present in this process "
+                f"({visible} visible) — using {effective_device}, which the "
+                f"launcher pinned to the same physical card", "WARN")
+        metrics["device"] = effective_device
 
         ensure_video_deps(timings)
 

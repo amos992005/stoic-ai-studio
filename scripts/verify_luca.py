@@ -371,6 +371,28 @@ def launcher_script():
 check("kernel runs as a script and stages its payload", launcher_script)
 
 # --------------------------------------------------------------------------- #
+# 7b. each worker gets exactly one physical GPU
+# --------------------------------------------------------------------------- #
+def gpu_isolation():
+    """
+    Regression for run 45956577517: both workers inherited
+    CUDA_VISIBLE_DEVICES=0,1 and depended on torch.cuda.set_device(1). MuseTalk's
+    torch.load has no map_location, landed on GPU 0, and OOM'd against the image
+    pipeline. The launcher must now give each child one card.
+    """
+    src = (REPO / "kaggle_kernel_luca/luca_studio.py").read_text()
+    assert 'CUDA_VISIBLE_DEVICES": "0"' in src, "images is not pinned to GPU 0"
+    assert 'CUDA_VISIBLE_DEVICES": "1"' in src, "video is not pinned to GPU 1"
+    assert 'env=envs[name]' in src, "the per-worker env is not what Popen receives"
+    assert 'env=env,' not in src, "a shared env is still being passed"
+    # and the worker copes with only one card visible
+    worker = (REPO / "scripts/luca_v2/generate_video.py").read_text()
+    assert "visible < 2" in worker, "video worker still assumes two visible GPUs"
+    return "images→GPU0, video→GPU1, each process sees a single card"
+
+check("per-process GPU isolation", gpu_isolation)
+
+# --------------------------------------------------------------------------- #
 # 8. the generated kernel is current
 # --------------------------------------------------------------------------- #
 def kernel_fresh():
