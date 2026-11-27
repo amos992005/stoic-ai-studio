@@ -1,8 +1,8 @@
 {
   "process": "images",
   "device": "cuda:0",
-  "status": "success_with_errors",
-  "started_at": "2026-11-27T10:56:07Z",
+  "status": "success",
+  "started_at": "2026-11-27T11:29:42Z",
   "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity": {
@@ -21,30 +21,27 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 42.883,
-    "img/build_master": 73.796,
-    "img/load_instantid": 38.411,
-    "img/build_dataset": 674.413,
-    "img/unload_instantid": 0.602,
-    "img/load_carousel_pipe": 29.433,
-    "img/generate_01_luca_master.png": 35.619,
-    "img/generate_02_luca_yacht.png": 26.607,
-    "img/generate_03_luca_porsche.png": 27.608,
-    "img/generate_04_luca_party.png": 28.287
+    "img/pip_install_deps": 77.901,
+    "img/build_master": 72.269,
+    "img/load_instantid": 45.257,
+    "img/build_dataset": 728.433,
+    "img/unload_instantid": 0.626,
+    "img/load_carousel_pipe": 31.106,
+    "img/generate_01_luca_master.png": 32.284,
+    "img/generate_02_luca_yacht.png": 26.765,
+    "img/generate_03_luca_porsche.png": 26.14,
+    "img/generate_04_luca_party.png": 26.201
   },
-  "errors": [
-    {
-      "stage": "train",
-      "error": "ImportError: Found an incompatible version of torchao. Found version 0.10.0, but only versions above 0.16.0 are supported"
-    }
-  ],
+  "errors": [],
   "artifacts": [
     "01_luca_master.png",
+    "luca_lora.safetensors",
     "01_luca_master.png",
     "02_luca_yacht.png",
     "03_luca_porsche.png",
     "04_luca_party.png"
   ],
+  "torchao_removed": "0.10.0",
   "environment": {
     "python": "3.13.16",
     "torch": "2.11.0+cu130",
@@ -101,6 +98,30 @@
     "free_mb": 14721,
     "total_mb": 14912
   },
+  "training": {
+    "base_model": "SG161222/RealVisXL_V5.0",
+    "adapter": "luca_lora.safetensors",
+    "rank": 16,
+    "alpha": 16,
+    "learning_rate": 0.0001,
+    "max_train_steps": 400,
+    "batch_size": 1,
+    "resolution": 768,
+    "images": 15,
+    "precision": "float16 with gradient checkpointing",
+    "loss_first_25": 0.1187,
+    "loss_last_25": 0.0782,
+    "loss_decreasing": true,
+    "adapter_mb": 93.07,
+    "train_seconds": 574.9,
+    "timings_seconds": {
+      "img/lora_load_text_encoders": 21.34,
+      "img/lora_encode_prompts": 0.408,
+      "img/lora_cache_latents": 6.974,
+      "img/lora_load_unet": 94.135,
+      "img/lora_save": 0.236
+    }
+  },
   "carousel": {
     "files": [
       "01_luca_master.png",
@@ -108,8 +129,8 @@
       "03_luca_porsche.png",
       "04_luca_party.png"
     ],
-    "lora_used": false
+    "lora_used": true
   },
-  "total_seconds": 1059.5,
-  "finished_at": "2026-11-27T11:13:46Z"
+  "total_seconds": 1598.8,
+  "finished_at": "2026-11-27T11:56:21Z"
 }

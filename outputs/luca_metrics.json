@@ -3,7 +3,7 @@
     "process": "video",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T10:56:01Z",
+    "started_at": "2026-11-27T11:29:33Z",
     "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
     "prohibitions_honoured": {
       "celebrity_name_in_prompts": false,
@@ -11,29 +11,52 @@
       "pipe.to_cpu": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 30.317
+      "img/pip_install_deps": 26.496,
+      "img/load_chatterbox": 81.631,
+      "img/generate_speech": 14.406,
+      "img/release_tts_vram": 0.537,
+      "img/wait_for_master": 25.008,
+      "img/clone_sadtalker": 3.711,
+      "img/fetch_sadtalker_weights": 28.013,
+      "img/ffmpeg_on_path": 15.986,
+      "img/sadtalker_face_models": 0.319,
+      "img/sadtalker_inference": 6.248
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "CalledProcessError: Command '['/usr/bin/python3', '-m', 'pip', 'download', '--no-deps', '--no-binary', ':all:', '--no-cache-dir', '-q', '-d', '/kaggle/working/luca_work/sdist', 'basicsr==1.4.2']' returned non-zero exit status 1."
+        "error": "RuntimeError: SadTalker failed (exit 1): work/run_sadtalker.py\", line 27, in <module>\n    runpy.run_path(entry, run_name=\"__main__\")\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen runpy>\", line 294, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/kaggle/working/luca_work/SadTalker/inference.py\", line 10, in <module>\n    from src.facerender.animate import AnimateFromCoeff\n  File \"/kaggle/working/luca_work/SadTalker/src/facerender/animate.py\", line 23, in <module>\n    from src.utils.face_enhancer import enhancer_generator_with_len, enhancer_list\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/face_enhancer.py\", line 4, in <module>\n    from gfpgan import GFPGANer\nImportError: cannot import name 'GFPGANer' from 'gfpgan' (unknown location)\n"
       }
     ],
-    "artifacts": [],
-    "total_seconds": 42.5,
-    "finished_at": "2026-11-27T10:56:43Z"
+    "artifacts": [
+      "luca_voice.wav"
+    ],
+    "voice": {
+      "engine": "chatterbox-tts",
+      "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
+      "dtype": "float16",
+      "s3gen_dtype": "float32 (STFT has no fp16 path)",
+      "sample_rate": 24000,
+      "duration_s": 6.28,
+      "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
+      "file": "luca_voice.wav"
+    },
+    "total_seconds": 218.4,
+    "finished_at": "2026-11-27T11:33:11Z"
   },
   "artifacts": [
     "01_luca_master.png",
     "02_luca_yacht.png",
     "03_luca_porsche.png",
-    "04_luca_party.png"
+    "04_luca_party.png",
+    "luca_lora.safetensors",
+    "luca_voice.wav"
   ],
   "images": {
     "process": "images",
     "device": "cuda:0",
-    "status": "success_with_errors",
-    "started_at": "2026-11-27T10:56:07Z",
+    "status": "success",
+    "started_at": "2026-11-27T11:29:42Z",
     "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity": {
@@ -52,30 +75,27 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 42.883,
-      "img/build_master": 73.796,
-      "img/load_instantid": 38.411,
-      "img/build_dataset": 674.413,
-      "img/unload_instantid": 0.602,
-      "img/load_carousel_pipe": 29.433,
-      "img/generate_01_luca_master.png": 35.619,
-      "img/generate_02_luca_yacht.png": 26.607,
-      "img/generate_03_luca_porsche.png": 27.608,
-      "img/generate_04_luca_party.png": 28.287
+      "img/pip_install_deps": 77.901,
+      "img/build_master": 72.269,
+      "img/load_instantid": 45.257,
+      "img/build_dataset": 728.433,
+      "img/unload_instantid": 0.626,
+      "img/load_carousel_pipe": 31.106,
+      "img/generate_01_luca_master.png": 32.284,
+      "img/generate_02_luca_yacht.png": 26.765,
+      "img/generate_03_luca_porsche.png": 26.14,
+      "img/generate_04_luca_party.png": 26.201
     },
-    "errors": [
-      {
-        "stage": "train",
-        "error": "ImportError: Found an incompatible version of torchao. Found version 0.10.0, but only versions above 0.16.0 are supported"
-      }
-    ],
+    "errors": [],
     "artifacts": [
       "01_luca_master.png",
+      "luca_lora.safetensors",
       "01_luca_master.png",
       "02_luca_yacht.png",
       "03_luca_porsche.png",
       "04_luca_party.png"
     ],
+    "torchao_removed": "0.10.0",
     "environment": {
       "python": "3.13.16",
       "torch": "2.11.0+cu130",
@@ -132,6 +152,30 @@
       "free_mb": 14721,
       "total_mb": 14912
     },
+    "training": {
+      "base_model": "SG161222/RealVisXL_V5.0",
+      "adapter": "luca_lora.safetensors",
+      "rank": 16,
+      "alpha": 16,
+      "learning_rate": 0.0001,
+      "max_train_steps": 400,
+      "batch_size": 1,
+      "resolution": 768,
+      "images": 15,
+      "precision": "float16 with gradient checkpointing",
+      "loss_first_25": 0.1187,
+      "loss_last_25": 0.0782,
+      "loss_decreasing": true,
+      "adapter_mb": 93.07,
+      "train_seconds": 574.9,
+      "timings_seconds": {
+        "img/lora_load_text_encoders": 21.34,
+        "img/lora_encode_prompts": 0.408,
+        "img/lora_cache_latents": 6.974,
+        "img/lora_load_unet": 94.135,
+        "img/lora_save": 0.236
+      }
+    },
     "carousel": {
       "files": [
         "01_luca_master.png",
@@ -139,9 +183,9 @@
         "03_luca_porsche.png",
         "04_luca_party.png"
       ],
-      "lora_used": false
+      "lora_used": true
     },
-    "total_seconds": 1059.5,
-    "finished_at": "2026-11-27T11:13:46Z"
+    "total_seconds": 1598.8,
+    "finished_at": "2026-11-27T11:56:21Z"
   }
 }
