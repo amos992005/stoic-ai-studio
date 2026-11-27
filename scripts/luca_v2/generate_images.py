@@ -318,7 +318,13 @@ def build_master(timings: Dict[str, float]) -> Dict[str, Any]:
         ).images[0]
         master_path = OUTPUT_DIR / MASTER_FILENAME
         image.save(master_path, format="PNG", optimize=True)
-        log(f"master portrait written ({master_path.stat().st_size / 1024:.0f} KB)")
+        stats = image_stats(image)
+        if is_degenerate(stats):
+            raise RuntimeError(f"the master portrait is degenerate ({stats}) — "
+                               f"process 2 would animate a flat frame")
+        summary["stats"] = stats
+        log(f"master portrait written ({master_path.stat().st_size / 1024:.0f} KB, "
+            f"std {stats['std']})")
         summary["prompt"] = master_prompt
         summary["bytes"] = master_path.stat().st_size
 
@@ -447,6 +453,51 @@ def unload_instantid(timings: Dict[str, float]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def cast_lora_to_unet(pipe) -> Dict[str, Any]:
+    """
+    Move the adapter onto the UNet's dtype and device, explicitly.
+
+    ``luca_lora.save_adapter`` stores float32 tensors (that is what keeps
+    training numerically sane), and a float32 LoRA multiplied into a float16
+    UNet produces infinities that the VAE then decodes to a flat image. Run
+    45989277255 wrote four 2.5 KB PNGs — byte-identical across four different
+    prompts, which is the signature of NaN rather than of a bad prompt. The
+    cast is cheap and idempotent, so it is done rather than trusted.
+    """
+    cast = 0
+    for module in pipe.unet.modules():
+        for attribute in ("lora_A", "lora_B"):
+            adapters = getattr(module, attribute, None)
+            if not isinstance(adapters, dict):
+                continue
+            for name, layer in adapters.items():
+                if hasattr(layer, "to"):
+                    layer.to(device=DEVICE, dtype=pipe.unet.dtype)
+                    cast += 1
+    log(f"adapter cast to {pipe.unet.dtype} on {DEVICE} ({cast} tensors)")
+    return {"dtype": str(pipe.unet.dtype), "tensors": cast}
+
+
+def image_stats(image) -> Dict[str, Any]:
+    """Cheap degeneracy check: a flat frame means the decode produced NaN."""
+    import numpy as np
+
+    array = np.asarray(image.convert("RGB"), dtype=np.float32)
+    return {
+        "mean": round(float(array.mean()), 2),
+        "std": round(float(array.std()), 2),
+        "unique_colors": int(len(np.unique(array.reshape(-1, 3), axis=0))),
+    }
+
+
+def is_degenerate(stats: Dict[str, Any]) -> bool:
+    """
+    A real photograph has thousands of colours and a standard deviation in the
+    tens. A NaN decode collapses to one value.
+    """
+    return stats["std"] < 8.0 or stats["unique_colors"] < 2000
+
+
 def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
                    ) -> Dict[str, Any]:
     """
@@ -476,6 +527,7 @@ def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
                     str(lora_path.parent), weight_name=lora_path.name,
                     adapter_name="luca")
                 pipe.set_adapters(["luca"], [LORA_SCALE])
+                produced["adapter_cast"] = cast_lora_to_unet(pipe)
                 log(f"LoRA loaded from {lora_path.name} at scale {LORA_SCALE}")
             except Exception as exc:
                 log(f"LoRA could not be applied ({type(exc).__name__}: {exc}) — "
@@ -493,11 +545,40 @@ def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
                 num_inference_steps=CAROUSEL_STEPS, guidance_scale=CAROUSEL_CFG,
                 generator=torch.Generator(device=DEVICE).manual_seed(int(entry["seed"])),
             ).images[0]
+            stats = image_stats(image)
+            if is_degenerate(stats) and produced["lora_used"]:
+                # Never ship a flat frame, and never claim the adapter made it:
+                # fall back to the base model for this slide and say so.
+                log(f"{entry['file']}: degenerate with the adapter "
+                    f"({stats}) — regenerating without it", "ERROR")
+                produced.setdefault("degenerate_with_lora", []).append(
+                    str(entry["file"]))
+                produced["lora_used"] = False
+                try:
+                    pipe.unload_lora_weights()
+                except Exception as exc:
+                    log(f"could not unload the adapter: {exc}", "WARN")
+                image = pipe(
+                    **encode(compel, prompt),
+                    width=int(entry["size"][0]), height=int(entry["size"][1]),
+                    num_inference_steps=CAROUSEL_STEPS,
+                    guidance_scale=CAROUSEL_CFG,
+                    generator=torch.Generator(device=DEVICE).manual_seed(
+                        int(entry["seed"])),
+                ).images[0]
+                stats = image_stats(image)
+                if is_degenerate(stats):
+                    raise RuntimeError(
+                        f"{entry['file']} is degenerate even without the LoRA "
+                        f"({stats}) — the pipeline, not the adapter, is broken")
+
             path = OUTPUT_DIR / str(entry["file"])
             image.save(path, format="PNG", optimize=True)
             produced["files"].append(str(entry["file"]))
+            produced.setdefault("stats", {})[str(entry["file"])] = stats
             log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB) · "
-                f"{entry['size'][0]}x{entry['size'][1]} · seed {entry['seed']}")
+                f"{entry['size'][0]}x{entry['size'][1]} · seed {entry['seed']} "
+                f"· std {stats['std']}")
 
     del pipe, compel
     gc.collect()

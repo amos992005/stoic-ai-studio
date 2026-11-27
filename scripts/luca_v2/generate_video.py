@@ -599,18 +599,22 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
         # Never pass --enhancer for a package that is not installed: SadTalker
         # imports gfpgan lazily inside the render loop and the whole run dies
         # there, minutes in, instead of degrading here, immediately.
-        try:
-            __import__("gfpgan")
-        except Exception as exc:
-            log(f"gfpgan unavailable ({type(exc).__name__}) — rendering "
-                f"without the face enhancer", "WARN")
+        if not gfpgan_usable():
+            log("rendering without the face enhancer", "WARN")
             enhancer = None
     if enhancer:
         command += ["--enhancer", enhancer]
 
     with timed("sadtalker_inference", timings):
+        child_env = dict(os.environ)
+        if not gfpgan_usable():
+            stub_dir = install_gfpgan_stub()
+            if stub_dir is not None:
+                child_env["PYTHONPATH"] = os.pathsep.join(
+                    [str(stub_dir)] + ([child_env["PYTHONPATH"]]
+                                       if child_env.get("PYTHONPATH") else []))
         log(f"SadTalker: {' '.join(command[2:])}")
-        proc = subprocess.run(command, cwd=str(SADTALKER_DIR),
+        proc = subprocess.run(command, cwd=str(SADTALKER_DIR), env=child_env,
                               capture_output=True, text=True, timeout=5400)
         tail = ((proc.stdout or "") + (proc.stderr or "")).strip().splitlines()
         for line in tail[-40:]:
@@ -654,6 +658,56 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
 # --------------------------------------------------------------------------- #
 # Mux + verification
 # --------------------------------------------------------------------------- #
+
+
+#: SadTalker imports ``from gfpgan import GFPGANer`` at *module scope* from
+#: ``src/utils/face_enhancer.py``, which ``src/facerender/animate.py`` imports
+#: unconditionally. So a missing — or, worse, half-installed — gfpgan kills the
+#: render even when ``--enhancer`` is not passed at all. (Run 45989277255: the
+#: failed basicsr build left a ``gfpgan`` namespace package behind and the
+#: import failed with "cannot import name 'GFPGANer' from 'gfpgan' (unknown
+#: location)".) This stub is installed *only* when the real one cannot be
+#: imported, and only satisfies the import.
+GFPGAN_STUB = '''
+"""Placeholder for a gfpgan that is not installed.
+
+SadTalker imports GFPGANer at module scope; this satisfies that import so a
+render without --enhancer can run. Instantiating it is a hard error, because a
+silently un-enhanced render that claims to be enhanced would be a lie.
+"""
+
+
+class GFPGANer:  # noqa: N801 - mimics the upstream name
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError(
+            "gfpgan is not installed: SadTalker was run without --enhancer, so "
+            "nothing should have constructed GFPGANer")
+
+
+class FaceRestoreer(GFPGANer):  # noqa: N801
+    pass
+'''
+
+
+def gfpgan_usable() -> bool:
+    """True only if the real ``GFPGANer`` can actually be imported."""
+    try:
+        from gfpgan import GFPGANer  # noqa: F401
+
+        return True
+    except Exception as exc:
+        log(f"gfpgan not usable ({type(exc).__name__}: {exc})", "WARN")
+        return False
+
+
+def install_gfpgan_stub() -> Optional[Path]:
+    """Write the stub package and return its directory (for PYTHONPATH)."""
+    stub_dir = WORK_DIR / "stubs"
+    package = stub_dir / "gfpgan"
+    package.mkdir(parents=True, exist_ok=True)
+    (package / "__init__.py").write_text(GFPGAN_STUB, encoding="utf-8")
+    log(f"gfpgan stub installed at {package} (renders without the enhancer)")
+    return stub_dir
 
 
 def ensure_ffmpeg_on_path() -> str:

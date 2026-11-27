@@ -697,6 +697,92 @@ check("resolution contract (master vs avatar)", resolution_contract)
 
 
 # --------------------------------------------------------------------------- #
+# 7c. A broken gfpgan must not kill the render (it is imported at module scope)
+# --------------------------------------------------------------------------- #
+
+
+def gfpgan_stub():
+    """
+    Regression for run 45989277255.
+
+    SadTalker's ``src/utils/face_enhancer.py`` does ``from gfpgan import
+    GFPGANer`` at module scope, and ``animate.py`` imports that unconditionally —
+    so a missing *or half-installed* gfpgan kills the render even when no
+    ``--enhancer`` was requested. A failed basicsr build had left a namespace
+    package behind, and the run died on "cannot import name 'GFPGANer' from
+    'gfpgan' (unknown location)".
+    """
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+    video.WORK_DIR = pathlib.Path(tempfile.mkdtemp())
+
+    assert video.gfpgan_usable() is False, \
+        "the real gfpgan is expected to be unusable in this environment"
+    stub_dir = video.install_gfpgan_stub()
+    assert (stub_dir / "gfpgan" / "__init__.py").is_file()
+
+    ok = subprocess.run(
+        [sys.executable, "-c", "from gfpgan import GFPGANer; print('ok')"],
+        env={**os.environ, "PYTHONPATH": str(stub_dir)},
+        capture_output=True, text=True)
+    assert "ok" in ok.stdout, ok.stderr[-400:]
+
+    # ...but constructing it must fail loudly: a render that silently skips the
+    # enhancer while claiming otherwise would be worse than no render.
+    boom = subprocess.run(
+        [sys.executable, "-c", "from gfpgan import GFPGANer; GFPGANer()"],
+        env={**os.environ, "PYTHONPATH": str(stub_dir)},
+        capture_output=True, text=True)
+    assert boom.returncode != 0 and "not installed" in boom.stderr, boom.stderr[-300:]
+
+    body = code_of(source("generate_video.py"))
+    assert "child_env[\"PYTHONPATH\"]" in body, \
+        "the stub directory must reach SadTalker's child process"
+    return "module-scope import satisfied, instantiation still a hard error"
+
+
+check("gfpgan stub satisfies SadTalker's module-scope import", gfpgan_stub)
+
+
+# --------------------------------------------------------------------------- #
+# 7d. A degenerate render must never be shipped
+# --------------------------------------------------------------------------- #
+
+
+def degeneracy_guard():
+    """
+    Regression for run 45989277255.
+
+    Four carousel PNGs came out at 2.5 KB, byte-identical across four different
+    prompts — the signature of a float32 adapter multiplied into a float16 UNet,
+    which produces inf/NaN that the VAE decodes to a flat frame. Two fixes: cast
+    the adapter to the UNet's dtype, and refuse to save a frame that is flat.
+    """
+    images = load("generate_images", WORKER_DIR / "generate_images.py")
+    images.log = lambda *a, **k: None
+    from PIL import Image
+    import numpy as np
+
+    blank = Image.new("RGB", (128, 128), (128, 128, 128))
+    noise = Image.fromarray(
+        np.random.default_rng(0).integers(0, 255, (128, 128, 3), dtype=np.uint8))
+    assert images.is_degenerate(images.image_stats(blank)) is True
+    assert images.is_degenerate(images.image_stats(noise)) is False
+
+    body = code_of(source("generate_images.py"))
+    assert "def cast_lora_to_unet" in body, "the adapter dtype cast is missing"
+    assert "cast_lora_to_unet(pipe)" in body, "the cast must run after loading"
+    assert "degenerate_with_lora" in body, \
+        "a flat slide must be regenerated without the adapter and recorded"
+    assert "the master portrait is degenerate" in body, \
+        "the master is the avatar's input; it must be checked too"
+    return "flat frames rejected, adapter cast, master checked"
+
+
+check("degenerate renders are never shipped", degeneracy_guard)
+
+
+# --------------------------------------------------------------------------- #
 # 8. The launcher: stages every import, then runs as a script
 # --------------------------------------------------------------------------- #
 
