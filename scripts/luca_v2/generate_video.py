@@ -42,6 +42,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import torch
+
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
@@ -335,6 +337,52 @@ def _needs_install(spec: str) -> bool:
         return True
 
 
+class _DtypeSafeLinear(torch.nn.Module):
+    """
+    An nn.Linear that casts its input to the weight's dtype first.
+
+    chatterbox's HiFT generator builds its harmonic excitation in float32
+    (`SineGen` produces float32 regardless of the module dtype) and feeds it to
+    `SourceModuleHnNSF.l_linear`, which we have cast to float16. The matmul then
+    fails with "expected mat1 and mat2 to have the same dtype, but got: float !=
+    c10::Half" (run 45950802624). Wrapping the projection fixes it without
+    duplicating upstream's forward(), and is a no-op when dtypes already agree.
+    """
+
+    def __init__(self, inner: torch.nn.Linear):
+        super().__init__()
+        self.inner = inner
+
+    @property
+    def weight(self):
+        return self.inner.weight
+
+    @property
+    def bias(self):
+        return self.inner.bias
+
+    def forward(self, x):
+        return torch.nn.functional.linear(
+            x.to(self.inner.weight.dtype), self.inner.weight, self.inner.bias)
+
+
+def make_dtype_safe(s3gen) -> int:
+    """
+    Wrap every `l_linear` inside the HiFT generator; returns how many changed.
+
+    Idempotent: an already-wrapped projection is skipped.
+    """
+    wrapped = 0
+    for module in s3gen.modules():
+        inner = getattr(module, "l_linear", None)
+        if isinstance(inner, torch.nn.Linear):
+            module.l_linear = _DtypeSafeLinear(inner)
+            wrapped += 1
+    if wrapped:
+        log(f"dtype-safe wrapper applied to {wrapped} HiFT projection(s)")
+    return wrapped
+
+
 # --------------------------------------------------------------------------- #
 # Stage 1 — TTS
 # --------------------------------------------------------------------------- #
@@ -419,12 +467,46 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
                     gen[key] = value.half()
                     cast_conds += 1
             log(f"cast {cast_conds} built-in conditioning tensor(s) to float16")
+
+        # HiFT's harmonic excitation is generated in float32 and projected by a
+        # layer we just put in float16. Patch the projections rather than
+        # upcasting the whole generator back, which would undo the fp16 win.
+        if dtype == "float16":
+            safe = make_dtype_safe(model.s3gen)
+            if not safe:
+                log("no HiFT projections wrapped — a dtype error may surface in "
+                    "s3gen", "WARN")
             if not cast_conds:
                 log("no conditioning tensors were cast — generate() may raise a "
                     "dtype mismatch", "WARN")
 
     with timed("generate_speech", timings):
-        output = model.generate(TRANSCRIPT)
+        try:
+            output = model.generate(TRANSCRIPT)
+        except RuntimeError as exc:
+            if "same dtype" not in str(exc):
+                raise
+            # Last resort: chatterbox has dtype-sensitive internals we cannot
+            # enumerate ahead of time. fp32 still fits on an empty 14.5 GB card,
+            # and a WAV that exists beats a run that dies on precision.
+            log(f"fp16 synthesis failed ({exc}); retrying the whole model in "
+                f"float32", "WARN")
+            model.t3.float()
+            model.s3gen.float()
+            model.ve.float()
+            for name in ("t3", "s3gen", "ve"):
+                submodule = getattr(model, name, None)
+                if submodule is not None:
+                    submodule.float()
+            conds = getattr(model, "conds", None)
+            t3_cond = getattr(conds, "t3", None) if conds is not None else None
+            for field, value in list(vars(t3_cond).items()) if t3_cond else []:
+                if torch.is_tensor(value) and value.is_floating_point():
+                    setattr(t3_cond, field, value.float())
+            for key, value in list((getattr(conds, "gen", None) or {}).items()):
+                if torch.is_tensor(value) and value.is_floating_point():
+                    conds.gen[key] = value.float()
+            output = model.generate(TRANSCRIPT)
         if isinstance(output, tuple):          # (wav, sr) on some versions
             audio, sample_rate = output[0], int(output[1])
         else:

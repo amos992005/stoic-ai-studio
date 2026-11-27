@@ -421,25 +421,7 @@ def load_instantid_pipeline(timings: Dict[str, float]):
 
     with timed("configure_pipeline", timings):
         pipe.to(DEVICE)                 # no CPU offload, no .to("cpu") anywhere
-        # The community InstantID pipeline inherits from
-        # StableDiffusionXLControlNetPipeline but does NOT mix in
-        # DiffusionPipeline, so the enable_vae_slicing() helper does not exist —
-        # calling it aborts the run after ~2 minutes of model loading (run
-        # 45947923120). The flag it sets is just `vae.enable_slicing()`, so set
-        # it on the VAE directly, and fall back to `use_slicing = True`.
-        slicing = "off"
-        vae = getattr(pipe, "vae", None)
-        for attempt in ("enable_slicing",):
-            if vae is not None and hasattr(vae, attempt):
-                getattr(vae, attempt)()
-                slicing = f"vae.{attempt}()"
-                break
-        if slicing == "off":
-            if vae is not None:
-                vae.use_slicing = True
-                slicing = "vae.use_slicing=True"
-            else:
-                log("no VAE on the pipeline — VAE slicing not enabled", "WARN")
+        slicing = enable_vae_slicing(pipe)
         try:
             pipe.set_progress_bar_config(disable=True)
         except Exception:
@@ -464,6 +446,31 @@ def build_compel(pipe):
     log("compel ready: CompelForSDXL with truncate_long_prompts=False on both "
         "encoders — prompts are chunked, not truncated at 77 tokens")
     return compel
+
+
+def enable_vae_slicing(pipe) -> str:
+    """
+    Turn on VAE slicing, and report which path was taken.
+
+    The community InstantID pipeline inherits from
+    StableDiffusionXLControlNetPipeline but does NOT mix in DiffusionPipeline, so
+    the enable_vae_slicing() helper does not exist — calling it aborts the run
+    after ~2 minutes of model loading (run 45947923120). The flag it sets is just
+    `vae.enable_slicing()`, so set it on the VAE directly and fall back to
+    assigning `use_slicing`.
+
+    Kept as a module-level function rather than inline in the loader so it can be
+    exercised without downloading 7 GB of weights.
+    """
+    vae = getattr(pipe, "vae", None)
+    if vae is None:
+        log("no VAE on the pipeline — VAE slicing not enabled", "WARN")
+        return "off"
+    if hasattr(vae, "enable_slicing"):
+        vae.enable_slicing()
+        return "vae.enable_slicing()"
+    vae.use_slicing = True
+    return "vae.use_slicing=True"
 
 
 def encode_prompts(compel, prompt: str, negative_prompt: str):
@@ -501,6 +508,36 @@ def set_scheduler(pipe, timings: Dict[str, float]) -> None:
         )
         log(f"scheduler: {type(pipe.scheduler).__name__} "
             f"(karras={pipe.scheduler.config.use_karras_sigmas})")
+
+
+def build_master_pipe(pipe, timings: Dict[str, float]):
+    """
+    A plain SDXL txt2img pipeline sharing the InstantID pipeline's components.
+
+    The master portrait has to come first — it *defines* the identity that the
+    carousel is conditioned on, so there is no reference face to pass yet. But
+    StableDiffusionXLInstantIDPipeline requires `image`/`image_embeds`: it runs
+    its own checks, then the ControlNet parent raises
+    "image must be passed and be one of PIL image, ..." before a single step
+    runs (run 45950802624).
+
+    `from_pipe` reuses the already-loaded UNet/text encoders/VAE rather than
+    allocating a second copy, which is what keeps this affordable on a 14.5 GB
+    T4 while process 2 holds the other card.
+    """
+    from diffusers import StableDiffusionXLPipeline
+
+    with timed("build_master_pipe", timings):
+        master_pipe = StableDiffusionXLPipeline.from_pipe(pipe)
+        master_pipe.scheduler = pipe.scheduler
+        master_pipe.to(DEVICE)          # no CPU offload anywhere
+        try:
+            master_pipe.set_progress_bar_config(disable=True)
+        except Exception:
+            pass
+        log("master txt2img pipeline built via from_pipe (shared SDXL weights, "
+            "no InstantID conditioning on the master)")
+    return master_pipe
 
 
 def generate_master(pipe, compel, timings: Dict[str, float]):
@@ -695,7 +732,8 @@ def main() -> int:
         compel = build_compel(pipe)
 
         # ---- master portrait -------------------------------------------------
-        master, master_prompt = generate_master(pipe, compel, timings)
+        master_pipe = build_master_pipe(pipe, timings)
+        master, master_prompt = generate_master(master_pipe, compel, timings)
         metrics["artifacts"].append(MASTER_FILENAME)
         metrics["master_prompt_tokens"] = len(master_prompt.split())
 
