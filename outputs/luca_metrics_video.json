@@ -1,8 +1,8 @@
 {
   "process": "video",
-  "device": "cuda:1",
+  "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T07:12:06Z",
+  "started_at": "2026-11-27T07:37:53Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,35 +10,16 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 6.333,
-    "vid/load_chatterbox": 99.186,
-    "vid/generate_speech": 23.751,
-    "vid/release_tts_vram": 0.552,
-    "vid/wait_for_master": 55.008,
-    "vid/clone_musetalk": 0.897,
-    "vid/fetch_musetalk_weights": 39.616,
-    "vid/load_musetalk": 11.232
+    "vid/pip_install_deps": 9.057,
+    "vid/load_chatterbox": 112.561
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 46.81 MiB is free. Including non-PyTorch memory, this process has 756.00 MiB memory in use. Process 10 has 13.78 GiB memory in use. Of the allocated memory 653.17 MiB is allocated by PyTorch, and 850.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+      "error": "RuntimeError: chatterbox-tts could not be loaded: CUDA error: invalid device ordinal\nGPU device may be out of range, do you have enough GPUs?\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n"
     }
   ],
-  "artifacts": [
-    "luca_voice.wav"
-  ],
-  "voice": {
-    "engine": "chatterbox-tts",
-    "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
-    "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
-    "dtype": "float16",
-    "sample_rate": 24000,
-    "duration_s": 5.24,
-    "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
-    "normalisation": "peak to -1.0 dBFS",
-    "file": "luca_voice.wav"
-  },
-  "total_seconds": 244.5,
-  "finished_at": "2026-11-27T07:16:10Z"
+  "artifacts": [],
+  "total_seconds": 128.2,
+  "finished_at": "2026-11-27T07:40:01Z"
 }
