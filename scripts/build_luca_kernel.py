@@ -322,6 +322,12 @@ def main() -> int:
         return 2
 
 
+'''
+
+#: Appended after the embedded sources: `main()` reads those constants, so the
+#: entrypoint must come last. Putting it earlier raises NameError on the very
+#: first call to stage_workers() (run 45950387190).
+TRAILER = '''
 if __name__ == "__main__":
     sys.exit(main())
 '''
@@ -353,6 +359,7 @@ def build() -> str:
     for constant, relative in EMBEDDED.items():
         source = (WORKER_DIR / relative).read_text(encoding="utf-8")
         parts.append(wrap(constant, source, f"scripts/luca_v2/{relative}"))
+    parts.append(TRAILER)
     return "\n".join(parts)
 
 
