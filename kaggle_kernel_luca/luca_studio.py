@@ -113,14 +113,35 @@ def stage_workers() -> Path:
     here = Path(__file__).resolve().parent
 
     def find(name: str) -> Path:
-        for candidate in (here / name, here.parent / name,
-                          here.parent / "scripts" / "luca_v2" / name,
-                          Path("/kaggle/src") / name, Path(name)):
+        """
+        Locate a worker script.
+
+        `kaggle kernels push` uploads ONLY the code file — sibling files in the
+        kernel directory are silently dropped (confirmed in run 45947135155).
+        The workers therefore arrive as a mounted dataset under
+        /kaggle/input/<slug>/, which is why that glob is probed at all.
+        """
+        candidates = [here / name, here.parent / name,
+                      here.parent / "scripts" / "luca_v2" / name,
+                      Path("/kaggle/src") / name]
+        dataset_root = Path(os.environ.get("LUCA_DATASET_ROOT",
+                                           "/kaggle/input/luca-v2-workers"))
+        candidates.append(dataset_root / name)
+        if Path("/kaggle/input").is_dir():
+            try:
+                candidates.extend(sorted(Path("/kaggle/input").glob(f"*/{name}")))
+                candidates.extend(sorted(Path("/kaggle/input").glob(f"*/*/{name}")))
+            except OSError:
+                pass
+        candidates.append(Path(name))
+        for candidate in candidates:
             if candidate.is_file():
+                banner(f"found {name} at {candidate}")
                 return candidate
         raise FileNotFoundError(
-            f"worker script not found: {name} (looked in {here} and redeployed "
-            f"paths — the kernel must ship scripts/luca_v2/* next to this file)")
+            f"worker script not found: {name} — looked in {here}, "
+            f"{dataset_root} and /kaggle/input/*/ . `kaggle kernels push` only "
+            f"uploads the code file, so the workers must be mounted as a dataset.")
 
     for name in WORKER_FILES:
         source = find(name)
@@ -134,6 +155,11 @@ def stage_workers() -> Path:
     vendor = here / "_vendor"
     if not vendor.is_dir():
         vendor = here.parent / "scripts" / "luca_v2" / "_vendor"
+    if not vendor.is_dir():
+        dataset_root = Path(os.environ.get("LUCA_DATASET_ROOT",
+                                          "/kaggle/input/luca-v2-workers"))
+        if (dataset_root / "_vendor").is_dir():
+            vendor = dataset_root / "_vendor"
     if vendor.is_dir():
         target = WORKER_DIR / "_vendor"
         target.mkdir(parents=True, exist_ok=True)

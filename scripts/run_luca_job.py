@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-stoic-ai-studio :: Phase 3 orchestrator — "Luca Moretti" flagship character.
+stoic-ai-studio :: Luca v2 orchestrator — "Luca Moretti" flagship character.
 
 Reuses the hardened credential / metadata / push / poll / download / validate
 logic from `scripts/run_kaggle_job.py` and swaps in the Luca kernel, artifact
 manifest and metrics expectations.
 
-The kernel needs **no auxiliary dataset** (everything is pulled from the
-HuggingFace hub inside Kaggle), so this driver is a thin manifest swap — no
-dataset publish step.
+Model weights are pulled from the HuggingFace hub inside Kaggle, but the
+*code* still needs shipping: `kaggle kernels push` uploads only the single
+code file, so the two workers are published as a private dataset and mounted
+at /kaggle/input/<slug>/.
 
 Every knob is env-overridable so the same code can be dry-run locally:
 
@@ -73,49 +74,45 @@ POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(55 
 MAX_RUNTIME_SECONDS = 2400
 
 
-#: Kaggle only uploads the kernel *directory*, and the workers must be importable
-#: siblings of luca_studio.py. They are staged in from scripts/luca_v2/ before
-#: the push (and removed from the kernel dir again so git stays a single source
-#: of truth — the copies are build artifacts, not sources).
+#: `kaggle kernels push` uploads ONLY CODE_FILE — sibling files in the kernel
+#: directory are silently dropped (confirmed in run 45947135155: the launcher
+#: started, then died with "worker script not found"). The workers therefore
+#: ship as a private dataset the kernel mounts at /kaggle/input/<slug>/.
 WORKER_SOURCES = REPO_ROOT / "scripts" / "luca_v2"
-STAGED_INTO_KERNEL = [
-    "generate_images.py",
-    "generate_video.py",
-    "fetch_instantid.py",
+WORKER_FILES = [
+    WORKER_SOURCES / "generate_images.py",
+    WORKER_SOURCES / "generate_video.py",
+    WORKER_SOURCES / "fetch_instantid.py",
+    WORKER_SOURCES / "_vendor" / "pipeline_stable_diffusion_xl_instantid.py",
 ]
-#: Vendor data dirs/files copied verbatim next to the staged workers.
-STAGED_TREES = ["_vendor"]
+#: Dataset slug suffix; the username is prefixed at publish time.
+WORKER_DATASET_SLUG = os.environ.get("LUCA_WORKER_DATASET", "luca-v2-workers")
 
 
-def stage_kernel_dir() -> None:
-    """Copy the v2 workers into the kernel directory so the push ships them."""
-    import shutil
+def publish_workers(orchestrator, username: str, env) -> str:
+    """
+    Publish/refresh the worker dataset and return the slug to mount.
 
-    KERNEL_DIR.mkdir(parents=True, exist_ok=True)
-    for name in STAGED_INTO_KERNEL:
-        source = WORKER_SOURCES / name
-        if not source.is_file():
-            raise FileNotFoundError(f"worker script missing: {source}")
-        shutil.copy2(source, KERNEL_DIR / name)
-    for tree in STAGED_TREES:
-        source = WORKER_SOURCES / tree
-        if not source.is_dir():
-            raise FileNotFoundError(f"worker asset dir missing: {source}")
-        target = KERNEL_DIR / tree
-        if target.exists():
-            shutil.rmtree(target)
-        shutil.copytree(source, target,
-                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    Filenames are preserved (publish_dataset copies by basename), so
+    /kaggle/input/<slug>/generate_images.py is exactly what the launcher probes.
+    """
+    missing = [str(f.relative_to(REPO_ROOT)) for f in WORKER_FILES if not f.is_file()]
+    if missing:
+        raise FileNotFoundError(f"worker sources missing: {missing}")
 
-    # Kaggle uploads the directory verbatim; stale bytecode is dead weight.
-    import shutil as _shutil
-    pycache = KERNEL_DIR / "__pycache__"
-    if pycache.is_dir():
-        _shutil.rmtree(pycache)
-
-    uploaded = [p.name for p in KERNEL_DIR.iterdir()
-                if p.is_file() or p.is_dir()]
-    print(f"kernel dir staged for upload: {sorted(uploaded)}")
+    slug = f"{username}/{WORKER_DATASET_SLUG}"
+    orchestrator.log_group(f"publishing worker dataset {slug}")
+    try:
+        published = orchestrator.publish_dataset(slug, WORKER_FILES, env)
+    finally:
+        orchestrator.log_group_end()
+    if not published:
+        # Not fatal on a refresh: the previous version is still mounted and
+        # usable, and the push that follows is what actually matters.
+        orchestrator.log(
+            "worker dataset publish reported failure — the kernel may mount a "
+            "stale (or no) copy of the workers", "WARN")
+    return slug
 
 
 def load_orchestrator():
@@ -148,15 +145,39 @@ def main() -> int:
     orchestrator.log(f"kernel: {KERNEL_DIR.relative_to(REPO_ROOT)}/{CODE_FILE}")
     orchestrator.log("=" * 78)
 
-    try:
-        stage_kernel_dir()
-    except Exception as exc:
-        orchestrator.annotate_error(f"could not stage the kernel directory: {exc}")
-        return 2
-
     if not (KERNEL_DIR / CODE_FILE).is_file():
         orchestrator.annotate_error(f"kernel source missing: {KERNEL_DIR / CODE_FILE}")
         return 2
+
+    # --- ship the workers, then mount them --------------------------------- #
+    username = orchestrator.sanitize(os.environ.get("KAGGLE_USERNAME"))
+    key = orchestrator.sanitize(os.environ.get("KAGGLE_KEY"))
+    if not username or not key:
+        return orchestrator.main()      # let main() emit the proper auth error
+
+    env = orchestrator.env_with_credentials(username, key)
+    try:
+        orchestrator.write_kaggle_credentials(username, key)
+    except Exception as exc:            # pragma: no cover
+        orchestrator.log(f"could not persist credentials: {exc}", "WARN")
+
+    try:
+        worker_slug = publish_workers(orchestrator, username, env)
+    except Exception as exc:
+        orchestrator.annotate_error(f"could not publish the worker dataset: {exc}")
+        return 2
+
+    original_build_metadata = orchestrator.build_metadata
+
+    def build_metadata_with_workers(user: str):
+        meta = original_build_metadata(user)
+        sources = list(meta.get("dataset_sources") or [])
+        if worker_slug not in sources:
+            sources.insert(0, worker_slug)
+        meta["dataset_sources"] = sources
+        return meta
+
+    orchestrator.build_metadata = build_metadata_with_workers
 
     exit_code = orchestrator.main()
     if exit_code == 0:
