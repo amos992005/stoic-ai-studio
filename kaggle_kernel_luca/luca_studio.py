@@ -86,6 +86,11 @@ BASE_SEED = int(os.environ.get("BASE_SEED", "42"))
 #: Stage 3 — high-res face adetailer.
 ADETAILER_SCALE = 0.60
 ADETAILER_STRENGTH = 0.27
+#: Refuse to refine a face smaller than this on its longest side — there is not
+#: enough real detail for a 1024 re-render to preserve identity.
+ADETAILER_MIN_FACE = int(os.environ.get("ADETAILER_MIN_FACE", "112"))
+#: Small faces that do get refined are cropped with at least this much context.
+ADETAILER_MIN_CROP = int(os.environ.get("ADETAILER_MIN_CROP", "288"))
 ADETAILER_STEPS = int(os.environ.get("ADETAILER_STEPS", "22"))
 ADETAILER_SIZE = 1024
 FACE_CROP_MULT = 2.0
@@ -998,9 +1003,26 @@ def adetailer_face(
     base = Image.fromarray(slide_rgb)
     width, height = base.size
     x1, y1, x2, y2 = bbox
-    if x2 - x1 < 48 or y2 - y1 < 48:
-        log("face crop too small for adetailer — skipped", "WARN", tag=tag)
-        return slide_rgb, {"adetailer": False, "reason": "crop too small"}
+
+    # A face that occupies only ~150 px cannot be re-rendered at 1024 and scaled
+    # back at strength 0.27 — the IP-Adapter wins and the identity drifts (slide
+    # 03 measured 0.376 after adetailer versus 0.867 from the swap alone). Below
+    # ADETAILER_MIN_FACE px of detected face, keep the inswapper result untouched.
+    face_w, face_h = x2 - x1, y2 - y1
+    if face_w < ADETAILER_MIN_FACE or face_h < ADETAILER_MIN_FACE:
+        log(f"detected face is only {face_w}x{face_h}px — adetailer skipped, "
+            f"keeping the swap (too little resolution to refine)", "WARN", tag=tag)
+        return slide_rgb, {"adetailer": False,
+                           "reason": f"face too small ({face_w}x{face_h}px)"}
+
+    # Expand small-but-usable crops to a workable resolution instead of
+    # upsampling a postage stamp into the 1024 square.
+    cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+    half = max(face_w, face_h, ADETAILER_MIN_CROP) / 2.0
+    x1 = max(0, int(round(cx - half)))
+    y1 = max(0, int(round(cy - half)))
+    x2 = min(width, int(round(cx + half)))
+    y2 = min(height, int(round(cy + half)))
 
     crop = base.crop((x1, y1, x2, y2)).resize((ADETAILER_SIZE, ADETAILER_SIZE), Image.LANCZOS)
 
@@ -1621,7 +1643,13 @@ class LivePortraitDriver:
 
         from src.utils.camera import get_rotation_matrix
         from src.utils.crop import prepare_paste_back, paste_back
-        from src.utils.video import load_video
+        # LivePortrait ships load_video in src.utils.io; src.utils.video only
+        # has the encoder helpers. Import defensively so a future re-organise
+        # cannot silently kill shot 1 again.
+        try:
+            from src.utils.io import load_video
+        except ImportError:
+            from src.utils.video import load_video  # type: ignore[no-redef]
 
         wrapper = self.wrapper
         device = wrapper.device
@@ -1642,8 +1670,11 @@ class LivePortraitDriver:
         x_s = wrapper.transform_keypoint(x_s_info)
 
         # Pasteback mask: the config already loaded the 512x512 template for us.
+        mask_crop = (getattr(getattr(wrapper, "inference_cfg", None), "mask_crop", None)
+                     or getattr(self.crop_cfg, "mask_crop", None)
+                     or str(self.repo / "src" / "utils" / "resources" / "mask_template.png"))
         mask_ori = prepare_paste_back(
-            wrapper.inference_cfg.mask_crop,
+            mask_crop,
             crop_info["M_c2o"],
             dsize=(source_rgb.shape[1], source_rgb.shape[0]),
         )
@@ -1658,8 +1689,11 @@ class LivePortraitDriver:
 
         ret_d = self.cropper.crop_driving_video(driving)
         crops = [cv2.resize(f, (256, 256)) for f in ret_d["frame_crop_lst"]][:n_frames]
-        lmk_crop = ret_d["lmk_crop_lst"][:n_frames]
+        lmk_crop = [np.asarray(l, dtype=np.float32).reshape(1, 106, 2)
+                    for l in ret_d["lmk_crop_lst"][:n_frames]]
         c_d_eyes_lst, c_d_lip_lst = wrapper.calc_ratio(lmk_crop)
+        log(f"driving ratios: {len(c_d_lip_lst)} frames, "
+            f"lip {float(c_d_lip_lst[0]):.3f}–{float(c_d_lip_lst[-1]):.3f}", tag="gpu1")
 
         I_d = wrapper.prepare_videos(crops)
         motion = []
@@ -1713,7 +1747,10 @@ class LivePortraitDriver:
             openness = float(np.clip(mouth_open[min(i, mouth_open.size - 1)], 0.0, 1.0))
             c_d_lip = lo + (hi - lo) * openness
             lip_values.append(c_d_lip)
-            combined = wrapper.calc_combined_lip_ratio([c_d_lip], source_lmk)
+            # calc_combined_lip_ratio does `c_d_lip_i[0]`, so it must receive an
+            # indexable — passing a bare float raises "not subscriptable".
+            combined = wrapper.calc_combined_lip_ratio(
+                np.array([c_d_lip], dtype=np.float32), source_lmk)
             lip_delta = wrapper.retarget_lip(x_s, combined)
 
             # stitch driving-pose keypoints, then swap in our lip delta. The lip
@@ -1744,7 +1781,8 @@ class LivePortraitDriver:
 # --------------------------------------------------------------------------- #
 
 
-def build_svd_pipeline(device: str, timings: Dict[str, float]):
+def build_svd_pipeline(device: str, timings: Dict[str, float],
+                       prefer_offload: bool = True):
     import torch
     from diffusers import StableVideoDiffusionPipeline
 
@@ -1776,12 +1814,18 @@ def build_svd_pipeline(device: str, timings: Dict[str, float]):
                 break
             except Exception:
                 continue
+        # NOT enable_model_cpu_offload: offload keeps tensors resident on the
+        # CPU and streams them in, which collided with LivePortrait's ~2.4 GB
+        # and produced "CUDA out of memory ... 1.57 GiB free" on a 14.5 GB card.
+        # SVD-XT in fp16 fits outright, so take the device.
+        pipe.to(device, dtype=torch.float16)
         try:
-            pipe.enable_model_cpu_offload(device=device)
-            log("svd: model CPU offload", tag="gpu1")
-        except Exception as exc:
-            log(f"svd offload unavailable ({exc}); moving to {device}", "WARN", tag="gpu1")
-            pipe.to(device, dtype=torch.float16)
+            free_b, total_b = torch.cuda.mem_get_info(device)
+            log(f"svd resident on {device} "
+                f"({free_b / 1024 ** 2:.0f} MB free of {total_b / 1024 ** 2:.0f} MB)",
+                tag="gpu1")
+        except Exception:
+            log(f"svd resident on {device}", tag="gpu1")
     return pipe
 
 
@@ -1799,7 +1843,7 @@ def svd_broll(pipe, image: Image.Image, n_frames: int, seed: int,
 
     width, height = BROLL_SIZE
     last: Optional[Exception] = None
-    for chunk in (4, 2):
+    for chunk in (4, 2, 1):
         try:
             with timed(f"svd_{label}", timings, "gpu1"):
                 result = pipe(
@@ -1828,6 +1872,10 @@ def svd_broll(pipe, image: Image.Image, n_frames: int, seed: int,
             log(f"svd {label} chunk={chunk} failed: {type(exc).__name__}: {exc}",
                 "WARN", tag="gpu1")
             release_memory(_reel_device())
+            if "out of memory" in str(exc).lower():
+                log("OOM — freeing caches before the next decode-chunk attempt",
+                    "WARN", tag="gpu1")
+                time.sleep(2)
     raise RuntimeError(f"SVD failed for {label}: {last}") from last
 
 
@@ -2197,7 +2245,9 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
                 hook_frames, hook_info = driver.animate(
                     src, driving, HOOK_FRAMES, mouth["mouth_open"][:HOOK_FRAMES])
                 result["shot1"] = hook_info
-                del driver
+            # outside the timed block: release the wrapper's VRAM before SVD
+            driver = None
+            release_memory(device)
         except Exception as exc:
             detail = f"{type(exc).__name__}: {exc}"
             log(f"LivePortrait unavailable — falling back to SVD shots: {detail}",
@@ -2214,6 +2264,15 @@ def run_reel(output_dir: Path, timings: Dict[str, float], models: Dict[str, Path
         boundaries.append(len(frames_all))
 
     # ---- Shots 2-3: SVD b-roll, forward-only ----
+    # LivePortrait's modules (≈2.4 GB) are still resident; drop them before SVD
+    # claims the device, otherwise the two fight for the last few GB.
+    try:
+        import gc
+
+        gc.collect()
+        release_memory(device)
+    except Exception:
+        pass
     svd = build_svd_pipeline(device, timings)
     broll_specs = [("porsche", 4), ("yacht", 2)]
     result["broll"] = []

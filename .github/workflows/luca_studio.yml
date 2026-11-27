@@ -162,6 +162,17 @@ jobs:
               n = _tokens(text)
               assert n <= 80, (f"slide {i} prompt is ~{n} CLIP tokens — "
                                f"anything past 77 is silently discarded")
+          # SVD must own the device: CPU offload collided with LivePortrait's
+          # resident weights and OOM'd on a 14.5 GB T4.
+          _code = "\n".join(l for l in src.splitlines()
+                            if not l.strip().startswith("#"))
+          assert "enable_model_cpu_offload" not in _code, \
+              "SVD must run resident on its device, not model-offloaded"
+          # LivePortrait keeps load_video in src.utils.io.
+          assert "from src.utils.io import load_video" in src, \
+              "LivePortrait's load_video lives in src.utils.io"
+          assert "ADETAILER_MIN_FACE" in src, \
+              "tiny faces must skip adetailer rather than drift the identity"
           print("phase 4 static checks passed")
           PY
           ls -la kaggle_kernel_luca/
