@@ -40,14 +40,14 @@ env:
   BASE_SEED: "42"
   LUCA_TRANSCRIPT: ${{ github.event.inputs.transcript || 'Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.' }}
   # The avatar render is the one stage with a real quality/latency trade-off.
-  SADTALKER_SIZE: "512"
+  SADTALKER_SIZE: "256"
   SADTALKER_ENHANCER: gfpgan
 
 jobs:
   luca:
     name: Luca Moretti (2x Kaggle T4) - LoRA on cuda:0, voice+reel on cuda:1
     runs-on: ubuntu-latest
-    timeout-minutes: 95
+    timeout-minutes: 110
 
     steps:
       - name: Checkout

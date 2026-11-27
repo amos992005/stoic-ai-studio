@@ -53,7 +53,11 @@ MASTER_POLL_SECONDS = 5.0
 
 #: SadTalker's output is 256px by default and 512px when asked; 512 is the
 #: difference between "a talking head" and "a phone wallpaper".
-SADTALKER_SIZE = int(os.environ.get("SADTALKER_SIZE", "512"))
+#: 256 is SadTalker's native training resolution, and the 512 single-file
+#: checkpoint is a *different* weight file (725 MB) that has to be downloaded
+#: separately. The avatar is upscaled by the mux anyway, so 256 costs nothing
+#: but a little sharpness, and halves the download and the render time.
+SADTALKER_SIZE = int(os.environ.get("SADTALKER_SIZE", "256"))
 #: gfpgan on: it repairs the softened mouth region SadTalker's renderer leaves.
 SADTALKER_ENHANCER = os.environ.get("SADTALKER_ENHANCER", "gfpgan")
 
@@ -157,7 +161,9 @@ def apply_legacy_shims() -> None:
     if not hasattr(np, "VisibleDeprecationWarning"):
         np.VisibleDeprecationWarning = DeprecationWarning
     for legacy, modern in (("float_", float), ("int_", int), ("bool_", bool),
-                           ("object_", object), ("str_", str)):
+                           ("object_", object), ("str_", str), ("complex_", complex),
+                           ("float", float), ("int", int), ("bool", bool),
+                           ("long", int)):
         if not hasattr(np, legacy):
             setattr(np, legacy, modern)
 
@@ -411,6 +417,7 @@ def verify_sadtalker_runner() -> None:
         "import sys, warnings\n"
         "import numpy as np\n"
         "warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)\n"
+        "assert np.float is float and np.int is int\n"
         "from src.helper import MARK\n"
         "print('SHIM_OK', MARK, sys.argv[sys.argv.index('--driven_audio') + 1])\n",
         encoding="utf-8")
@@ -536,9 +543,13 @@ import numpy as np
 
 if not hasattr(np, "VisibleDeprecationWarning"):
     np.VisibleDeprecationWarning = DeprecationWarning
+# numpy 2 removed the bare aliases as well as the underscore forms. SadTalker
+# uses np.float in src/face3d/util/my_awing_arch.py, which runs on the very
+# first frame (run 45995210057).
 for _legacy, _modern in (("float_", float), ("int_", int), ("bool_", bool),
-                         ("object_", object), ("str_", str)):
-    if not hasattr(np, _legacy):
+                         ("object_", object), ("str_", str), ("complex_", complex),
+                         ("float", float), ("int", int), ("long", int)):
+    if _legacy not in vars(np):
         setattr(np, _legacy, _modern)
 
 try:

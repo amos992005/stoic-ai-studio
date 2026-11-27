@@ -86,6 +86,10 @@ TRAIN_LR = float(os.environ.get("LUCA_TRAIN_LR", "1e-4"))
 LORA_RANK = int(os.environ.get("LUCA_LORA_RANK", "16"))
 LORA_ALPHA = int(os.environ.get("LUCA_LORA_ALPHA", "16"))
 LORA_SCALE = float(os.environ.get("LUCA_LORA_SCALE", "0.85"))
+#: Tried in order if a slide comes out degenerate with the adapter. A lower
+#: weight is a *weaker* identity, but a broken frame is no identity at all.
+LORA_FALLBACK_SCALES = [float(v) for v in os.environ.get(
+    "LUCA_LORA_FALLBACK_SCALES", "0.6,0.4").split(",")]
 CAROUSEL_STEPS = int(os.environ.get("LUCA_CAROUSEL_STEPS", "30"))
 CAROUSEL_CFG = float(os.environ.get("LUCA_CAROUSEL_CFG", "4.0"))
 
@@ -455,27 +459,62 @@ def unload_instantid(timings: Dict[str, float]) -> Dict[str, Any]:
 
 def cast_lora_to_unet(pipe) -> Dict[str, Any]:
     """
-    Move the adapter onto the UNet's dtype and device, explicitly.
+    Move every adapter tensor onto the UNet's dtype and device, explicitly.
 
-    ``luca_lora.save_adapter`` stores float32 tensors (that is what keeps
-    training numerically sane), and a float32 LoRA multiplied into a float16
-    UNet produces infinities that the VAE then decodes to a flat image. Run
-    45989277255 wrote four 2.5 KB PNGs — byte-identical across four different
-    prompts, which is the signature of NaN rather than of a bad prompt. The
-    cast is cheap and idempotent, so it is done rather than trusted.
+    ``luca_lora.save_adapter`` stores float32 (that is what keeps training
+    numerically sane), and a float32 LoRA multiplied into a float16 UNet can
+    produce infinities that the VAE decodes to a flat frame.
+
+    The first attempt at this looked only for ``module.lora_A`` dicts and found
+    zero tensors (run 45995210057 logged ``tensors: 0``), because which
+    attribute holds the adapter depends on whether diffusers loaded it through
+    its own ``LoraLayer`` or through peft's wrapper. So the scan is by *name*
+    over parameters and buffers — ``lora_A``, ``lora_B``, ``lora_embedding_A``,
+    ``.default.weight``, whatever the loader produced — and it also handles the
+    plain-dict and single-module shapes for good measure.
     """
-    cast = 0
-    for module in pipe.unet.modules():
-        for attribute in ("lora_A", "lora_B"):
-            adapters = getattr(module, attribute, None)
-            if not isinstance(adapters, dict):
+    import torch
+
+    unet = pipe.unet
+    dtype, device = unet.dtype, unet.device
+    census: Dict[str, int] = {}
+    for name, parameter in unet.named_parameters():
+        if "lora" in name.lower() and parameter.dtype != dtype:
+            parameter.data = parameter.data.to(device=device, dtype=dtype)
+            census[f"param:{parameter.dtype}"] = census.get(f"param:{parameter.dtype}", 0) + 1
+    for name, buffer in unet.named_buffers():
+        if "lora" in name.lower() and buffer.dtype.is_floating_point and buffer.dtype != dtype:
+            buffer.data = buffer.data.to(device=device, dtype=dtype)
+
+    # Belt and braces: some loaders attach the layers outside the module tree.
+    moved = 0
+    for module in unet.modules():
+        for attribute in ("lora_A", "lora_B", "lora_embedding_A", "lora_embedding_B"):
+            container = getattr(module, attribute, None)
+            if container is None:
                 continue
-            for name, layer in adapters.items():
+            layers = (container.values() if isinstance(container, dict)
+                      else [container])
+            for layer in layers:
                 if hasattr(layer, "to"):
-                    layer.to(device=DEVICE, dtype=pipe.unet.dtype)
-                    cast += 1
-    log(f"adapter cast to {pipe.unet.dtype} on {DEVICE} ({cast} tensors)")
-    return {"dtype": str(pipe.unet.dtype), "tensors": cast}
+                    layer.to(device=device, dtype=dtype)
+                    moved += 1
+
+    lora_tensors = [(name, parameter.dtype)
+                    for name, parameter in unet.named_parameters()
+                    if "lora" in name.lower()]
+    summary = {
+        "unet_dtype": str(dtype),
+        "lora_tensors": len(lora_tensors),
+        "lora_dtypes": sorted({str(d) for _, d in lora_tensors}),
+        "layers_touched": moved,
+        "dtype_census": census,
+    }
+    log(f"adapter cast: {summary}")
+    if not lora_tensors:
+        log("no LoRA parameters found in the UNet — the adapter did not attach",
+            "ERROR")
+    return summary
 
 
 def image_stats(image) -> Dict[str, Any]:
@@ -536,6 +575,8 @@ def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
         else:
             log("no adapter available — generating with the base model", "WARN")
 
+    adapter_attached = produced["lora_used"]
+    used_scale = LORA_SCALE
     for entry in character.CAROUSEL:
         prompt = character.carousel_prompt(entry)
         with timed(f"generate_{entry['file']}", timings):
@@ -546,39 +587,70 @@ def build_carousel(timings: Dict[str, float], lora_path: Optional[Path]
                 generator=torch.Generator(device=DEVICE).manual_seed(int(entry["seed"])),
             ).images[0]
             stats = image_stats(image)
-            if is_degenerate(stats) and produced["lora_used"]:
-                # Never ship a flat frame, and never claim the adapter made it:
-                # fall back to the base model for this slide and say so.
-                log(f"{entry['file']}: degenerate with the adapter "
-                    f"({stats}) — regenerating without it", "ERROR")
-                produced.setdefault("degenerate_with_lora", []).append(
-                    str(entry["file"]))
-                produced["lora_used"] = False
-                try:
-                    pipe.unload_lora_weights()
-                except Exception as exc:
-                    log(f"could not unload the adapter: {exc}", "WARN")
-                image = pipe(
-                    **encode(compel, prompt),
-                    width=int(entry["size"][0]), height=int(entry["size"][1]),
-                    num_inference_steps=CAROUSEL_STEPS,
-                    guidance_scale=CAROUSEL_CFG,
-                    generator=torch.Generator(device=DEVICE).manual_seed(
-                        int(entry["seed"])),
-                ).images[0]
-                stats = image_stats(image)
-                if is_degenerate(stats):
-                    raise RuntimeError(
-                        f"{entry['file']} is degenerate even without the LoRA "
-                        f"({stats}) — the pipeline, not the adapter, is broken")
+
+            # A degenerate frame means the adapter is poisoning this prompt, not
+            # that the prompt is wrong. Walk the scale down before giving up on
+            # it, and *never* unload the adapter for the whole carousel: run
+            # 45995210057 did exactly that on slide 01, so slides 02-04 were
+            # rendered by the base model and the carousel lost its identity.
+            if is_degenerate(stats) and adapter_attached:
+                for scale in LORA_FALLBACK_SCALES:
+                    log(f"{entry['file']}: degenerate at scale {scale} "
+                        f"({stats}) — retrying lower", "WARN")
+                    try:
+                        pipe.set_adapters(["luca"], [scale])
+                    except Exception as exc:
+                        log(f"could not lower the adapter scale: {exc}", "WARN")
+                        break
+                    image = pipe(
+                        **encode(compel, prompt),
+                        width=int(entry["size"][0]),
+                        height=int(entry["size"][1]),
+                        num_inference_steps=CAROUSEL_STEPS,
+                        guidance_scale=CAROUSEL_CFG,
+                        generator=torch.Generator(device=DEVICE).manual_seed(
+                            int(entry["seed"])),
+                    ).images[0]
+                    stats = image_stats(image)
+                    if not is_degenerate(stats):
+                        used_scale = scale
+                        break
+                else:
+                    log(f"{entry['file']}: still degenerate at every adapter "
+                        f"scale — rendering it with the base model", "ERROR")
+                    produced.setdefault("degenerate_with_lora", []).append(
+                        str(entry["file"]))
+                    try:
+                        pipe.unload_lora_weights()
+                    except Exception as exc:
+                        log(f"could not unload the adapter: {exc}", "WARN")
+                    adapter_attached = False
+                    image = pipe(
+                        **encode(compel, prompt),
+                        width=int(entry["size"][0]),
+                        height=int(entry["size"][1]),
+                        num_inference_steps=CAROUSEL_STEPS,
+                        guidance_scale=CAROUSEL_CFG,
+                        generator=torch.Generator(device=DEVICE).manual_seed(
+                            int(entry["seed"])),
+                    ).images[0]
+                    stats = image_stats(image)
+
+            if is_degenerate(stats):
+                raise RuntimeError(
+                    f"{entry['file']} is degenerate even without the LoRA "
+                    f"({stats}) — the pipeline, not the adapter, is broken")
 
             path = OUTPUT_DIR / str(entry["file"])
             image.save(path, format="PNG", optimize=True)
             produced["files"].append(str(entry["file"]))
             produced.setdefault("stats", {})[str(entry["file"])] = stats
+            produced.setdefault("scales", {})[str(entry["file"])] = (
+                used_scale if adapter_attached else None)
             log(f"wrote {path.name} ({path.stat().st_size / 1024:.0f} KB) · "
                 f"{entry['size'][0]}x{entry['size'][1]} · seed {entry['seed']} "
-                f"· std {stats['std']}")
+                f"· std {stats['std']} · lora_scale "
+                f"{used_scale if adapter_attached else 'off'}")
 
     del pipe, compel
     gc.collect()

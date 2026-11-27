@@ -293,6 +293,54 @@ check("torchao/peft import guard", torchao_guard)
 
 
 # --------------------------------------------------------------------------- #
+# 4c. The adapter cast actually moves the adapter
+# --------------------------------------------------------------------------- #
+
+
+def adapter_cast():
+    """
+    Regression for run 45995210057, which logged ``adapter_cast: tensors 0``.
+
+    The adapter is saved float32; a float32 LoRA against a float16 UNet is how
+    you get a flat frame. The cast has to find the tensors by name, because
+    which attribute holds them depends on the loader.
+    """
+    images = load("generate_images", WORKER_DIR / "generate_images.py")
+    images.log = lambda *a, **k: None
+    images.DEVICE = "cpu"
+
+    import torch
+    from diffusers import UNet2DConditionModel
+    from peft import LoraConfig, get_peft_model
+
+    unet = UNet2DConditionModel(
+        sample_size=16, in_channels=4, out_channels=4, layers_per_block=1,
+        block_out_channels=(32, 64),
+        down_block_types=("DownBlock2D", "CrossAttnDownBlock2D"),
+        up_block_types=("CrossAttnUpBlock2D", "UpBlock2D"),
+        cross_attention_dim=32, norm_num_groups=32, attention_head_dim=8)
+    get_peft_model(unet, LoraConfig(
+        r=8, lora_alpha=8, init_lora_weights="gaussian",
+        target_modules=["to_q", "to_k", "to_v", "to_out.0"]))
+    unet = unet.half()
+    for name, parameter in unet.named_parameters():   # what the loader does
+        if "lora" in name.lower():
+            parameter.data = parameter.data.float()
+
+    before = {p.dtype for n, p in unet.named_parameters() if "lora" in n.lower()}
+    assert before == {torch.float32}, before
+
+    info = images.cast_lora_to_unet(types.SimpleNamespace(unet=unet))
+    after = {p.dtype for n, p in unet.named_parameters() if "lora" in n.lower()}
+    assert after == {torch.float16}, f"adapter still {after}"
+    assert info["lora_tensors"] > 0, "the cast found no adapter tensors"
+    return f"{info['lora_tensors']} adapter tensors float32 -> float16"
+
+
+check("adapter cast finds and converts the adapter", adapter_cast)
+
+
+# --------------------------------------------------------------------------- #
 # 5. Stage order: InstantID builds the dataset and is gone before training
 # --------------------------------------------------------------------------- #
 
@@ -687,10 +735,12 @@ def resolution_contract():
     images = source("generate_images.py")
     assert "width=1024, height=1024" in images, "the master is no longer 1024²"
     video = source("generate_video.py")
-    assert "SADTALKER_SIZE = int(os.environ.get(\"SADTALKER_SIZE\", \"512\"))" in video
+    assert re.search(r'SADTALKER_SIZE = int\(os\.environ\.get\('
+                     r'"SADTALKER_SIZE", "256"\)\)', video), \
+        "the avatar should default to SadTalker's native 256, not the 512 file"
     assert "master_source_px" in video, \
         "the reel metrics must record the source resolution the avatar cropped from"
-    return "master 1024², avatar 512, source resolution recorded in the metrics"
+    return "master 1024², avatar 256 (native), source resolution recorded"
 
 
 check("resolution contract (master vs avatar)", resolution_contract)
@@ -776,7 +826,24 @@ def degeneracy_guard():
         "a flat slide must be regenerated without the adapter and recorded"
     assert "the master portrait is degenerate" in body, \
         "the master is the avatar's input; it must be checked too"
-    return "flat frames rejected, adapter cast, master checked"
+
+    # The cast must find tensors by NAME. The first attempt looked only for
+    # module.lora_A dicts, found zero (``tensors: 0`` in run 45995210057), and
+    # so changed nothing.
+    assert "named_parameters()" in body and '"lora" in name.lower()' in body, \
+        "the adapter cast must scan named parameters, not a fixed attribute"
+    assert "lora_tensors" in body, "the cast must report what it found"
+
+    # ...and a degenerate slide must never unload the adapter for the rest of
+    # the carousel: that is how slides 02-04 lost the identity in 45995210057.
+    carousel = body[body.index("def build_carousel"):body.index("def main()")]
+    assert "LORA_FALLBACK_SCALES" in carousel, \
+        "a degenerate slide must walk the adapter scale down first"
+    assert "set_adapters([\"luca\"], [scale])" in carousel
+    unload = carousel.index("unload_lora_weights")
+    retry = carousel.index("LORA_FALLBACK_SCALES")
+    assert retry < unload, "the scale ladder must be tried before unloading"
+    return "flat frames rejected, adapter cast by name, per-slide scale ladder"
 
 
 check("degenerate renders are never shipped", degeneracy_guard)
