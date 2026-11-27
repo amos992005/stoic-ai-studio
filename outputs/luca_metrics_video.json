@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:0",
   "status": "success",
-  "started_at": "2026-11-27T13:14:03Z",
+  "started_at": "2026-11-27T13:50:25Z",
   "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
   "prohibitions_honoured": {
     "celebrity_name_in_prompts": false,
@@ -10,18 +10,18 @@
     "pipe.to_cpu": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 25.642,
-    "img/load_chatterbox": 78.955,
-    "img/generate_speech": 14.07,
-    "img/release_tts_vram": 0.508,
+    "img/pip_install_deps": 25.641,
+    "img/load_chatterbox": 81.115,
+    "img/generate_speech": 16.007,
+    "img/release_tts_vram": 0.514,
     "img/wait_for_master": 20.006,
-    "img/clone_sadtalker": 3.205,
-    "img/fetch_sadtalker_weights": 40.471,
-    "img/ffmpeg_on_path": 12.446,
-    "img/sadtalker_face_models": 0.325,
-    "img/sadtalker_inference": 97.415,
-    "img/mux_reel": 0.718,
-    "img/verify_reel": 0.123
+    "img/clone_sadtalker": 5.492,
+    "img/fetch_sadtalker_weights": 22.641,
+    "img/ffmpeg_on_path": 26.3,
+    "img/sadtalker_face_models": 0.431,
+    "img/sadtalker_inference": 94.843,
+    "img/mux_reel": 0.668,
+    "img/verify_reel": 0.128
   },
   "errors": [],
   "artifacts": [
@@ -34,13 +34,13 @@
     "dtype": "float16",
     "s3gen_dtype": "float32 (STFT has no fp16 path)",
     "sample_rate": 24000,
-    "duration_s": 5.96,
+    "duration_s": 5.48,
     "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
     "file": "luca_voice.wav"
   },
   "sadtalker": {
     "engine": "SadTalker",
-    "raw": "/kaggle/working/luca_work/sadtalker_out/2026_11_27_13.17.40.mp4",
+    "raw": "/kaggle/working/luca_work/sadtalker_out/2026_11_27_13.54.10.mp4",
     "enhanced": false,
     "size": 256,
     "preprocess": "crop",
@@ -60,24 +60,24 @@
       "pix_fmt": "yuv420p",
       "width": 256,
       "height": 256,
-      "duration_s": 5.96,
+      "duration_s": 5.48,
       "fps": "25/1"
     },
     "audio": {
       "codec": "aac",
       "sample_rate": "44100",
       "channels": 2,
-      "duration_s": 5.943991
+      "duration_s": 5.48
     },
-    "duration_s": 5.96,
+    "duration_s": 5.48,
     "sync": {
-      "video_s": 5.96,
-      "audio_s": 5.944,
-      "drift_s": 0.016,
+      "video_s": 5.48,
+      "audio_s": 5.48,
+      "drift_s": 0.0,
       "ok": true
     },
     "iphone_compatible": true
   },
-  "total_seconds": 310.7,
-  "finished_at": "2026-11-27T13:19:13Z"
+  "total_seconds": 315.0,
+  "finished_at": "2026-11-27T13:55:40Z"
 }
