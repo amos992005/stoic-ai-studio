@@ -202,6 +202,62 @@ def module_name(package_spec: str) -> str:
                                  base.replace("-", "_"))
 
 
+def _locked(command: List[str], tag: str = "img"):
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(PIP_LOCK, "a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            return subprocess.run(command, capture_output=True, text=True)
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+
+def drop_incompatible_torchao(tag: str = "img") -> Optional[str]:
+    """
+    Remove a torchao that peft refuses to coexist with.
+
+    ``peft.import_utils.is_torchao_available`` *raises* rather than returning
+    False when torchao is installed but older than 0.16 — and Kaggle's image
+    ships 0.10 — so every peft import dies, which is what stopped the LoRA
+    trainer in run 45984347218. Nothing here quantises anything: torchao is an
+    optional peft backend we never request, so removing it is the fix rather
+    than a workaround.
+
+    Returns the removed version, or None when nothing needed removing.
+    """
+    from importlib import metadata
+
+    try:
+        version = metadata.version("torchao")
+    except Exception:
+        return None
+
+    def parse(text: str) -> Tuple[int, ...]:
+        parts = []
+        for piece in text.split("."):
+            digits = "".join(ch for ch in piece if ch.isdigit())
+            parts.append(int(digits) if digits else 0)
+        return tuple(parts)
+
+    if parse(version) >= (0, 16, 0):
+        return None
+
+    log(f"removing torchao {version}: peft requires >= 0.16 and its check "
+        f"raises rather than degrading", "WARN", tag)
+    for extra in ([], ["--break-system-packages"]):
+        proc = _locked([sys.executable, "-m", "pip", "uninstall", "-y", "-q"]
+                       + extra + ["torchao"])
+        if proc.returncode == 0:
+            return version
+
+    # An uninstall is the only thing that actually works here: transformers also
+    # imports torchao.prototype, so merely satisfying peft's version check would
+    # move the failure one import later. Say so rather than pretending success.
+    log("torchao could not be removed — peft will refuse to import and LoRA "
+        "training cannot run in this environment", "ERROR", tag)
+    return None
+
+
 def missing_packages(specs: Iterable[str]) -> List[str]:
     """Which of these are not importable yet."""
     import importlib

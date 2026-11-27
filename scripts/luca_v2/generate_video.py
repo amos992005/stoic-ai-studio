@@ -950,13 +950,15 @@ def prepare_basicsr_sdist(packages: List[str]) -> List[str]:
     directory.mkdir(parents=True, exist_ok=True)
     archive = directory / "basicsr-1.4.2.tar.gz"
     if not archive.is_file():
-        subprocess.run(
+        proc = subprocess.run(
             [sys.executable, "-m", "pip", "download", "--no-deps",
              "--no-binary", ":all:", "--no-cache-dir", "-q",
              "-d", str(directory), target],
-            capture_output=True, text=True, check=True)
-    if not archive.is_file():
-        raise RuntimeError("pip download produced no basicsr sdist")
+            capture_output=True, text=True)
+        if proc.returncode != 0 or not archive.is_file():
+            raise RuntimeError(
+                f"pip download failed ({proc.returncode}): "
+                f"{(proc.stderr or proc.stdout)[-400:]}")
 
     extracted = directory / "basicsr-1.4.2"
     if not (extracted / "setup.py").is_file():
@@ -1002,10 +1004,19 @@ def ensure_video_deps(timings: Dict[str, float]) -> None:
             # needs libGL; Kaggle has no libGL. Every dependency is in
             # GFPGAN_BUILD_DEPS already, and the headless build is forced back
             # on either way.
-            if not pip_install(GFPGAN_DEPS, no_deps=True, no_build_isolation=True,
-                               prepare_sdist=prepare_basicsr_sdist):
-                # A missing enhancer costs sharpness, not the reel: SadTalker
-                # renders fine without --enhancer, so degrade instead of dying.
+            # A missing enhancer costs sharpness, not the reel: SadTalker
+            # renders fine without --enhancer, so every failure in this block
+            # degrades instead of aborting the process (run 45984347218 died
+            # here, taking the whole video stage with it).
+            try:
+                installed = pip_install(GFPGAN_DEPS, no_deps=True,
+                                        no_build_isolation=True,
+                                        prepare_sdist=prepare_basicsr_sdist)
+            except Exception as exc:
+                log(f"basicsr/gfpgan preparation failed "
+                    f"({type(exc).__name__}: {exc})", "WARN")
+                installed = False
+            if not installed:
                 log("gfpgan/basicsr could not be installed — the reel will be "
                     "rendered without the face enhancer", "WARN")
             else:

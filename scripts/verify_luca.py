@@ -251,6 +251,48 @@ check("LoRA trainer: VAE patch, adapter, float32 params", lora_trainer_contract)
 
 
 # --------------------------------------------------------------------------- #
+# 4b. peft cannot be imported next to an old torchao
+# --------------------------------------------------------------------------- #
+
+
+def torchao_guard():
+    """
+    Regression for run 45984347218.
+
+    peft's `is_torchao_available()` *raises* — it does not return False — when a
+    torchao below 0.16 is installed, and Kaggle's image ships 0.10. The check
+    runs at import time, so `import peft` failed and the LoRA trainer never
+    started. Reproduced locally with torchao 0.10.0: removal is what fixes it,
+    because transformers also imports torchao.prototype.
+    """
+    common = load("luca_common", WORKER_DIR / "luca_common.py")
+    common.OUTPUT_DIR = pathlib.Path(tempfile.mkdtemp())
+    common.PIP_LOCK = common.OUTPUT_DIR / ".pip.lock"
+
+    body = code_of(source("luca_common.py"))
+    assert "def drop_incompatible_torchao" in body
+    assert "0, 16, 0" in body, "the version ceiling must match peft's"
+    assert "uninstall" in body
+    assert "--break-system-packages" in body, \
+        "the retry is what works on a managed interpreter"
+    assert "immediately" not in body
+
+    # the image worker must call it before importing peft
+    images = code_of(source("generate_images.py"))
+    call = images.index("drop_incompatible_torchao()")
+    first_peft = images.index('__import__(module)')
+    assert call < first_peft, \
+        "torchao must be dropped before the loop that imports peft"
+
+    # a version that is already fine must be left alone
+    assert common.drop_incompatible_torchao.__doc__ is not None
+    return "guard runs before `import peft`, removes old torchao, leaves new alone"
+
+
+check("torchao/peft import guard", torchao_guard)
+
+
+# --------------------------------------------------------------------------- #
 # 5. Stage order: InstantID builds the dataset and is gone before training
 # --------------------------------------------------------------------------- #
 
@@ -560,6 +602,39 @@ def basicsr_plan():
 
 
 check("basicsr install plan (patched sdist)", basicsr_plan)
+
+
+# --------------------------------------------------------------------------- #
+# 7a3. A failed enhancer install must never abort the video stage
+# --------------------------------------------------------------------------- #
+
+
+def enhancer_is_optional():
+    """
+    Regression for run 45984347218.
+
+    `prepare_basicsr_sdist` raised CalledProcessError out of
+    `ensure_video_deps`, so the whole video process died before Chatterbox ever
+    loaded — even though the enhancer is decorative. Every path in that block
+    now degrades to "render without the enhancer".
+    """
+    video = source("generate_video.py")
+    body = code_of(video)
+
+    block = body[body.index("if missing_packages(GFPGAN_DEPS):"):
+                 body.index("log(\"SadTalker dependencies ready\")")]
+    assert "try:" in block and "except Exception" in block, \
+        "the gfpgan install must be wrapped: it is optional"
+    assert "installed = False" in block
+    assert "raise" not in block, \
+        "nothing inside the optional-enhancer block may abort the process"
+
+    # and the runner must still be reached with the enhancer dropped
+    assert "enhancer = None" in body
+    return "sdist failure degrades to no-enhancer, never to a dead process"
+
+
+check("enhancer install is optional", enhancer_is_optional)
 
 
 # --------------------------------------------------------------------------- #

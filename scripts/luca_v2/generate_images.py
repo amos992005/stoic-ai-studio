@@ -41,8 +41,9 @@ from typing import Any, Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import luca_character as character
-from luca_common import (BUILD_LOG, METRICS_PATH, OUTPUT_DIR, Tee, log,
-                         merge_metrics, missing_packages, pip_install, timed, ts)
+from luca_common import (BUILD_LOG, METRICS_PATH, OUTPUT_DIR, Tee,
+                         drop_incompatible_torchao, log, merge_metrics,
+                         missing_packages, pip_install, timed, ts)
 import luca_lora
 
 # --------------------------------------------------------------------------- #
@@ -94,7 +95,7 @@ CAROUSEL_CFG = float(os.environ.get("LUCA_CAROUSEL_CFG", "4.0"))
 # --------------------------------------------------------------------------- #
 
 
-def ensure_deps(timings: Dict[str, float]) -> None:
+def ensure_deps(timings: Dict[str, float]) -> Dict[str, Any]:
     """
     Install what is missing, in the order that cannot break the runtime.
 
@@ -103,6 +104,12 @@ def ensure_deps(timings: Dict[str, float]) -> None:
     and a normal resolve would also let it downgrade numpy under torch.
     """
     with timed("pip_install_deps", timings):
+        # Before anything imports peft: its torchao check raises on Kaggle's
+        # preinstalled 0.10, and it runs at import time (run 45984347218).
+        removed = drop_incompatible_torchao()
+        if removed:
+            log(f"torchao {removed} removed (peft requires >= 0.16)")
+
         missing = missing_packages(IMAGE_DEPS + TRAIN_DEPS)
         if missing:
             plain = [m for m in missing if not m.startswith("insightface")]
@@ -116,6 +123,7 @@ def ensure_deps(timings: Dict[str, float]) -> None:
         for module in ("cv2", "insightface", "compel", "diffusers", "peft"):
             __import__(module)
         log("image dependencies import cleanly")
+        return {"torchao_removed": removed}
 
 
 # --------------------------------------------------------------------------- #
@@ -537,7 +545,7 @@ def main() -> int:
     exit_code = 0
 
     try:
-        ensure_deps(timings)
+        metrics.update(ensure_deps(timings))
 
         import torch
 
