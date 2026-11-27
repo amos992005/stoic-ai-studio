@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T12:01:56Z",
+  "started_at": "2026-11-27T12:35:49Z",
   "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
   "prohibitions_honoured": {
     "celebrity_name_in_prompts": false,
@@ -10,21 +10,21 @@
     "pipe.to_cpu": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 36.854,
-    "img/load_chatterbox": 83.316,
-    "img/generate_speech": 13.694,
-    "img/release_tts_vram": 0.508,
-    "img/wait_for_master": 5.008,
-    "img/clone_sadtalker": 4.995,
-    "img/fetch_sadtalker_weights": 27.829,
-    "img/ffmpeg_on_path": 19.082,
-    "img/sadtalker_face_models": 0.355,
-    "img/sadtalker_inference": 16.481
+    "img/pip_install_deps": 22.135,
+    "img/load_chatterbox": 79.819,
+    "img/generate_speech": 12.236,
+    "img/release_tts_vram": 0.526,
+    "img/wait_for_master": 20.007,
+    "img/clone_sadtalker": 3.436,
+    "img/fetch_sadtalker_weights": 7.019,
+    "img/ffmpeg_on_path": 35.569,
+    "img/sadtalker_face_models": 0.305,
+    "img/sadtalker_inference": 14.994
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "RuntimeError: SadTalker failed (exit 1): rk/SadTalker/src/face3d/util/my_awing_arch.py\", line 18, in calculate_points\n    preds = preds.astype(np.float, copy=False)\n                         ^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/numpy/__init__.py\", line 397, in __getattr__\n    raise AttributeError(__former_attrs__[attr], name=None)\nAttributeError: module 'numpy' has no attribute 'float'.\n`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.\nThe aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:\n    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations\n"
+      "error": "RuntimeError: SadTalker failed (exit 1): ^^^^\n                                                                             source_image_flag=True, pic_size=args.size)\n                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/preprocess.py\", line 146, in generate\n    trans_params, im1, lm1, _ = align_img(frame, lm1, self.lm3d_std)\n                                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/face3d/util/preprocess.py\", line 101, in align_img\n    trans_params = np.array([w0, h0, s, t[0], t[1]])\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (5,) + inhomogeneous part.\n"
     }
   ],
   "artifacts": [
@@ -36,10 +36,10 @@
     "dtype": "float16",
     "s3gen_dtype": "float32 (STFT has no fp16 path)",
     "sample_rate": 24000,
-    "duration_s": 5.88,
+    "duration_s": 5.92,
     "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
     "file": "luca_voice.wav"
   },
-  "total_seconds": 223.6,
-  "finished_at": "2026-11-27T12:05:40Z"
+  "total_seconds": 209.0,
+  "finished_at": "2026-11-27T12:39:18Z"
 }

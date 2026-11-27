@@ -3,7 +3,7 @@
     "process": "video",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T12:01:56Z",
+    "started_at": "2026-11-27T12:35:49Z",
     "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
     "prohibitions_honoured": {
       "celebrity_name_in_prompts": false,
@@ -11,21 +11,21 @@
       "pipe.to_cpu": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 36.854,
-      "img/load_chatterbox": 83.316,
-      "img/generate_speech": 13.694,
-      "img/release_tts_vram": 0.508,
-      "img/wait_for_master": 5.008,
-      "img/clone_sadtalker": 4.995,
-      "img/fetch_sadtalker_weights": 27.829,
-      "img/ffmpeg_on_path": 19.082,
-      "img/sadtalker_face_models": 0.355,
-      "img/sadtalker_inference": 16.481
+      "img/pip_install_deps": 22.135,
+      "img/load_chatterbox": 79.819,
+      "img/generate_speech": 12.236,
+      "img/release_tts_vram": 0.526,
+      "img/wait_for_master": 20.007,
+      "img/clone_sadtalker": 3.436,
+      "img/fetch_sadtalker_weights": 7.019,
+      "img/ffmpeg_on_path": 35.569,
+      "img/sadtalker_face_models": 0.305,
+      "img/sadtalker_inference": 14.994
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "RuntimeError: SadTalker failed (exit 1): rk/SadTalker/src/face3d/util/my_awing_arch.py\", line 18, in calculate_points\n    preds = preds.astype(np.float, copy=False)\n                         ^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/numpy/__init__.py\", line 397, in __getattr__\n    raise AttributeError(__former_attrs__[attr], name=None)\nAttributeError: module 'numpy' has no attribute 'float'.\n`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.\nThe aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:\n    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations\n"
+        "error": "RuntimeError: SadTalker failed (exit 1): ^^^^\n                                                                             source_image_flag=True, pic_size=args.size)\n                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/preprocess.py\", line 146, in generate\n    trans_params, im1, lm1, _ = align_img(frame, lm1, self.lm3d_std)\n                                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/luca_work/SadTalker/src/face3d/util/preprocess.py\", line 101, in align_img\n    trans_params = np.array([w0, h0, s, t[0], t[1]])\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (5,) + inhomogeneous part.\n"
       }
     ],
     "artifacts": [
@@ -37,26 +37,23 @@
       "dtype": "float16",
       "s3gen_dtype": "float32 (STFT has no fp16 path)",
       "sample_rate": 24000,
-      "duration_s": 5.88,
+      "duration_s": 5.92,
       "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
       "file": "luca_voice.wav"
     },
-    "total_seconds": 223.6,
-    "finished_at": "2026-11-27T12:05:40Z"
+    "total_seconds": 209.0,
+    "finished_at": "2026-11-27T12:39:18Z"
   },
   "artifacts": [
     "01_luca_master.png",
-    "02_luca_yacht.png",
-    "03_luca_porsche.png",
-    "04_luca_party.png",
     "luca_lora.safetensors",
     "luca_voice.wav"
   ],
   "images": {
     "process": "images",
     "device": "cuda:0",
-    "status": "success",
-    "started_at": "2026-11-27T12:02:04Z",
+    "status": "failed",
+    "started_at": "2026-11-27T12:35:56Z",
     "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity": {
@@ -75,25 +72,23 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 51.231,
-      "img/build_master": 95.917,
-      "img/load_instantid": 47.541,
-      "img/build_dataset": 656.084,
-      "img/unload_instantid": 0.635,
-      "img/load_carousel_pipe": 31.486,
-      "img/generate_01_luca_master.png": 67.473,
-      "img/generate_02_luca_yacht.png": 27.424,
-      "img/generate_03_luca_porsche.png": 28.891,
-      "img/generate_04_luca_party.png": 28.064
+      "img/pip_install_deps": 44.333,
+      "img/build_master": 94.171,
+      "img/load_instantid": 47.902,
+      "img/build_dataset": 778.895,
+      "img/unload_instantid": 0.63,
+      "img/load_carousel_pipe": 31.032,
+      "img/generate_01_luca_master.png": 36.427
     },
-    "errors": [],
+    "errors": [
+      {
+        "stage": "fatal",
+        "error": "RuntimeError: 01_luca_master.png is degenerate even without the LoRA ({'mean': 0.0, 'std': 0.0, 'unique_colors': 1}) \u2014 the pipeline, not the adapter, is broken"
+      }
+    ],
     "artifacts": [
       "01_luca_master.png",
-      "luca_lora.safetensors",
-      "01_luca_master.png",
-      "02_luca_yacht.png",
-      "03_luca_porsche.png",
-      "04_luca_party.png"
+      "luca_lora.safetensors"
     ],
     "torchao_removed": "0.10.0",
     "environment": {
@@ -172,54 +167,16 @@
       "loss_last_25": 0.0782,
       "loss_decreasing": true,
       "adapter_mb": 93.07,
-      "train_seconds": 566.3,
+      "train_seconds": 581.0,
       "timings_seconds": {
-        "img/lora_load_text_encoders": 23.612,
-        "img/lora_encode_prompts": 0.394,
-        "img/lora_cache_latents": 7.185,
-        "img/lora_load_unet": 94.838,
-        "img/lora_save": 0.218
+        "img/lora_load_text_encoders": 21.481,
+        "img/lora_encode_prompts": 0.402,
+        "img/lora_cache_latents": 7.025,
+        "img/lora_load_unet": 94.186,
+        "img/lora_save": 0.199
       }
     },
-    "carousel": {
-      "files": [
-        "01_luca_master.png",
-        "02_luca_yacht.png",
-        "03_luca_porsche.png",
-        "04_luca_party.png"
-      ],
-      "lora_used": false,
-      "adapter_cast": {
-        "dtype": "torch.float16",
-        "tensors": 0
-      },
-      "degenerate_with_lora": [
-        "01_luca_master.png"
-      ],
-      "stats": {
-        "01_luca_master.png": {
-          "mean": 132.51,
-          "std": 54.62,
-          "unique_colors": 198060
-        },
-        "02_luca_yacht.png": {
-          "mean": 116.59,
-          "std": 53.32,
-          "unique_colors": 187924
-        },
-        "03_luca_porsche.png": {
-          "mean": 110.05,
-          "std": 63.13,
-          "unique_colors": 174162
-        },
-        "04_luca_party.png": {
-          "mean": 82.69,
-          "std": 58.56,
-          "unique_colors": 212703
-        }
-      }
-    },
-    "total_seconds": 1555.8,
-    "finished_at": "2026-11-27T12:28:00Z"
+    "total_seconds": 1568.2,
+    "finished_at": "2026-11-27T13:02:04Z"
   }
 }
