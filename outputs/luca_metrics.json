@@ -1,8 +1,8 @@
 {
   "phase": "phase-3.1-luca-moretti",
   "character": "Luca Moretti \u00b7 27 \u00b7 young-millionaire playboy",
-  "started_at": "2026-11-26T23:37:03.716259+00:00",
-  "status": "failed",
+  "started_at": "2026-11-26T23:58:49.735362+00:00",
+  "status": "success_with_errors",
   "config": {
     "stage1": {
       "model": "SG161222/RealVisXL_V5.0",
@@ -58,27 +58,20 @@
     "luca_slide_05.jpg"
   ],
   "timings_seconds": {
-    "pip_install_deps": 11.646,
-    "face/fetch_buffalo_l": 3.23,
-    "face/fetch_inswapper": 4.594,
-    "parallel_gpu_workers": 1020.967
+    "pip_install_deps": 12.415,
+    "face/fetch_buffalo_l": 3.429,
+    "face/fetch_inswapper": 4.715,
+    "parallel_gpu_workers": 369.592
   },
   "errors": [
-    {
-      "worker": "carousel",
-      "error": "timeout"
-    },
-    {
-      "worker": "carousel",
-      "exitcode": -15
-    },
     {
       "worker": "reel",
       "exitcode": 1
     },
+    "RuntimeError: SVD failed for porsche: CUDA out of memory. Tried to allocate 2.64 GiB. GPU 1 has a total capacity of 14.56 GiB of which 1.57 GiB is free. Including non-PyTorch memory, this process has 12.99 GiB memory in use. Of the allocated memory 11.58 GiB is allocated by PyTorch, and 1.28 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)",
     {
-      "stage": "fatal",
-      "error": "RuntimeError: carousel artifacts missing: ['luca_metrics.json']"
+      "stage": "reel_artifacts",
+      "error": "reel artifacts missing: ['luca_reel_clip.mp4']"
     }
   ],
   "environment": {
@@ -135,27 +128,35 @@
       "stage2": {
         "faces_detected": 2,
         "genders": [
-          "F",
-          "M"
+          "M",
+          "F"
         ],
-        "male_index": 1,
+        "male_index": 0,
         "swapped": true,
         "male_bbox": [
-          122,
-          10,
-          499,
-          387
+          32,
+          0,
+          675,
+          583
         ]
       },
       "stage3": {
-        "adetailer": false,
-        "reason": "AttributeError"
+        "adetailer": true,
+        "strength": 0.27,
+        "ip_adapter_scale": 0.6,
+        "crop": [
+          32,
+          0,
+          675,
+          583
+        ],
+        "blend": "elliptical gaussian feather, sigma\u224877.2px"
       },
       "polish": {
         "colour": "warm cast reduced 5% (blue \u00d71.05)",
         "grain_sigma": 1.3
       },
-      "identity_cosine": 0.7188
+      "identity_cosine": 0.7238
     },
     {
       "index": 3,
@@ -170,29 +171,39 @@
       "stage1": "ok",
       "ip_adapter_during_txt2img": false,
       "stage2": {
-        "faces_detected": 2,
+        "faces_detected": 4,
         "genders": [
           "M",
+          "M",
+          "F",
           "F"
         ],
-        "male_index": 0,
+        "male_index": 1,
         "swapped": true,
         "male_bbox": [
-          0,
-          0,
-          605,
-          604
+          399,
+          106,
+          554,
+          261
         ]
       },
       "stage3": {
-        "adetailer": false,
-        "reason": "AttributeError"
+        "adetailer": true,
+        "strength": 0.27,
+        "ip_adapter_scale": 0.6,
+        "crop": [
+          399,
+          106,
+          554,
+          261
+        ],
+        "blend": "elliptical gaussian feather, sigma\u224818.6px"
       },
       "polish": {
         "colour": "warm cast reduced 5% (blue \u00d71.05)",
         "grain_sigma": 1.3
       },
-      "identity_cosine": 0.867
+      "identity_cosine": 0.3758
     },
     {
       "index": 4,
@@ -214,21 +225,29 @@
         "male_index": 0,
         "swapped": true,
         "male_bbox": [
-          118,
-          22,
-          626,
-          530
+          346,
+          80,
+          549,
+          282
         ]
       },
       "stage3": {
-        "adetailer": false,
-        "reason": "AttributeError"
+        "adetailer": true,
+        "strength": 0.27,
+        "ip_adapter_scale": 0.6,
+        "crop": [
+          346,
+          80,
+          549,
+          282
+        ],
+        "blend": "elliptical gaussian feather, sigma\u224824.4px"
       },
       "polish": {
         "colour": "warm cast reduced 5% (blue \u00d71.05)",
         "grain_sigma": 1.3
       },
-      "identity_cosine": 0.8828
+      "identity_cosine": 0.801
     },
     {
       "index": 5,
@@ -250,33 +269,55 @@
         "male_index": 0,
         "swapped": true,
         "male_bbox": [
-          358,
-          95,
-          570,
-          307
+          357,
+          74,
+          588,
+          305
         ]
       },
       "stage3": {
-        "adetailer": false,
-        "reason": "AttributeError"
+        "adetailer": true,
+        "strength": 0.27,
+        "ip_adapter_scale": 0.6,
+        "crop": [
+          357,
+          74,
+          588,
+          305
+        ],
+        "blend": "elliptical gaussian feather, sigma\u224827.7px"
       },
       "polish": {
         "colour": "warm cast reduced 5% (blue \u00d71.05)",
         "grain_sigma": 1.3
       },
-      "identity_cosine": 0.8332
+      "identity_cosine": 0.8433
     }
   ],
   "identity_cosine": {
-    "02_monaco_yacht_date.png": 0.7188,
-    "03_vip_party_flash.png": 0.867,
-    "04_porsche_gt3_pov.png": 0.8828,
-    "05_extreme_action.png": 0.8332
+    "02_monaco_yacht_date.png": 0.7238,
+    "03_vip_party_flash.png": 0.3758,
+    "04_porsche_gt3_pov.png": 0.801,
+    "05_extreme_action.png": 0.8433
   },
   "adetailer_adapter": true,
-  "missing_slides": [
-    "luca_metrics.json"
+  "voice": {},
+  "envelope": {},
+  "shot1": {},
+  "broll": [],
+  "audio_mix": {},
+  "video": {},
+  "missing_slides": [],
+  "missing_reel_artifacts": [
+    "luca_reel_clip.mp4"
   ],
-  "total_seconds": 1073.7,
-  "finished_at": "2026-11-26T23:54:57.419269+00:00"
+  "reel_skipped": "reel artifacts missing: ['luca_reel_clip.mp4']",
+  "identity_verdicts": [
+    "02_monaco_yacht_date.png:MATCH",
+    "03_vip_party_flash.png:DRIFT",
+    "04_porsche_gt3_pov.png:MATCH",
+    "05_extreme_action.png:MATCH"
+  ],
+  "total_seconds": 429.3,
+  "finished_at": "2026-11-27T00:05:59.004342+00:00"
 }
