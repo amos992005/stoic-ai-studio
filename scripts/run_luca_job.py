@@ -35,47 +35,87 @@ KERNEL_TITLE = KERNEL_SLUG
 KERNEL_DIR = REPO_ROOT / "kaggle_kernel_luca"
 CODE_FILE = "luca_studio.py"
 
-#: Success = the postable carousel pack. Every slide is a deliverable, so the
-#: sheet plus all five JPEGs are required; a run that produces those is a real
-#: result even if the avatar pass was cut off.
+#: Success = the full v2 pack: the master portrait, three scenes, the voice
+#: and the finished reel. Each is a separate deliverable from one run.
 REQUIRED_ARTIFACTS: List[str] = [
-    "luca_carousel_sheet.png",
-    "luca_slide_01.jpg",
-    "luca_slide_02.jpg",
-    "luca_slide_03.jpg",
-    "luca_slide_04.jpg",
-    "luca_slide_05.jpg",
+    "01_luca_master.png",
+    "02_luca_yacht.png",
+    "03_luca_porsche.png",
+    "04_luca_party.png",
+    "luca_voice.wav",
+    "luca_reel.mp4",
     "luca_metrics.json",
 ]
-#: The reel is best-effort (its own worker, own budget) — warn, never fail.
+#: Warn only.
 OPTIONAL_ARTIFACTS: List[str] = [
-    "luca_reel_clip.mp4",
-    "luca_voice.mp3",
-    "luca_video_sheet.png",
-    "luca_voice.wav",
-    "01_luca_master.png",
+    "luca_metrics_images.json",
+    "luca_metrics_video.json",
+    "build.log",
 ]
 #: Everything the workflow may commit back (5 MB per-file ceiling applies).
 COMMITTABLE_ARTIFACTS: List[str] = [
-    "outputs/luca_carousel_sheet.png",
-    "outputs/luca_video_sheet.png",
-    "outputs/luca_reel_clip.mp4",
-    "outputs/luca_voice.mp3",
-    "outputs/luca_metrics.json",
-    "outputs/build.log",
     "outputs/01_luca_master.png",
-    "outputs/luca_slide_01.jpg",
-    "outputs/luca_slide_02.jpg",
-    "outputs/luca_slide_03.jpg",
-    "outputs/luca_slide_04.jpg",
-    "outputs/luca_slide_05.jpg",
+    "outputs/02_luca_yacht.png",
+    "outputs/03_luca_porsche.png",
+    "outputs/04_luca_party.png",
+    "outputs/luca_voice.wav",
+    "outputs/luca_reel.mp4",
+    "outputs/luca_metrics.json",
+    "outputs/luca_metrics_images.json",
+    "outputs/luca_metrics_video.json",
+    "outputs/build.log",
 ]
-#: Must exceed the kernel's own KERNEL_BUDGET_S (30 min) plus provisioning,
-#: model downloads and output download, otherwise we kill a kernel that is about
-#: to report a perfectly good carousel.
-POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(48 * 60)))
-#: Runtime guard for the warning only — the work is genuinely longer now.
-MAX_RUNTIME_SECONDS = 1800
+#: Must exceed the kernel's own budget plus provisioning, the ~8 GB of weights
+#: (SDXL + InstantID + Chatterbox + MuseTalk + whisper) and the artifact pull,
+#: or we kill a kernel that is about to report success.
+POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(55 * 60)))
+#: Runtime guard for the warning only.
+MAX_RUNTIME_SECONDS = 2400
+
+
+#: Kaggle only uploads the kernel *directory*, and the workers must be importable
+#: siblings of luca_studio.py. They are staged in from scripts/luca_v2/ before
+#: the push (and removed from the kernel dir again so git stays a single source
+#: of truth — the copies are build artifacts, not sources).
+WORKER_SOURCES = REPO_ROOT / "scripts" / "luca_v2"
+STAGED_INTO_KERNEL = [
+    "generate_images.py",
+    "generate_video.py",
+    "fetch_instantid.py",
+]
+#: Vendor data dirs/files copied verbatim next to the staged workers.
+STAGED_TREES = ["_vendor"]
+
+
+def stage_kernel_dir() -> None:
+    """Copy the v2 workers into the kernel directory so the push ships them."""
+    import shutil
+
+    KERNEL_DIR.mkdir(parents=True, exist_ok=True)
+    for name in STAGED_INTO_KERNEL:
+        source = WORKER_SOURCES / name
+        if not source.is_file():
+            raise FileNotFoundError(f"worker script missing: {source}")
+        shutil.copy2(source, KERNEL_DIR / name)
+    for tree in STAGED_TREES:
+        source = WORKER_SOURCES / tree
+        if not source.is_dir():
+            raise FileNotFoundError(f"worker asset dir missing: {source}")
+        target = KERNEL_DIR / tree
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(source, target,
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+
+    # Kaggle uploads the directory verbatim; stale bytecode is dead weight.
+    import shutil as _shutil
+    pycache = KERNEL_DIR / "__pycache__"
+    if pycache.is_dir():
+        _shutil.rmtree(pycache)
+
+    uploaded = [p.name for p in KERNEL_DIR.iterdir()
+                if p.is_file() or p.is_dir()]
+    print(f"kernel dir staged for upload: {sorted(uploaded)}")
 
 
 def load_orchestrator():
@@ -104,9 +144,15 @@ def main() -> int:
     orchestrator.POLL_TIMEOUT_SECONDS = POLL_TIMEOUT_SECONDS
 
     orchestrator.log("=" * 78)
-    orchestrator.log("PHASE 3 · LUCA MORETTI · CAROUSEL + VOICE + NEURAL VIDEO")
+    orchestrator.log("LUCA v2 · DUAL-GPU · MASTER + SCENES + VOICE + REEL")
     orchestrator.log(f"kernel: {KERNEL_DIR.relative_to(REPO_ROOT)}/{CODE_FILE}")
     orchestrator.log("=" * 78)
+
+    try:
+        stage_kernel_dir()
+    except Exception as exc:
+        orchestrator.annotate_error(f"could not stage the kernel directory: {exc}")
+        return 2
 
     if not (KERNEL_DIR / CODE_FILE).is_file():
         orchestrator.annotate_error(f"kernel source missing: {KERNEL_DIR / CODE_FILE}")
@@ -119,7 +165,7 @@ def main() -> int:
 
 
 def summarize(orchestrator) -> None:
-    """Print a compact success summary from luca_metrics.json."""
+    """Print a compact success summary from the two v2 metrics halves."""
     import json
 
     metrics_path = orchestrator.OUTPUT_DIR / "luca_metrics.json"
@@ -132,58 +178,58 @@ def summarize(orchestrator) -> None:
         orchestrator.log(f"could not read luca_metrics.json: {exc}", "WARN")
         return
 
-    total = float(data.get("total_seconds") or 0.0)
-    voice = data.get("voice") or {}
+    images = data.get("images") or {}
     video = data.get("video") or {}
-    slides = data.get("slides") or []
-    envelope = data.get("envelope") or {}
-
-    ok = [s for s in slides if not s.get("error")]
-    swapped = [s for s in slides if (s.get("stage2") or {}).get("swapped")]
-    refined = [s for s in slides if (s.get("stage3") or {}).get("adetailer")]
-    orchestrator.log(
-        f"carousel: {len(ok)}/{len(slides)} slides · {len(swapped)} biometric swaps · "
-        f"{len(refined)} 1024px adetailer passes"
-    )
-    for slide in slides:
-        stage2 = slide.get("stage2") or {}
-        stage3 = slide.get("stage3") or {}
+    if images:
         orchestrator.log(
-            f"  {slide.get('filename')}: people={slide.get('expected_people')} "
-            f"genders={stage2.get('genders')} swapped={stage2.get('swapped')} "
-            f"adetailer={stage3.get('adetailer')} "
-            f"identity={slide.get('identity_cosine')}"
+            f"images: {images.get('status')} in {images.get('total_seconds')}s "
+            f"on {images.get('device')} · master face "
+            f"{images.get('master_face')}"
         )
-    verdicts = data.get("identity_verdicts") or []
-    orchestrator.log(f"identity verdicts (cosine ≥ 0.45 = MATCH): {verdicts}")
-    orchestrator.log(
-        f"voice: {voice.get('duration_s')}s @ {voice.get('sample_rate')} Hz · "
-        f"{voice.get('engine')} {voice.get('voice')} · peak {voice.get('peak_dbfs')} dBFS"
-    )
-    mix = data.get("audio_mix") or {}
-    orchestrator.log(
-        f"reel audio: {mix.get('duration_s')}s · {mix.get('bpm')} BPM bed · {mix.get('bed')}"
-    )
-    orchestrator.log(
-        f"video: {video.get('frames')} frames @ {video.get('fps')} fps · "
-        f"{video.get('duration_s')}s · shots={video.get('shots')} · "
-        f"boundaries={video.get('shot_boundaries')} · "
-        f"ping_pong={video.get('ping_pong')} cross_fade={video.get('cross_fade_retime')}"
-    )
-    orchestrator.log(
-        f"mouth articulation: {envelope.get('active_fraction')} of frames active · "
-        f"mean {envelope.get('mouth_open_mean')} · band {envelope.get('vocal_band_hz')} Hz"
-    )
-    orchestrator.log(
-        f"banned techniques — procedural_animation={video.get('procedural_animation')} · "
-        f"wsola={(data.get('voice') or {}).get('wsola_time_stretch')} · "
-        f"biquad_eq={(data.get('voice') or {}).get('biquad_or_parametric_eq')}"
-    )
-    orchestrator.log(f"kernel total: {total:.0f}s")
-    if total > MAX_RUNTIME_SECONDS:
-        orchestrator.log(f"kernel used {total:.0f}s (> {MAX_RUNTIME_SECONDS}s budget)", "WARN")
-    for error in data.get("errors") or []:
-        orchestrator.log(f"kernel error: {error}", "WARN")
+        for filename, result in (images.get("identity") or {}).items():
+            orchestrator.log(
+                f"  {filename}: cosine={result.get('cosine')} "
+                f"verdict={result.get('verdict')} "
+                f"repaired={result.get('repaired')}"
+            )
+        env = images.get("environment") or {}
+        orchestrator.log(
+            f"  prompt chunks: master={images.get('master_prompt_tokens')} words · "
+            f"{env.get('base_model')} · {env.get('insightface_provider')}"
+        )
+
+    if video:
+        voice = video.get("voice") or {}
+        probe = video.get("reel_probe") or {}
+        sync = probe.get("sync") or {}
+        orchestrator.log(
+            f"voice: {voice.get('duration_s')}s @ {voice.get('sample_rate')} Hz · "
+            f"{voice.get('class')} {voice.get('dtype')} · "
+            f"peak {voice.get('peak_dbfs')} dBFS · vram freed "
+            f"{video.get('vram_after_tts_mb')} MB"
+        )
+        orchestrator.log(
+            f"reel: {probe.get('video', {}).get('width')}x"
+            f"{probe.get('video', {}).get('height')} "
+            f"{probe.get('video', {}).get('codec')} / "
+            f"{probe.get('audio', {}).get('codec')} · "
+            f"{probe.get('format', {}).get('duration')}s · "
+            f"drift {sync.get('drift_s')}s"
+        )
+        musetalk = video.get("musetalk") or {}
+        orchestrator.log(
+            f"musetalk: {musetalk.get('frames')} frames @ "
+            f"{musetalk.get('fps')} fps"
+        )
+
+    artifacts = data.get("artifacts") or []
+    orchestrator.log(f"artifacts reported by the workers: {artifacts}")
+    missing = [a for a in REQUIRED_ARTIFACTS
+               if not (orchestrator.OUTPUT_DIR / a).is_file()]
+    if missing:
+        orchestrator.log(f"REQUIRED artifacts missing: {missing}", "ERROR")
+    else:
+        orchestrator.log("all required artifacts present")
 
 
 if __name__ == "__main__":

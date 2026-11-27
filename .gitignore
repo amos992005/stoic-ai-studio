@@ -37,4 +37,13 @@ stoic_lipsync/
 .kaggle_dataset/
 
 # Phase 3: generated kernel metadata
+# Regenerated at runtime from scripts/luca_v2/_vendor/ by fetch_instantid.py.
+scripts/luca_v2/instantid_pipeline.py
 kaggle_kernel_luca/kernel-metadata.json
+# Staged by scripts/run_luca_job.py before `kaggle kernels push`; the sources
+# live in scripts/luca_v2/ and stay the single source of truth.
+kaggle_kernel_luca/generate_images.py
+kaggle_kernel_luca/generate_video.py
+kaggle_kernel_luca/fetch_instantid.py
+kaggle_kernel_luca/instantid_pipeline.py
+kaggle_kernel_luca/_vendor/

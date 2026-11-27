@@ -1,4 +1,4 @@
-name: Luca Studio · Phase 3
+name: Luca Studio · v2 (dual-GPU parallel)
 
 # $0 orchestrator: pushes the Luca kernel to Kaggle (Tesla T4), waits for it,
 # then commits the postable asset pack straight back to the branch.
@@ -10,23 +10,16 @@ name: Luca Studio · Phase 3
 on:
   workflow_dispatch:
     inputs:
-      slide_steps:
-        description: "Sampling steps per carousel slide (default 30)"
+      transcript:
+        description: "Line Luca speaks in the reel (~8-10 s of speech)"
         required: false
-        default: "30"
-      svd_frames:
-        description: "Neural frames from Stable Video Diffusion (default 25)"
-        required: false
-        default: "25"
-      voice:
-        description: "Kokoro voice id (am_adam / am_michael / bm_lewis)"
-        required: false
-        default: "am_adam"
+        default: "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view."
   push:
     branches:
       - "arena/**"
     paths:
       - "kaggle_kernel_luca/**"
+      - "scripts/luca_v2/**"
       - "scripts/run_luca_job.py"
       - "scripts/run_kaggle_job.py"
       - ".github/workflows/luca_studio.yml"
@@ -43,15 +36,13 @@ env:
   PYTHONUNBUFFERED: "1"
   OUTPUT_DIR: outputs
   MAX_COMMIT_BYTES: "5242880"
-  # Kernel-side knobs (env vars are read by luca_studio.py).
-  SLIDE_STEPS: ${{ github.event.inputs.slide_steps || '30' }}
-  SVD_NUM_FRAMES: ${{ github.event.inputs.svd_frames || '25' }}
-  VOICE_NAME: ${{ github.event.inputs.voice || 'am_adam' }}
-  BASE_SEED: "777"
+  # Kernel-side knobs (read by the workers via os.environ).
+  BASE_SEED: "42"
+  LUCA_TRANSCRIPT: ${{ github.event.inputs.transcript || 'Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.' }}
 
 jobs:
   luca:
-    name: Luca Moretti (Kaggle T4) — carousel + voice + neural video
+    name: Luca Moretti (2x Kaggle T4) - images on cuda:0, voice+reel on cuda:1
     runs-on: ubuntu-latest
     timeout-minutes: 65
 
@@ -80,102 +71,188 @@ jobs:
       - name: Static checks (syntax, banned techniques, required APIs)
         run: |
           set -euo pipefail
-          python -m py_compile kaggle_kernel_luca/luca_studio.py scripts/run_luca_job.py
+          python -m py_compile \
+            kaggle_kernel_luca/luca_studio.py \
+            scripts/luca_v2/generate_images.py \
+            scripts/luca_v2/generate_video.py \
+            scripts/luca_v2/fetch_instantid.py \
+            scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py \
+            scripts/run_luca_job.py
           python - <<'PY'
           import pathlib
-          src = pathlib.Path("kaggle_kernel_luca/luca_studio.py").read_text()
-
-          # Source-compiling deps are forbidden (Kaggle is Python 3.13, no compiler).
-          forbidden = ["import dlib", "import basicsr", "import spacy", "from basicsr",
-                       "import face_alignment", "import insightface"]
-          hits = [f for f in forbidden if f in src]
-          assert not hits, f"source-compiling dependency reintroduced: {hits}"
-
-          # Techniques explicitly banned by the user.
-          banned = {
-              "WSOLA time stretching": "def time_stretch",
-              "procedural pixel-slice mouth": "open_mouth_patch",
-              "custom biquad filter": "def biquad_",
-              "custom parametric EQ": "def peaking_boost",
-              "pixel-slice strip shift": "apply_head_motion",
-          }
-          found = [name for name, token in banned.items() if token in src]
-          assert not found, f"banned technique reintroduced: {found}"
-
-          # Wheels only: insightface must be pinned at the pure-python wheel.
-          assert "insightface>=2.1" in src, "insightface pin lost (pre-2.1 ships a Cython .pyx)"
-          for bad in ("import dlib", "import basicsr", "from basicsr", "import spacy"):
-              assert bad not in src, f"source-compiling dependency reintroduced: {bad}"
-
-          # The architecture the upgrade is judged on.
-          required = [
-              "DPMSolverSinglestepScheduler",     # DPM++ SDE Karras
-              "sde-dpmsolver++",
-              "inswapper_128.onnx",               # Stage 2 biometric swap
-              "buffalo_l",
-              "StableDiffusionXLImg2ImgPipeline",  # Stage 3 adetailer
-              "ip-adapter-plus-face_sdxl_vit-h.safetensors",
-              "LivePortrait",                     # dedicated avatar model
-              "retarget_lip",                     # audio-driven mouth
-              "stable-video-diffusion-img2vid-xt",  # b-roll
-              "edge_tts",
-              "en-US-AndrewMultilingualNeural",
-              "cuda:1",                           # dual-GPU
-              "forward-only",
-          ]
-          missing = [r for r in required if r not in src]
-          assert not missing, f"kernel missing expected pieces: {missing}"
-
-          # The specifics users get burned by.
-          assert "ip_adapter=OFF" in src, "Stage 1 must state that txt2img runs without IP-Adapter"
-          assert "no sunglasses" in src, "negative prompt must forbid sunglasses"
-          assert "hands" in src and "five fingers" in src, "hands must be explicit, never hidden"
-          assert "hands out of frame" not in src, "hiding hands is forbidden"
-          assert src.count("strength=ADETAILER_STRENGTH") >= 1
-          assert "ADETAILER_STRENGTH = 0.27" in src, "adetailer strength must be 0.27"
-          assert "ADETAILER_SCALE = 0.60" in src, "a-face adapter scale must be 0.60"
-
-          # Failure modes that actually cost us whole runs — keep them fixed.
-          assert "list(faces).index" not in src, \
-              "insightface Face compares ndarrays: never recover an index via list.index"
-          assert "insightface.model_zoo" in src or "model_zoo import get_model" in src, \
-              "inswapper must be built via model_zoo.get_model (an INSwapper, not a session)"
-          assert "CAROUSEL_BUDGET_S" in src and "REEL_MIN_BUDGET_S" in src, \
-              "workers must be wall-clock bounded"
-          assert "_load_slides" in src, "the reel must read published slides from disk"
-          assert "no reel frames were produced" in src, "the reel must fail loudly, not silently"
-
-          # CLIP truncates at 77 tokens: prompt bloat silently dropped the
-          # Porsche and the hands, so budget every prompt explicitly.
           import re
-          def _tokens(text):
-              n = 0
-              for w in re.findall(r"\w+|[^\w\s]", text):
-                  n += 1 if (not w.isalnum() or len(w) <= 6) else (1.5 if len(w) <= 12 else 2)
-              return round(n)
-          prompts = re.findall(r'prompt": \((.*?)\n        \),', src, re.S)
-          assert len(prompts) == 5, f"expected 5 prompts, found {len(prompts)}"
-          for i, raw in enumerate(prompts, 1):
-              text = " ".join(re.findall(r'"([^"]*)"', raw))
-              text = re.sub(r"\{PHOTOREAL\}|\{LUCA\}",
-                            "unretouched, visible skin pores, photorealistic", text)
-              n = _tokens(text)
-              assert n <= 80, (f"slide {i} prompt is ~{n} CLIP tokens — "
-                               f"anything past 77 is silently discarded")
-          # SVD must own the device: CPU offload collided with LivePortrait's
-          # resident weights and OOM'd on a 14.5 GB T4.
-          _code = "\n".join(l for l in src.splitlines()
-                            if not l.strip().startswith("#"))
-          assert "enable_model_cpu_offload" not in _code, \
-              "SVD must run resident on its device, not model-offloaded"
-          # LivePortrait keeps load_video in src.utils.io.
-          assert "from src.utils.io import load_video" in src, \
-              "LivePortrait's load_video lives in src.utils.io"
-          assert "ADETAILER_MIN_FACE" in src, \
-              "tiny faces must skip adetailer rather than drift the identity"
-          print("phase 4 static checks passed")
+
+          launcher = pathlib.Path("kaggle_kernel_luca/luca_studio.py").read_text()
+          images = pathlib.Path("scripts/luca_v2/generate_images.py").read_text()
+          video = pathlib.Path("scripts/luca_v2/generate_video.py").read_text()
+          fetch = pathlib.Path("scripts/luca_v2/fetch_instantid.py").read_text()
+          vendor = pathlib.Path(
+              "scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py"
+          ).read_text()
+          workers = {"generate_images.py": images, "generate_video.py": video}
+
+          def code_of(src):
+              """
+              Keep only executable code.
+
+              Both workers document the prohibitions in their docstring and
+              report them in a metrics dict (`"inswapper_128": False`), so a
+              naive scan rejects the compliant files. Docstrings are removed
+              through the AST, comments by prefix, self-reporting lines by
+              pattern.
+              """
+              import ast
+              try:
+                  tree = ast.parse(src)
+              except SyntaxError:
+                  tree = None
+              if tree is not None:
+                  for node in ast.walk(tree):
+                      if isinstance(node, (ast.Module, ast.ClassDef,
+                                           ast.FunctionDef,
+                                           ast.AsyncFunctionDef)):
+                          doc = ast.get_docstring(node, clean=False)
+                          if doc:
+                              src = src.replace(doc, "")
+              kept = []
+              for line in src.splitlines():
+                  if line.strip().startswith("#"):
+                      continue
+                  if re.match(r"^\s*[\"'][^\"']*[\"']\s*:\s*False\s*,?\s*$", line):
+                      continue
+                  kept.append(line)
+              return "\n".join(kept)
+
+          # -- the four techniques the user banned, on actual code -----------
+          banned = [
+              ('pipe.to("cpu")', "CPU offload"),
+              ("inswapper_128", "inswapper_128"),
+              ("StableVideoDiffusion", "SVD-XT"),
+              ("stable-video-diffusion", "SVD-XT"),
+              ("StableDiffusionXLImg2ImgPipeline", "SDXL img2img adetailer"),
+          ]
+          for name, src in workers.items():
+              body = code_of(src)
+              for token, label in banned:
+                  assert token not in body, f"{name} reintroduced banned {label}"
+
+          # -- architecture: two scripts, one run, two GPUs ------------------
+          assert "generate_video.py" in launcher, "video worker not launched"
+          assert "Popen" in launcher and "threading" in launcher, \
+              "workers must be spawned concurrently and their logs pumped"
+          assert "CUDA_VISIBLE_DEVICES" in launcher, "both GPUs must be exposed"
+          assert "PYTORCH_CUDA_ALLOC_CONF" in launcher, \
+              "expandable_segments prevents fragmentation OOM on a 14.5 GB T4"
+          assert "check_prohibitions" in launcher and "BANNED" in launcher, \
+              "the launcher must fail fast on a banned construct"
+          assert "preflight_instantid" in launcher, \
+              "the InstantID pipeline must be staged before the GPU work starts"
+          assert '"cuda:0"' in images, "image pipeline must pin cuda:0"
+          assert '"cuda:1"' in video, "voice/avatar pipeline must pin cuda:1"
+
+          # -- image pipeline specifics the user fixed -----------------------
+          assert "SG161222/RealVisXL_V5.0" in images, "base model changed"
+          assert "InstantX/InstantID" in images, "InstantID weights changed"
+          assert "antelopev2" in images, "identity analysis must use antelopev2"
+          assert "CUDAExecutionProvider" in images, \
+              "insightface must run on the GPU provider"
+          assert "enable_vae_slicing()" in images, "VAE slicing missing"
+          assert "CompelForSDXL" in images, "compel is required to bypass 77 tokens"
+          assert "DPMSolverMultistepScheduler" in images and \
+                 "use_karras_sigmas=True" in images, "scheduler must be DPM++ Karras"
+          assert "float16" in images, "SDXL must run in fp16"
+          assert "set_ip_adapter_scale" in images, \
+              ("ip_adapter_scale is not a __call__ kwarg - it is swallowed by "
+               "**kwargs and silently ignored; use the setter")
+          assert "ip_adapter_scale=0.80" not in images, \
+              "ip_adapter_scale passed to the pipeline call would be ignored"
+
+          prefix = (
+              "24mm iPhone 16 Pro candid photo, dirty blonde tousled hair, "
+              "light 3-day stubble, natural sunlight, visible skin pores, "
+              "slight film grain"
+          )
+
+          def collapsed(text):
+              return re.sub(r"\s+", " ", text.replace('"', "")).strip()
+
+          # The literal is wrapped across implicit-concatenation lines, so
+          # compare on collapsed whitespace rather than exact source layout.
+          assert collapsed(prefix) in collapsed(images), \
+              "the required prompt prefix was altered"
+          assert images.count("LENS_SPEC") >= 2, \
+              "every scene prompt must start with the lens prefix"
+
+          for needle, label in [("MASTER_CFG = 3.8", "master CFG 3.8"),
+                                ("MASTER_STEPS = 30", "master 30 steps"),
+                                ("SCENE_IP_ADAPTER_SCALE = 0.80", "ip adapter 0.80"),
+                                ("SCENE_CONTROLNET_SCALE = 0.55", "controlnet 0.55")]:
+              assert needle in images, f"{label} changed"
+
+          assert "hands" in images.lower(), "hands must be explicit"
+          assert re.search(r"hands near the face", images), \
+              "the master portrait must forbid hands near the face"
+          assert "face_box_for" in images or "male face" in images, \
+              "party scene needs a male-face-bbox-targeted identity repair"
+
+          # -- video pipeline specifics ---------------------------------------
+          assert "chatterbox" in video, "TTS must be Chatterbox"
+          assert "tts_turbo" in video, \
+              "Turbo lives at chatterbox.tts_turbo, not the package root"
+          # The cleanup trio must sit together inside release_tts_vram, in order.
+          cleanup = re.search(
+              r"del (\w+)\s*\n\s*gc\.collect\(\)\s*\n\s*"
+              r"torch\.cuda\.empty_cache\(\)", video)
+          assert cleanup, \
+              ("TTS VRAM release must be exactly del <model>; gc.collect(); "
+               "torch.cuda.empty_cache() back to back")
+          # Compare definition order, not the first mention (docstrings lie).
+          assert 'timed("release_tts_vram"' in video, \
+              "the VRAM release stage is missing"
+          assert 'timed("release_tts_vram"' in video and \
+                 video.index('timed("release_tts_vram"') < \
+                 video.index("def run_musetalk"), \
+              "VRAM must be released before MuseTalk loads"
+          assert "MuseTalk" in video, "MuseTalk required for the talking avatar"
+          assert "wait_for_master" in video or "01_luca_master.png" in video, \
+              "the avatar must poll for the master portrait (cross-process order)"
+          assert "ffprobe" in video, "the reel must be verified with ffprobe"
+          assert "luca_reel.mp4" in video and "luca_voice.wav" in video
+          assert "unet.timesteps" not in code_of(video), \
+              "MuseTalk UNet has no .timesteps attribute"
+          assert "SD_VAE_FILES" in video and "safetensors" in video, \
+              "sd-vae ships safetensors only; requesting the .bin 404s"
+          assert "merge_metrics" in images and "merge_metrics" in video, \
+              "both workers must merge their metrics half under a lock"
+          assert "fcntl.flock" in images and "fcntl.flock" in video, \
+              "the shared luca_metrics.json needs an exclusive lock"
+
+          # -- dependency pins that decide whether pip can install at all ----
+          assert "onnxruntime-gpu==1.22.0" in images, \
+              "onnxruntime-gpu 1.32 is CUDA 13; a T4 runtime is CUDA 12"
+          assert "onnx==1.23.2" in images, "onnx needs the cp312-abi3 wheel"
+          assert "insightface==2.1" in images, "insightface must be the wheel release"
+          # chatterbox pins diffusers==0.29 for a symbol newer diffusers dropped;
+          # process 1 needs >=0.30 on the same interpreter, so the shim is
+          # load-bearing, not decorative.
+          assert "shim_diffusers_lora" in video, \
+              "chatterbox needs the diffusers LoRA shim on a shared interpreter"
+          assert "LoRACompatibleLinear" in video, \
+              "the shim must restore the exact symbol chatterbox imports"
+          assert "--no-deps" in images, \
+              ("insightface must be installed --no-deps: its opencv-python "
+               "dependency imports libGL, which Kaggle does not have")
+
+          # -- the vendored InstantID pipeline --------------------------------
+          for symbol in ("StableDiffusionXLInstantIDPipeline", "draw_kps",
+                         "load_ip_adapter_instantid"):
+              assert symbol in vendor, f"vendored pipeline lost {symbol}"
+          assert "ensure_pipeline" in fetch and "_vendor" in fetch, \
+              "the bootstrapper must prefer the committed pipeline over the network"
+
+          print("v2 static checks passed")
           PY
-          ls -la kaggle_kernel_luca/
+          ls -la kaggle_kernel_luca/ scripts/luca_v2/
 
       - name: Preflight — Kaggle credentials present?
         env:
@@ -221,13 +298,12 @@ jobs:
           mkdir -p outputs
           touch outputs/build.log
 
-          FILES="outputs/luca_carousel_sheet.png outputs/luca_video_sheet.png \
-                 outputs/01_luca_master.png \
-                 outputs/luca_reel_clip.mp4 outputs/luca_voice.mp3 \
-                 outputs/luca_metrics.json outputs/build.log \
-                 outputs/luca_slide_01.jpg outputs/luca_slide_02.jpg \
-                 outputs/luca_slide_03.jpg outputs/luca_slide_04.jpg \
-                 outputs/luca_slide_05.jpg"
+          FILES="outputs/01_luca_master.png outputs/02_luca_yacht.png \
+                 outputs/03_luca_porsche.png outputs/04_luca_party.png \
+                 outputs/luca_voice.wav outputs/luca_reel.mp4 \
+                 outputs/luca_metrics.json \
+                 outputs/luca_metrics_images.json outputs/luca_metrics_video.json \
+                 outputs/build.log"
 
           keep() {
             mkdir -p /tmp/artifact_keep
@@ -274,6 +350,6 @@ jobs:
             echo "::notice::nothing new to commit"
             exit 0
           fi
-          git commit -m "chore(luca): publish Phase 3 assets (carousel, voice, neural clip) [skip ci]" \
+          git commit -m "chore(luca): publish v2 assets (master, scenes, voice, reel) [skip ci]" \
                      -m "Automated by .github/workflows/luca_studio.yml · run ${{ github.run_id }}"
           git push origin "HEAD:${BRANCH}"
