@@ -223,6 +223,43 @@ def chatterbox_precision():
 check("chatterbox keeps s3gen in float32", chatterbox_precision)
 
 # --------------------------------------------------------------------------- #
+# 5b. the vendored pipeline calls the parent's check_inputs by keyword only
+# --------------------------------------------------------------------------- #
+def check_inputs_keywords():
+    """
+    Regression for run 45953039196. diffusers 0.43 inserted ip_adapter_image and
+    ip_adapter_image_embeds into the parent's check_inputs signature, so the
+    vendored positional call shifted every later argument and
+    controlnet_conditioning_scale arrived holding a tensor. Keywords are stable
+    across versions; positional arguments are not.
+    """
+    import ast
+    import inspect
+
+    tree = ast.parse((REPO / "scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py").read_text())
+    calls = [node for node in ast.walk(tree)
+             if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Attribute)
+             and node.func.attr == "check_inputs"]
+    assert len(calls) == 1, f"expected one check_inputs call, found {len(calls)}"
+    call = calls[0]
+    assert not call.args, f"{len(call.args)} positional argument(s) — these drift across releases"
+    passed = {kw.arg for kw in call.keywords}
+
+    # and they must still be acceptable to whatever diffusers is installed
+    from diffusers.pipelines.controlnet.pipeline_controlnet_sd_xl import (
+        StableDiffusionXLControlNetPipeline as Parent)
+    params = set(inspect.signature(Parent.check_inputs).parameters) - {"self"}
+    unknown = passed - params
+    assert not unknown, f"diffusers dropped {unknown}"
+    required = {n for n, p_ in inspect.signature(Parent.check_inputs).parameters.items()
+                if p_.default is p_.empty} - {"self"}
+    assert required <= passed, f"diffusers added required {required - passed}"
+    return f"{len(passed)} keyword args, no positional, bindable on diffusers {__import__('diffusers').__version__}"
+
+check("vendored check_inputs is called by keyword", check_inputs_keywords)
+
+# --------------------------------------------------------------------------- #
 # 6. verify_reel rejects bad reels and accepts a good one
 # --------------------------------------------------------------------------- #
 def reel_gate():

@@ -756,7 +756,12 @@ def run_musetalk(master: Path, voice: Path, timings: Dict[str, float]) -> Dict[s
                 datagen(whisper_chunks=whisper_chunks,
                         vae_encode_latents=[latents],
                         batch_size=1, delay_frame=0, device=device)):
-            audio_feature_batch = pe(whisper_batch)
+            # PositionalEncoding adds a float32 buffer (`self.pe`) to its input,
+            # so even with fp16 whisper features the sum is promoted to float32
+            # and the first attention matmul inside the fp16 UNet dies with
+            # "expected mat1 and mat2 to have the same dtype, but got: float !=
+            # c10::Half" (run 45953039196). Cast both UNet inputs explicitly.
+            audio_feature_batch = pe(whisper_batch).to(dtype=unet.model.dtype)
             latent_batch = latent_batch.to(dtype=unet.model.dtype)
             pred = unet.model(latent_batch, timesteps,
                               encoder_hidden_states=audio_feature_batch).sample
