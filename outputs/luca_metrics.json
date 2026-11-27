@@ -1,323 +1,69 @@
 {
-  "phase": "phase-3.1-luca-moretti",
-  "character": "Luca Moretti \u00b7 27 \u00b7 young-millionaire playboy",
-  "started_at": "2026-11-26T23:58:49.735362+00:00",
-  "status": "success_with_errors",
-  "config": {
-    "stage1": {
-      "model": "SG161222/RealVisXL_V5.0",
-      "scheduler": "DPM++ SDE Karras",
-      "algorithm": "sde-dpmsolver++",
-      "steps": 32,
-      "cfg": 5.0,
-      "ip_adapter": false
+  "video": {
+    "process": "video",
+    "device": "cuda:1",
+    "status": "failed",
+    "started_at": "2026-11-27T05:48:45Z",
+    "prohibitions_honoured": {
+      "pipe.to_cpu": false,
+      "inswapper_128": false,
+      "svd_xt": false,
+      "sdxl_img2img_adetailer": false
     },
-    "stage2": {
-      "detector": "insightface buffalo_l",
-      "swapper": "inswapper_128.onnx",
-      "target": "male face only"
+    "timings_seconds": {
+      "vid/pip_install_deps": 6.757,
+      "vid/load_chatterbox": 75.277,
+      "vid/generate_speech": 0.726
     },
-    "stage3": {
-      "pipeline": "SDXL img2img + IP-Adapter-Plus-Face",
-      "scale": 0.6,
-      "strength": 0.27,
-      "size": 1024,
-      "steps": 22
-    },
-    "video": {
-      "hook": "KwaiVGI/LivePortrait",
-      "hook_frames": 60,
-      "broll": "stable-video-diffusion-img2vid-xt",
-      "broll_frames": 30,
-      "fps": 25,
-      "ping_pong": false,
-      "cross_fade": false
-    },
-    "audio": {
-      "engine": "edge-tts",
-      "voice": "en-US-AndrewMultilingualNeural",
-      "bed_bpm": 120,
-      "wsola": false,
-      "biquad_eq": false
-    },
-    "parallelism": "cuda:0 carousel \u2016 cuda:1 reel"
-  },
-  "artifacts": [
-    "01_luca_master.png",
-    "02_monaco_yacht_date.png",
-    "03_vip_party_flash.png",
-    "04_porsche_gt3_pov.png",
-    "05_extreme_action.png",
-    "build.log",
-    "luca_carousel_sheet.png",
-    "luca_metrics.json",
-    "luca_slide_01.jpg",
-    "luca_slide_02.jpg",
-    "luca_slide_03.jpg",
-    "luca_slide_04.jpg",
-    "luca_slide_05.jpg"
-  ],
-  "timings_seconds": {
-    "pip_install_deps": 12.415,
-    "face/fetch_buffalo_l": 3.429,
-    "face/fetch_inswapper": 4.715,
-    "parallel_gpu_workers": 369.592
-  },
-  "errors": [
-    {
-      "worker": "reel",
-      "exitcode": 1
-    },
-    "RuntimeError: SVD failed for porsche: CUDA out of memory. Tried to allocate 2.64 GiB. GPU 1 has a total capacity of 14.56 GiB of which 1.57 GiB is free. Including non-PyTorch memory, this process has 12.99 GiB memory in use. Of the allocated memory 11.58 GiB is allocated by PyTorch, and 1.28 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)",
-    {
-      "stage": "reel_artifacts",
-      "error": "reel artifacts missing: ['luca_reel_clip.mp4']"
-    }
-  ],
-  "environment": {
-    "python": "3.13.16",
-    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
-    "torch": "2.11.0+cu130",
-    "cuda_available": true,
-    "cuda_version": "13.0",
-    "gpu_names": [
-      "Tesla T4",
-      "Tesla T4"
+    "errors": [
+      {
+        "stage": "fatal",
+        "error": "RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half"
+      }
     ],
-    "diffusers": "0.42.0",
-    "transformers": "5.20.2",
-    "accelerate": "1.15.0",
-    "safetensors": "0.8.0",
-    "PIL": "13.0.0",
-    "onnxruntime": "1.32.0",
-    "insightface": "2.1",
-    "cv2": "4.14.0",
-    "edge_tts": "7.3.1"
+    "artifacts": [],
+    "total_seconds": 85.5,
+    "finished_at": "2026-11-27T05:50:11Z"
   },
-  "face_models": {
-    "buffalo_l": "/tmp/stoic_face_models/models/buffalo_l",
-    "inswapper": "/tmp/stoic_face_models/inswapper_128.onnx"
-  },
-  "gpu_count": 2,
-  "slides": [
-    {
-      "index": 1,
-      "filename": "01_luca_master.png",
-      "title": "01 \u00b7 MASTER",
-      "seed": 42,
-      "size": [
-        1024,
-        1024
-      ],
-      "expected_people": 1,
-      "stage1": "ok",
-      "ip_adapter_during_txt2img": false
+  "artifacts": [],
+  "images": {
+    "process": "images",
+    "device": "cuda:0",
+    "status": "failed",
+    "started_at": "2026-11-27T05:48:45Z",
+    "base_model": "SG161222/RealVisXL_V5.0",
+    "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
+    "face_encoder": "insightface antelopev2",
+    "prompt_encoder": "compel CompelForSDXL (truncation disabled)",
+    "prohibitions_honoured": {
+      "pipe.to_cpu": false,
+      "inswapper_128": false,
+      "svd_xt": false,
+      "sdxl_img2img_adetailer": false
     },
-    {
-      "index": 2,
-      "filename": "02_monaco_yacht_date.png",
-      "title": "02 \u00b7 MONACO \u00b7 YACHT",
-      "seed": 44,
-      "size": [
-        832,
-        1024
-      ],
-      "expected_people": 2,
-      "stage1": "ok",
-      "ip_adapter_during_txt2img": false,
-      "stage2": {
-        "faces_detected": 2,
-        "genders": [
-          "M",
-          "F"
-        ],
-        "male_index": 0,
-        "swapped": true,
-        "male_bbox": [
-          32,
-          0,
-          675,
-          583
-        ]
-      },
-      "stage3": {
-        "adetailer": true,
-        "strength": 0.27,
-        "ip_adapter_scale": 0.6,
-        "crop": [
-          32,
-          0,
-          675,
-          583
-        ],
-        "blend": "elliptical gaussian feather, sigma\u224877.2px"
-      },
-      "polish": {
-        "colour": "warm cast reduced 5% (blue \u00d71.05)",
-        "grain_sigma": 1.3
-      },
-      "identity_cosine": 0.7238
+    "timings_seconds": {
+      "img/pip_install_deps": 64.81,
+      "img/load_controlnet": 17.562,
+      "img/load_sdxl": 37.823,
+      "img/load_identity_adapter": 16.641,
+      "img/configure_pipeline": 5.757
     },
-    {
-      "index": 3,
-      "filename": "03_vip_party_flash.png",
-      "title": "03 \u00b7 IBIZA \u00b7 VIP",
-      "seed": 45,
-      "size": [
-        832,
-        1024
-      ],
-      "expected_people": 2,
-      "stage1": "ok",
-      "ip_adapter_during_txt2img": false,
-      "stage2": {
-        "faces_detected": 4,
-        "genders": [
-          "M",
-          "M",
-          "F",
-          "F"
-        ],
-        "male_index": 1,
-        "swapped": true,
-        "male_bbox": [
-          399,
-          106,
-          554,
-          261
-        ]
-      },
-      "stage3": {
-        "adetailer": true,
-        "strength": 0.27,
-        "ip_adapter_scale": 0.6,
-        "crop": [
-          399,
-          106,
-          554,
-          261
-        ],
-        "blend": "elliptical gaussian feather, sigma\u224818.6px"
-      },
-      "polish": {
-        "colour": "warm cast reduced 5% (blue \u00d71.05)",
-        "grain_sigma": 1.3
-      },
-      "identity_cosine": 0.3758
+    "errors": [
+      {
+        "stage": "fatal",
+        "error": "AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'"
+      }
+    ],
+    "artifacts": [],
+    "identity": {},
+    "environment": {
+      "python": "3.13.16",
+      "torch": "2.11.0+cu130",
+      "diffusers": "0.42.0",
+      "cuda_available": true,
+      "gpu_count": 2
     },
-    {
-      "index": 4,
-      "filename": "04_porsche_gt3_pov.png",
-      "title": "04 \u00b7 AMALFI \u00b7 GT3",
-      "seed": 46,
-      "size": [
-        832,
-        1024
-      ],
-      "expected_people": 1,
-      "stage1": "ok",
-      "ip_adapter_during_txt2img": false,
-      "stage2": {
-        "faces_detected": 1,
-        "genders": [
-          "M"
-        ],
-        "male_index": 0,
-        "swapped": true,
-        "male_bbox": [
-          346,
-          80,
-          549,
-          282
-        ]
-      },
-      "stage3": {
-        "adetailer": true,
-        "strength": 0.27,
-        "ip_adapter_scale": 0.6,
-        "crop": [
-          346,
-          80,
-          549,
-          282
-        ],
-        "blend": "elliptical gaussian feather, sigma\u224824.4px"
-      },
-      "polish": {
-        "colour": "warm cast reduced 5% (blue \u00d71.05)",
-        "grain_sigma": 1.3
-      },
-      "identity_cosine": 0.801
-    },
-    {
-      "index": 5,
-      "filename": "05_extreme_action.png",
-      "title": "05 \u00b7 EXTREME",
-      "seed": 47,
-      "size": [
-        832,
-        1024
-      ],
-      "expected_people": 1,
-      "stage1": "ok",
-      "ip_adapter_during_txt2img": false,
-      "stage2": {
-        "faces_detected": 1,
-        "genders": [
-          "M"
-        ],
-        "male_index": 0,
-        "swapped": true,
-        "male_bbox": [
-          357,
-          74,
-          588,
-          305
-        ]
-      },
-      "stage3": {
-        "adetailer": true,
-        "strength": 0.27,
-        "ip_adapter_scale": 0.6,
-        "crop": [
-          357,
-          74,
-          588,
-          305
-        ],
-        "blend": "elliptical gaussian feather, sigma\u224827.7px"
-      },
-      "polish": {
-        "colour": "warm cast reduced 5% (blue \u00d71.05)",
-        "grain_sigma": 1.3
-      },
-      "identity_cosine": 0.8433
-    }
-  ],
-  "identity_cosine": {
-    "02_monaco_yacht_date.png": 0.7238,
-    "03_vip_party_flash.png": 0.3758,
-    "04_porsche_gt3_pov.png": 0.801,
-    "05_extreme_action.png": 0.8433
-  },
-  "adetailer_adapter": true,
-  "voice": {},
-  "envelope": {},
-  "shot1": {},
-  "broll": [],
-  "audio_mix": {},
-  "video": {},
-  "missing_slides": [],
-  "missing_reel_artifacts": [
-    "luca_reel_clip.mp4"
-  ],
-  "reel_skipped": "reel artifacts missing: ['luca_reel_clip.mp4']",
-  "identity_verdicts": [
-    "02_monaco_yacht_date.png:MATCH",
-    "03_vip_party_flash.png:DRIFT",
-    "04_porsche_gt3_pov.png:MATCH",
-    "05_extreme_action.png:MATCH"
-  ],
-  "total_seconds": 429.3,
-  "finished_at": "2026-11-27T00:05:59.004342+00:00"
+    "total_seconds": 142.9,
+    "finished_at": "2026-11-27T05:51:08Z"
+  }
 }

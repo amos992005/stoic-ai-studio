@@ -1,0 +1,40 @@
+{
+  "process": "images",
+  "device": "cuda:0",
+  "status": "failed",
+  "started_at": "2026-11-27T05:48:45Z",
+  "base_model": "SG161222/RealVisXL_V5.0",
+  "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
+  "face_encoder": "insightface antelopev2",
+  "prompt_encoder": "compel CompelForSDXL (truncation disabled)",
+  "prohibitions_honoured": {
+    "pipe.to_cpu": false,
+    "inswapper_128": false,
+    "svd_xt": false,
+    "sdxl_img2img_adetailer": false
+  },
+  "timings_seconds": {
+    "img/pip_install_deps": 64.81,
+    "img/load_controlnet": 17.562,
+    "img/load_sdxl": 37.823,
+    "img/load_identity_adapter": 16.641,
+    "img/configure_pipeline": 5.757
+  },
+  "errors": [
+    {
+      "stage": "fatal",
+      "error": "AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'"
+    }
+  ],
+  "artifacts": [],
+  "identity": {},
+  "environment": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cu130",
+    "diffusers": "0.42.0",
+    "cuda_available": true,
+    "gpu_count": 2
+  },
+  "total_seconds": 142.9,
+  "finished_at": "2026-11-27T05:51:08Z"
+}

@@ -1,0 +1,26 @@
+{
+  "process": "video",
+  "device": "cuda:1",
+  "status": "failed",
+  "started_at": "2026-11-27T05:48:45Z",
+  "prohibitions_honoured": {
+    "pipe.to_cpu": false,
+    "inswapper_128": false,
+    "svd_xt": false,
+    "sdxl_img2img_adetailer": false
+  },
+  "timings_seconds": {
+    "vid/pip_install_deps": 6.757,
+    "vid/load_chatterbox": 75.277,
+    "vid/generate_speech": 0.726
+  },
+  "errors": [
+    {
+      "stage": "fatal",
+      "error": "RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half"
+    }
+  ],
+  "artifacts": [],
+  "total_seconds": 85.5,
+  "finished_at": "2026-11-27T05:50:11Z"
+}
