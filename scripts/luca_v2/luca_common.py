@@ -120,7 +120,8 @@ def torch_fingerprint() -> Tuple[Optional[str], Optional[str]]:
 
 
 def pip_install(packages: Iterable[str], *, no_deps: bool = False,
-                no_build_isolation: bool = False, tag: str = "img") -> bool:
+                no_build_isolation: bool = False, prepare_sdist=None,
+                tag: str = "img") -> bool:
     """
     Install packages under a cross-process lock, never letting torch move.
 
@@ -131,6 +132,7 @@ def pip_install(packages: Iterable[str], *, no_deps: bool = False,
     dependency's metadata can still do.
     """
     packages = list(packages)
+    command_prefix: List[str] = []
     torch_version, torchaudio_version = torch_fingerprint()
     command = [sys.executable, "-m", "pip", "install", "-q", "--no-cache-dir"]
     if no_deps:
@@ -140,10 +142,19 @@ def pip_install(packages: Iterable[str], *, no_deps: bool = False,
         # already; in an isolated build environment they are not, and the wheel
         # fails with "No available output" before any compilation happens.
         command.append("--no-build-isolation")
+    if prepare_sdist is not None:
+        # Some 2022-era setup.py files do not survive a modern setuptools. There
+        # is no pip flag that edits a build, so the sdist is fetched, patched
+        # and installed from a local path instead.
+        packages = prepare_sdist(packages)
     command.extend(packages)
 
-    log(f"pip install {' '.join(packages)}{' (no-deps)' if no_deps else ''}",
-        tag=tag)
+    flags = "".join(flag for flag, on in ((" (no-deps)", no_deps),
+                                          (" (no-build-isolation)",
+                                           no_build_isolation),
+                                          (" (patched sdist)",
+                                           prepare_sdist is not None)) if on)
+    log(f"pip install {' '.join(packages)}{flags}", tag=tag)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     with open(PIP_LOCK, "a+") as lock:
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)

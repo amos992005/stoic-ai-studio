@@ -477,6 +477,126 @@ check("SadTalker invocation and weights", sadtalker_invocation)
 
 
 # --------------------------------------------------------------------------- #
+# 7a. The SadTalker wrapper actually survives the process boundary
+# --------------------------------------------------------------------------- #
+
+
+def sadtalker_wrapper():
+    """
+    Regression for run 45980957305.
+
+    SadTalker's `src/face3d/util/preprocess.py` calls
+    `warnings.filterwarnings(..., category=np.VisibleDeprecationWarning)` at
+    import time. numpy 2 removed that symbol, and SadTalker runs as a
+    *subprocess* — so patching numpy in the parent does nothing, and
+    PYTHONSTARTUP is ignored for scripts (verified, not assumed). The fix is a
+    wrapper script that shims numpy and then run_path()s inference.py; this
+    check runs that wrapper against a stand-in that performs the same import.
+    """
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+    video.WORK_DIR = pathlib.Path(tempfile.mkdtemp())
+
+    probe_dir = video.WORK_DIR / "runner_probe"
+    (probe_dir / "src").mkdir(parents=True, exist_ok=True)
+    (probe_dir / "src" / "__init__.py").write_text("")
+    (probe_dir / "src" / "helper.py").write_text("MARK = 'sibling-ok'\n")
+    stub = probe_dir / "inference.py"
+    stub.write_text(
+        "import sys, warnings\n"
+        "import numpy as np\n"
+        "warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)\n"
+        "from src.helper import MARK\n"
+        "print('SHIM_OK', MARK)\n")
+
+    runner = video.write_sadtalker_runner()
+    probe = subprocess.run([sys.executable, str(runner), str(stub)],
+                           capture_output=True, text=True, cwd=str(probe_dir))
+    assert "SHIM_OK sibling-ok" in (probe.stdout + probe.stderr), \
+        (probe.stdout + probe.stderr)[-600:]
+
+    # ...and without the wrapper the very same stub must fail, or this check
+    # would pass for the wrong reason.
+    failing = subprocess.run([sys.executable, str(stub)], capture_output=True,
+                             text=True, cwd=str(probe_dir))
+    assert failing.returncode != 0 and "VisibleDeprecationWarning" in failing.stderr, \
+        "the stub does not reproduce the numpy 2 failure, so the check proves nothing"
+    return "wrapper restores the shim in a child; the bare script fails as it did in the run"
+
+
+check("SadTalker wrapper survives the process boundary", sadtalker_wrapper)
+
+
+# --------------------------------------------------------------------------- #
+# 7a2. The gfpgan dependency chain has a concrete, tested plan
+# --------------------------------------------------------------------------- #
+
+
+def basicsr_plan():
+    """
+    basicsr 1.4.2 will not build under a modern setuptools.
+
+    Its setup.py asks git for a hash with
+    `subprocess.Popen(...).communicate()`, and that fails during metadata
+    generation; pip reports only "Preparing metadata (pyproject.toml) did not
+    run successfully / No available output". Verified locally: the same sdist
+    builds cleanly once that one line is the equivalent subprocess.run call, so
+    the worker now downloads, patches and installs the local path.
+    """
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+    body = code_of(source("generate_video.py"))
+
+    assert "prepare_basicsr_sdist" in body
+    assert "prepare_sdist=prepare_basicsr_sdist" in body, \
+        "the pip call must use the patched sdist"
+    old, new = video._BASICSR_SETUP_PATCH
+    assert "communicate()" in old and "subprocess.run" in new
+    assert "no_build_isolation=True" in body, \
+        "basicsr's setup.py imports torch, so isolation has to be off"
+    # The enhancer must still be optional: a failed install may not kill the reel.
+    assert "enhancer = None" in body
+    return "sdist patched, installed without isolation, enhancer still optional"
+
+
+check("basicsr install plan (patched sdist)", basicsr_plan)
+
+
+# --------------------------------------------------------------------------- #
+# 7b. Detection failures must never delete a generated image
+# --------------------------------------------------------------------------- #
+
+
+def dataset_retention():
+    """
+    Regression for run 45980957305, the expensive half of it.
+
+    12 of 15 InstantID renders were deleted because antelopev2's detector — at
+    its single 640px scale — could not find a face in the wider framings. The
+    training set fell to three images, under the minimum, so no adapter was
+    produced and the carousel silently fell back to the base model.
+    """
+    images = source("generate_images.py")
+    body = code_of(images)
+
+    assert "unverified" in body, "unverified renders must be recorded, not deleted"
+    # The only unlink() left must not be the per-image face check.
+    loop = images[images.index("for index, entry in enumerate"):
+                  images.index("dataset complete")]
+    assert "unlink" not in loop, \
+        "the dataset loop still deletes images on a detection miss"
+    assert "DET_SIZES" in body and len(re.findall(r"\(\d{3,4}, \d{3,4}\)", body)) >= 2, \
+        "detection must escalate through more than one det_size"
+    # ...and training uses every kept image, verified or not.
+    assert 'dataset["files"] + dataset["unverified"]' in body, \
+        "training must include the renders the detector could not verify"
+    return "renders are kept, detection escalates, training uses all of them"
+
+
+check("dataset retention: a detection miss never deletes an image", dataset_retention)
+
+
+# --------------------------------------------------------------------------- #
 # 7b. Resolution mismatches: the LoRA resizes internally, the avatar cannot
 # --------------------------------------------------------------------------- #
 

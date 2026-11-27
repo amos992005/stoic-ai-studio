@@ -161,13 +161,49 @@ def load_face_app(root: Path):
     return app
 
 
+#: Detection scales, largest first. antelopev2's detector is the SCRFD-10G that
+#: InstantID itself uses; it is trained on faces occupying a decent share of the
+#: frame, and at det_size 640 a medium or full body shot leaves far too few
+#: pixels on the face to find. Run 45980957305 lost 12 of 15 dataset images this
+#: way — the same detector that found the close-up master missed everything
+#: wider than a head-and-shoulders crop.
+DET_SIZES = ((640, 640), (1024, 1024))
+
+
 def detect_face(app, image_rgb):
-    """The largest male face, or the largest face if none scores male."""
+    """
+    The largest male face, or the largest face if none scores male.
+
+    Detection escalates rather than giving up: a smaller det_size is the cheaper
+    attempt, a larger one costs ~2.5x the compute but resolves faces that are
+    small in frame. Giving up after one scale is what silently shrank the
+    training set to three images.
+    """
     import cv2
     import numpy as np
 
     array = image_rgb if isinstance(image_rgb, np.ndarray) else np.asarray(image_rgb)
-    faces = app.get(cv2.cvtColor(array, cv2.COLOR_RGB2BGR))
+    bgr = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
+
+    faces = []
+    used = None
+    for det_size in DET_SIZES:
+        try:
+            app.prepare(ctx_id=0, det_size=det_size)
+        except Exception:
+            pass
+        faces = app.get(bgr)
+        used = det_size
+        if faces:
+            break
+
+    # restore the default so the next call does not inherit the widened scale
+    if used != DET_SIZES[0]:
+        try:
+            app.prepare(ctx_id=0, det_size=DET_SIZES[0])
+        except Exception:
+            pass
+
     if not faces:
         return None, 0
     males = [f for f in faces if getattr(f, "sex", None) == "M"] or faces
@@ -297,6 +333,7 @@ def build_dataset(timings: Dict[str, float], master_path: Path) -> Dict[str, Any
     summary: Dict[str, Any] = {
         "images": 0,
         "files": [],
+        "unverified": [],
         "method": "master from RealVisXL, 15 variants anchored by InstantID",
         "instantid_scales": {"ip_adapter": DATASET_IP_SCALE,
                              "controlnet": DATASET_CONTROLNET_SCALE},
@@ -338,17 +375,28 @@ def build_dataset(timings: Dict[str, float], master_path: Path) -> Dict[str, Any
                 generator=torch.Generator(device=DEVICE).manual_seed(int(entry["seed"])),
             ).images[0]
             image.save(path, format="PNG", optimize=True)
+
+            # The detector is a *quality signal on the finished image*, not a
+            # filter on the pipeline. InstantID has already anchored the face, so
+            # a detection miss means the framing is wide, not that the image is
+            # unusable — and deleting it is how the training set collapsed.
+            # Keep everything, and record which images verified so a genuinely
+            # faceless render is still visible in the metrics.
             face, _ = detect_face(app, image)
             if face is None:
-                log(f"  {entry['name']}: no face detected — excluding", "WARN")
-                path.unlink(missing_ok=True)
-                continue
-            summary["files"].append(path.name)
-            log(f"  [{index}/{len(character.DATASET)}] {path.name} "
-                f"({path.stat().st_size / 1024:.0f} KB)")
+                summary["unverified"].append(path.name)
+                log(f"  [{index}/{len(character.DATASET)}] {path.name} "
+                    f"({path.stat().st_size / 1024:.0f} KB) · face not detected "
+                    f"in-frame, kept", "WARN")
+            else:
+                summary["files"].append(path.name)
+                log(f"  [{index}/{len(character.DATASET)}] {path.name} "
+                    f"({path.stat().st_size / 1024:.0f} KB)")
 
-        summary["images"] = len(summary["files"])
-        log(f"dataset complete: {summary['images']} images in {DATASET_DIR}")
+        summary["images"] = len(summary["files"]) + len(summary["unverified"])
+        log(f"dataset complete: {summary['images']} images in {DATASET_DIR} "
+            f"({len(summary['files'])} face-verified, "
+            f"{len(summary['unverified'])} unverified)")
 
         # Drop the reference model here rather than in the caller: the ControlNet
         # and the projection network are the two largest residents on the card,
@@ -522,11 +570,13 @@ def main() -> int:
         if dataset["images"] >= 8:
             try:
                 metrics["training"] = luca_lora.train(
-                    image_paths=[DATASET_DIR / name for name in dataset["files"]],
+                    image_paths=[DATASET_DIR / name
+                                 for name in dataset["files"] + dataset["unverified"]],
                     prompts=[character.dataset_prompt(entry)
                              for entry in character.DATASET
                              if entry["name"] in
-                             {Path(n).stem for n in dataset["files"]}],
+                             {Path(n).stem for n in
+                              dataset["files"] + dataset["unverified"]}],
                     base_model=BASE_MODEL, lora_path=lora_path, device=DEVICE,
                     resolution=TRAIN_RESOLUTION, rank=LORA_RANK, alpha=LORA_ALPHA,
                     learning_rate=TRAIN_LR, max_train_steps=TRAIN_STEPS,

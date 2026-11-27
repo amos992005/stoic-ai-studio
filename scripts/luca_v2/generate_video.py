@@ -88,9 +88,13 @@ SADTALKER_DEPS = ["librosa", "face_alignment", "imageio", "imageio-ffmpeg",
 #: ``gfpgan`` depends on basicsr, so both go in the same no-isolation call.
 GFPGAN_DEPS = ["basicsr==1.4.2", "gfpgan==1.3.8"]
 #: basicsr is imported by the SadTalker shim, not by gfpgan's own metadata.
+#: basicsr's setup.py imports numpy itself, so numpy must be importable in the
+#: live interpreter (with --no-build-isolation it is) *and* the wheel must not
+#: try to re-resolve torch. ``basicsr`` also declares opencv-python, which
+#: imports libGL: the headless build has to be forced back on afterwards.
 GFPGAN_BUILD_DEPS = ["numpy", "opencv-python-headless", "torchvision", "scipy",
                      "tqdm", "yapf", "addict", "future", "lmdb", "pyyaml",
-                     "requests", "scikit-image", "tqdm"]
+                     "requests", "scikit-image", "filterpy", "numpy"]
 
 SADTALKER_REPO = "https://github.com/OpenTalker/SadTalker.git"
 
@@ -387,6 +391,44 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def verify_sadtalker_runner() -> None:
+    """
+    Run the wrapper against a stub that reproduces SadTalker's import.
+
+    This is a *functional* check, not a string check: a child process applies
+    the shim, imports numpy the way ``src/face3d/util/preprocess.py`` does,
+    resolves a sibling module by plain ``import`` (which is how SadTalker
+    resolves ``src.*``), and reports its argv. If any of that breaks, the run
+    dies here in two seconds instead of after downloading 725 MB of weights.
+    """
+    probe_dir = WORK_DIR / "runner_probe"
+    (probe_dir / "src").mkdir(parents=True, exist_ok=True)
+    (probe_dir / "src" / "__init__.py").write_text("", encoding="utf-8")
+    (probe_dir / "src" / "helper.py").write_text("MARK = 'sibling-ok'\n",
+                                                 encoding="utf-8")
+    stub = probe_dir / "inference.py"
+    stub.write_text(
+        "import sys, warnings\n"
+        "import numpy as np\n"
+        "warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)\n"
+        "from src.helper import MARK\n"
+        "print('SHIM_OK', MARK, sys.argv[sys.argv.index('--driven_audio') + 1])\n",
+        encoding="utf-8")
+
+    runner = write_sadtalker_runner()
+    probe = subprocess.run(
+        [sys.executable, str(runner), str(stub),
+         "--driven_audio", "/tmp/voice.wav"],
+        capture_output=True, text=True, cwd=str(probe_dir))
+    output = (probe.stdout or "") + (probe.stderr or "")
+    if "SHIM_OK sibling-ok /tmp/voice.wav" not in output:
+        raise RuntimeError(
+            "the SadTalker wrapper does not survive a subprocess:\n"
+            + output.strip()[-800:])
+    log("SadTalker wrapper verified: shim applied, sibling imports resolve, "
+        "argv forwarded, in a child process")
+
+
 def wait_for_master(timings: Dict[str, float]) -> Path:
     """Poll for process 1's master portrait."""
     master = OUTPUT_DIR / MASTER_FILENAME
@@ -458,6 +500,10 @@ def ensure_sadtalker(timings: Dict[str, float]) -> Path:
 
     with timed("ffmpeg_on_path", timings):
         ensure_ffmpeg_on_path()
+        # Prove the shim survives the process boundary before a ten-minute
+        # render depends on it, by running the real wrapper against a stand-in
+        # inference.py that imports numpy the way SadTalker does.
+        verify_sadtalker_runner()
 
     with timed("sadtalker_face_models", timings):
         # face_alignment fetches these on first construction; doing it here means
@@ -469,6 +515,54 @@ def ensure_sadtalker(timings: Dict[str, float]) -> Path:
         __import__("face_alignment")
         log(f"face_alignment ready (cache {FACE_ALIGNMENT_CACHE})")
     return SADTALKER_DIR
+
+
+#: SadTalker imports ``src.face3d.util.preprocess`` at module scope, and that
+#: module does ``warnings.filterwarnings("ignore",
+#: category=np.VisibleDeprecationWarning)``. numpy 2 removed the symbol, so the
+#: child dies during *import*, before a single frame is rendered.
+#:
+#: Monkeypatching numpy in this process does nothing: SadTalker is a subprocess
+#: and gets a fresh interpreter. PYTHONSTARTUP does not help either — Python
+#: only honours it for *interactive* sessions, not for scripts or ``-c`` (this
+#: was verified rather than assumed). So the shim lives in a runner script that
+#: applies it and then executes inference.py in the same interpreter.
+SADTALKER_RUNNER = '''
+import os
+import runpy
+import sys
+
+import numpy as np
+
+if not hasattr(np, "VisibleDeprecationWarning"):
+    np.VisibleDeprecationWarning = DeprecationWarning
+for _legacy, _modern in (("float_", float), ("int_", int), ("bool_", bool),
+                         ("object_", object), ("str_", str)):
+    if not hasattr(np, _legacy):
+        setattr(np, _legacy, _modern)
+
+try:
+    import torchvision.transforms.functional as _functional
+
+    sys.modules.setdefault("torchvision.transforms.functional_tensor", _functional)
+except Exception:
+    pass
+
+entry = sys.argv[1]
+# inference.py resolves src/config relative to sys.argv[0], and does `from src...`
+# imports, so both the argv and sys.path have to look like a direct run.
+sys.argv = sys.argv[1:]
+sys.path.insert(0, os.path.dirname(os.path.abspath(entry)))
+runpy.run_path(entry, run_name="__main__")
+'''
+
+
+def write_sadtalker_runner() -> Path:
+    """Write the shim-then-run wrapper Python will execute instead of inference.py."""
+    runner = WORK_DIR / "run_sadtalker.py"
+    runner.parent.mkdir(parents=True, exist_ok=True)
+    runner.write_text(SADTALKER_RUNNER, encoding="utf-8")
+    return runner
 
 
 def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
@@ -487,8 +581,9 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
     output_dir = WORK_DIR / "sadtalker_out"
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    runner = write_sadtalker_runner()
     command = [
-        sys.executable, "inference.py",
+        sys.executable, str(runner), str(SADTALKER_DIR / "inference.py"),
         "--driven_audio", str(voice),
         "--source_image", str(master),
         "--result_dir", str(output_dir),
@@ -514,7 +609,7 @@ def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
         command += ["--enhancer", enhancer]
 
     with timed("sadtalker_inference", timings):
-        log(f"SadTalker: {' '.join(command[1:])}")
+        log(f"SadTalker: {' '.join(command[2:])}")
         proc = subprocess.run(command, cwd=str(SADTALKER_DIR),
                               capture_output=True, text=True, timeout=5400)
         tail = ((proc.stdout or "") + (proc.stderr or "")).strip().splitlines()
@@ -823,6 +918,63 @@ def verify_reel(reel: Path, timings: Dict[str, float]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+#: basicsr 1.4.2's setup.py calls ``subprocess.Popen(...).communicate()`` to ask
+#: git for a commit hash. Under modern setuptools that call fails during
+#: metadata generation and pip reports only
+#: "Preparing metadata (pyproject.toml) did not run successfully /
+#: No available output" — no traceback, no package name in the useful place.
+#: The replacement is the equivalent one-liner that does not rely on the call.
+_BASICSR_SETUP_PATCH = (
+    "out = subprocess.Popen(cmd, stdout=subprocess.PIPE, "
+    "env=env).communicate()[0]",
+    "out = subprocess.run(cmd, stdout=subprocess.PIPE, env=env).stdout",
+)
+
+
+def prepare_basicsr_sdist(packages: List[str]) -> List[str]:
+    """
+    Download basicsr, fix its setup.py, and hand pip the local path.
+
+    basicsr is only needed for ``gfpgan`` (which selects the face enhancer), so
+    this is best-effort by design: if anything here fails the caller installs
+    nothing and the reel is rendered without the enhancer.
+    """
+    import tarfile
+    import urllib.request
+
+    target = "basicsr==1.4.2"
+    if target not in packages:
+        return packages
+
+    directory = WORK_DIR / "sdist"
+    directory.mkdir(parents=True, exist_ok=True)
+    archive = directory / "basicsr-1.4.2.tar.gz"
+    if not archive.is_file():
+        subprocess.run(
+            [sys.executable, "-m", "pip", "download", "--no-deps",
+             "--no-binary", ":all:", "--no-cache-dir", "-q",
+             "-d", str(directory), target],
+            capture_output=True, text=True, check=True)
+    if not archive.is_file():
+        raise RuntimeError("pip download produced no basicsr sdist")
+
+    extracted = directory / "basicsr-1.4.2"
+    if not (extracted / "setup.py").is_file():
+        with tarfile.open(archive) as tar:
+            tar.extractall(directory)
+    setup_py = extracted / "setup.py"
+    source = setup_py.read_text(encoding="utf-8")
+    old, new = _BASICSR_SETUP_PATCH
+    if old in source:
+        setup_py.write_text(source.replace(old, new), encoding="utf-8")
+        log("patched basicsr's setup.py (git-hash Popen call)")
+    elif new not in source:
+        raise RuntimeError("basicsr setup.py is not the shape this patch expects")
+
+    return [str(extracted) if package == target else package
+            for package in packages]
+
+
 def ensure_video_deps(timings: Dict[str, float]) -> None:
     with timed("pip_install_deps", timings):
         missing = missing_packages(CHATTERBOX_DEPS)
@@ -846,11 +998,19 @@ def ensure_video_deps(timings: Dict[str, float]) -> None:
             pip_install([d for d in GFPGAN_BUILD_DEPS
                          if missing_packages([d])],
                         no_build_isolation=True)
-            if not pip_install(GFPGAN_DEPS, no_build_isolation=True):
+            # --no-deps: basicsr declares plain opencv-python, whose import
+            # needs libGL; Kaggle has no libGL. Every dependency is in
+            # GFPGAN_BUILD_DEPS already, and the headless build is forced back
+            # on either way.
+            if not pip_install(GFPGAN_DEPS, no_deps=True, no_build_isolation=True,
+                               prepare_sdist=prepare_basicsr_sdist):
                 # A missing enhancer costs sharpness, not the reel: SadTalker
                 # renders fine without --enhancer, so degrade instead of dying.
                 log("gfpgan/basicsr could not be installed — the reel will be "
                     "rendered without the face enhancer", "WARN")
+            else:
+                pip_install(["--force-reinstall", "--no-deps",
+                             "opencv-python-headless"])
         log("SadTalker dependencies ready")
 
 
