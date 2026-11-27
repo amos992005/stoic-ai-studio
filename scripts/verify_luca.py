@@ -190,6 +190,49 @@ def memory_controls():
 check("memory controls", memory_controls)
 
 # --------------------------------------------------------------------------- #
+# 4c. the identity projector is moved with the rest of the pipeline
+# --------------------------------------------------------------------------- #
+def projector_moved():
+    """
+    Regression for run 45954696729: load_ip_adapter_instantid() creates
+    image_proj_model after __init__, so it is not in pipe.components and
+    pipe.to(device) leaves it on CPU. Every scene then dies on a device
+    mismatch; only the master (which skips the identity branch) survives.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
+    gi = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(gi)
+    except Exception:
+        pass
+    gi.log = lambda *a, **k: None
+    gi.DEVICE = "cpu"
+
+    import torch
+    class Resampler(torch.nn.Module):
+        def __init__(self):
+            super().__init__(); self.proj = torch.nn.Linear(4, 4)
+    class FakeUNet(torch.nn.Module):
+        """Real diffusers models expose .dtype; nn.Linear does not."""
+        dtype = torch.float16
+    class Pipe:
+        def __init__(self):
+            self.unet = FakeUNet()                     # the dtype source
+            self.image_proj_model = Resampler()        # still float32
+
+    pipe = Pipe()
+    assert pipe.image_proj_model.proj.weight.dtype is torch.float32
+    assert gi.move_identity_projector(pipe) != "absent"
+    assert pipe.image_proj_model.proj.weight.dtype is torch.float16, \
+        "the projector was not matched to the unet dtype"
+    # a pipeline without one must not raise
+    assert gi.move_identity_projector(types.SimpleNamespace()) == "absent"
+    return "projector follows the unet's device and dtype"
+
+check("identity projector is moved", projector_moved)
+
+# --------------------------------------------------------------------------- #
 # 5. chatterbox precision: s3gen stays float32 (its STFT has no fp16 path)
 # --------------------------------------------------------------------------- #
 def chatterbox_precision():

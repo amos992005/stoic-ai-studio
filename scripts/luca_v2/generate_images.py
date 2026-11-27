@@ -426,6 +426,7 @@ def load_instantid_pipeline(timings: Dict[str, float]):
 
     with timed("configure_pipeline", timings):
         pipe.to(DEVICE)                 # no CPU offload, no .to("cpu") anywhere
+        moved = move_identity_projector(pipe)
         limits = configure_memory_limits()
         attention = enable_attention_slicing(pipe)
         slicing = enable_vae_slicing(pipe)
@@ -433,7 +434,7 @@ def load_instantid_pipeline(timings: Dict[str, float]):
             pipe.set_progress_bar_config(disable=True)
         except Exception:
             pass
-        log(f"pipeline on {DEVICE} · vae slicing: {slicing} · attention slicing: "
+        log(f"pipeline on {DEVICE} · projector: {moved} · vae slicing: {slicing} · attention slicing: "
             f"{'on' if attention else 'off'} · tf32: "
             f"{'on' if limits['tf32'] else 'off'} · "
             f"{limits['alloc_conf']}")
@@ -456,6 +457,29 @@ def build_compel(pipe):
     log("compel ready: CompelForSDXL with truncate_long_prompts=False on both "
         "encoders — prompts are chunked, not truncated at 77 tokens")
     return compel
+
+
+def move_identity_projector(pipe) -> str:
+    """
+    Put `image_proj_model` on the pipeline's device and dtype.
+
+    `load_ip_adapter_instantid()` *creates* this submodule after `__init__`, so it
+    is absent from `pipe.components` and `pipe.to(device)` never touches it. It
+    stays on CPU while everything else moves to cuda:0, and the first scene dies
+    with "Expected all tensors to be on the same device, but got mat1 is on
+    cuda:0, different from other tensors on cpu" (run 45954696729). The master
+    portrait is unaffected because it never runs the identity branch, which is
+    why only the carousel failed.
+    """
+    projector = getattr(pipe, "image_proj_model", None)
+    if projector is None:
+        log("no image_proj_model on the pipeline — identity branch would fail",
+            "WARN")
+        return "absent"
+    unet = getattr(pipe, "unet", None)
+    dtype = getattr(unet, "dtype", None)
+    projector.to(DEVICE, dtype=dtype) if dtype is not None else projector.to(DEVICE)
+    return f"image_proj_model → {DEVICE}/{dtype}"
 
 
 def configure_memory_limits() -> Dict[str, Any]:
