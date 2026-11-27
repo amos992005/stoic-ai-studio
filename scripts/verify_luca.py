@@ -101,66 +101,126 @@ def vae_slicing():
 check("VAE slicing helper", vae_slicing)
 
 # --------------------------------------------------------------------------- #
-# 4. from_pipe shares components (no second SDXL copy on a 14.5 GB card)
+# 4. the master pipeline shares the SDXL weights and fetches nothing
 # --------------------------------------------------------------------------- #
-def from_pipe_shares():
-    from diffusers import StableDiffusionXLPipeline, AutoencoderKL, UNet2DConditionModel
-    vae = AutoencoderKL(in_channels=4, out_channels=4, down_block_types=("DownBlock2D",),
-                        up_block_types=("UpBlock2D",), block_out_channels=(32,),
-                        layers_per_block=1, latent_channels=4, sample_size=32,
-                        norm_num_groups=32)
+def master_pipe_shares():
+    """
+    Regression for run 45952128760: StableDiffusionXLPipeline.from_pipe()
+    silently re-downloads optional components the source pipeline lacks
+    (image_encoder, feature_extractor) in float32, which doubled VRAM to
+    14.4 GiB and OOM'd. Building from the live components must share, not copy.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
+    gi = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(gi)
+    except Exception:
+        pass
+    gi.log = lambda *a, **k: None
+    gi.DEVICE = "cpu"
+
+    from diffusers import AutoencoderKL, UNet2DConditionModel
+    from diffusers.schedulers import DPMSolverMultistepScheduler
+    vae = AutoencoderKL(in_channels=4, out_channels=4,
+                        down_block_types=("DownBlock2D", "DownBlock2D"),
+                        up_block_types=("UpBlock2D", "UpBlock2D"),
+                        block_out_channels=(32, 64), layers_per_block=2,
+                        latent_channels=4, sample_size=32, norm_num_groups=32)
     unet = UNet2DConditionModel(sample_size=32, in_channels=4, out_channels=4,
                                 layers_per_block=1, block_out_channels=(32, 64),
                                 down_block_types=("DownBlock2D", "CrossAttnDownBlock2D"),
                                 up_block_types=("CrossAttnUpBlock2D", "UpBlock2D"),
                                 cross_attention_dim=32, norm_num_groups=32,
                                 attention_head_dim=8)
-    base = StableDiffusionXLPipeline(vae=vae, text_encoder=None, tokenizer=None,
-                                     unet=unet, scheduler=None,
-                                     text_encoder_2=None, tokenizer_2=None)
-    plain = StableDiffusionXLPipeline.from_pipe(base)
-    assert plain.unet is base.unet and plain.vae is base.vae, "components were copied"
-    assert "image" not in inspect.signature(plain.__call__).parameters
-    return "unet/vae shared, and the master pipeline needs no control image"
+    scheduler = DPMSolverMultistepScheduler()
 
-check("from_pipe shares weights and drops the image requirement", from_pipe_shares)
+    class Fake(torch.nn.Module):        # a stand-in for a transformers encoder
+        dtype = torch.float32
+    Fake.__module__ = "transformers"
+
+    comps = {"vae": vae, "unet": unet, "scheduler": scheduler,
+             "text_encoder": Fake(), "text_encoder_2": Fake(),
+             "tokenizer": Fake(), "tokenizer_2": Fake(),
+             "controlnet": object(), "image_proj_model": object(),
+             "ip_adapter": object()}
+    master = gi.build_master_pipe(types.SimpleNamespace(components=dict(comps)), {})
+
+    assert master.unet is unet and master.vae is vae, "weights were copied, not shared"
+    assert master.text_encoder_2 is comps["text_encoder_2"]
+    assert master.scheduler is scheduler
+    assert master.image_encoder is None, "an image_encoder was fetched"
+    assert master.feature_extractor is None, "a feature_extractor was fetched"
+    assert not hasattr(master, "controlnet"), "controlnet leaked into the master pipeline"
+    return "shares unet/vae/encoders, fetches no optional component"
+
+check("master pipeline shares weights instead of refetching", master_pipe_shares)
 
 # --------------------------------------------------------------------------- #
-# 5. the HiFT dtype wrapper is number-correct
+# 4b. the memory controls are in place and harmless
 # --------------------------------------------------------------------------- #
-def hift_wrapper():
+def memory_controls():
     import importlib.util
-    spec = importlib.util.spec_from_file_location("gv", REPO / "scripts/luca_v2/generate_video.py")
-    gv = importlib.util.module_from_spec(spec); spec.loader.exec_module(gv)
-    gv.log = lambda *a, **k: None
-
-    import torch.nn as nn
-    class Source(nn.Module):
-        def __init__(self):
-            super().__init__(); self.l_linear = nn.Linear(9, 1); self.l_tanh = nn.Tanh()
-        def forward(self, x):
-            return self.l_tanh(self.l_linear(x.float().unsqueeze(-1).expand(-1, -1, -1, 9)))
-    class S3(nn.Module):
-        def __init__(self):
-            super().__init__(); self.m_source = Source()
-
-    gen = S3().half().eval()
-    x = torch.randn(2, 16, 1).half()
+    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
+    gi = importlib.util.module_from_spec(spec)
     try:
-        gen.m_source(x)
-        raise AssertionError("expected a dtype error before wrapping")
-    except RuntimeError as exc:
-        assert "same dtype" in str(exc), exc
-    assert gv.make_dtype_safe(gen) == 1
-    y = gen.m_source(x)
-    ref = S3().eval()
-    ref.m_source.l_linear.weight.data = gen.m_source.l_linear.weight.data.float()
-    ref.m_source.l_linear.bias.data = gen.m_source.l_linear.bias.data.float()
-    assert torch.allclose(y.float(), ref.m_source(x.float()), atol=2e-2)
-    assert gv.make_dtype_safe(gen) == 0, "wrapper is not idempotent"
-    return "fp16 output matches the fp32 reference"
+        spec.loader.exec_module(gi)
+    except Exception:
+        pass
+    gi.log = lambda *a, **k: None
 
-check("HiFT dtype wrapper fixes the crash numerically", hift_wrapper)
+    # set at import time: the allocator reads it when CUDA first initialises
+    src = (REPO / "scripts/luca_v2/generate_images.py").read_text()
+    before_models = src.split("def load_pipeline")[0]
+    assert "PYTORCH_CUDA_ALLOC_CONF" in before_models, \
+        "alloc conf is set too late to take effect"
+
+    limits = gi.configure_memory_limits()
+    assert "expandable_segments" in limits["alloc_conf"], limits
+    # attention slicing: applied when available, skipped otherwise
+    applied = {}
+
+    class WithHelper:
+        def enable_attention_slicing(self, *a, **k):
+            applied["sliced"] = True
+    assert gi.enable_attention_slicing(WithHelper()) is True and applied["sliced"]
+    assert gi.enable_attention_slicing(types.SimpleNamespace()) is False
+    return f"allocator {limits['alloc_conf']}, tf32={'on' if limits['tf32'] else 'off (no GPU here)'}"
+
+check("memory controls", memory_controls)
+
+# --------------------------------------------------------------------------- #
+# 5. chatterbox precision: s3gen stays float32 (its STFT has no fp16 path)
+# --------------------------------------------------------------------------- #
+def chatterbox_precision():
+    """
+    Regression for runs 45950802624 and 45952128760: casting s3gen to fp16 makes
+    its float32 STFT output collide with fp16 conv weights. Only the
+    autoregressive t3 and the voice encoder may be cast.
+    """
+    import re
+    src = (REPO / "scripts/luca_v2/generate_video.py").read_text()
+    m = re.search(r"FP16_SUBMODULES = \(([^)]*)\)", src)
+    assert m, "FP16_SUBMODULES disappeared"
+    names = re.findall(r'"(\w+)"', m.group(1))
+    assert "s3gen" not in names, f"s3gen is cast to fp16 again: {names}"
+    assert "t3" in names, f"t3 should still be cast: {names}"
+    # the s3gen vocoder really is where the problem is: show it concretely
+    import torch
+    import torch.nn as nn
+    class Voc(nn.Module):                       # mimics the conv after the STFT
+        def __init__(self):
+            super().__init__(); self.conv = nn.Conv1d(4, 4, 3)
+    voc = Voc().half().eval()
+    stft_out = torch.stft(torch.randn(4, 64), n_fft=8, return_complex=True)  # float32
+    try:
+        voc.conv(stft_out.real.float())
+        raise AssertionError("expected the dtype error")
+    except RuntimeError as exc:
+        assert "should be the same" in str(exc)
+    return f"fp16 set is {names}; s3gen float32 because torch.stft emits float32"
+
+check("chatterbox keeps s3gen in float32", chatterbox_precision)
 
 # --------------------------------------------------------------------------- #
 # 6. verify_reel rejects bad reels and accepts a good one

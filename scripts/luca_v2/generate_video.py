@@ -42,8 +42,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import torch
-
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
@@ -337,52 +335,6 @@ def _needs_install(spec: str) -> bool:
         return True
 
 
-class _DtypeSafeLinear(torch.nn.Module):
-    """
-    An nn.Linear that casts its input to the weight's dtype first.
-
-    chatterbox's HiFT generator builds its harmonic excitation in float32
-    (`SineGen` produces float32 regardless of the module dtype) and feeds it to
-    `SourceModuleHnNSF.l_linear`, which we have cast to float16. The matmul then
-    fails with "expected mat1 and mat2 to have the same dtype, but got: float !=
-    c10::Half" (run 45950802624). Wrapping the projection fixes it without
-    duplicating upstream's forward(), and is a no-op when dtypes already agree.
-    """
-
-    def __init__(self, inner: torch.nn.Linear):
-        super().__init__()
-        self.inner = inner
-
-    @property
-    def weight(self):
-        return self.inner.weight
-
-    @property
-    def bias(self):
-        return self.inner.bias
-
-    def forward(self, x):
-        return torch.nn.functional.linear(
-            x.to(self.inner.weight.dtype), self.inner.weight, self.inner.bias)
-
-
-def make_dtype_safe(s3gen) -> int:
-    """
-    Wrap every `l_linear` inside the HiFT generator; returns how many changed.
-
-    Idempotent: an already-wrapped projection is skipped.
-    """
-    wrapped = 0
-    for module in s3gen.modules():
-        inner = getattr(module, "l_linear", None)
-        if isinstance(inner, torch.nn.Linear):
-            module.l_linear = _DtypeSafeLinear(inner)
-            wrapped += 1
-    if wrapped:
-        log(f"dtype-safe wrapper applied to {wrapped} HiFT projection(s)")
-    return wrapped
-
-
 # --------------------------------------------------------------------------- #
 # Stage 1 — TTS
 # --------------------------------------------------------------------------- #
@@ -432,8 +384,17 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
             raise RuntimeError(f"chatterbox-tts could not be loaded: {last_error}")
 
         # float16 on the real submodules; report what actually happened.
+        #
+        # `s3gen` is deliberately excluded. Its vocoder is a signal-processing
+        # chain (STFT -> conv stacks) whose intermediate tensors are float32 by
+        # construction — torch.stft has no float16 path — so casting it yields
+        # "Input type (float) and bias type (c10::Half) should be the same" no
+        # matter how many individual projections get patched (runs 45950802624
+        # and 45952128760). t3, the ~2 GB autoregressive transformer, is where
+        # the memory actually goes and s3gen's convs are cheap at 24 kHz.
+        FP16_SUBMODULES = ("t3", "ve")
         cast, failed = [], []
-        for name in ("t3", "s3gen", "ve"):
+        for name in FP16_SUBMODULES:
             submodule = getattr(model, name, None)
             if submodule is None or not hasattr(submodule, "half"):
                 continue
@@ -453,8 +414,9 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
         # dtype, and the float/int tensors live in the same container, so reach
         # through to the fp tensors explicitly — a blanket .half() would corrupt
         # the int speech-token ids.
+        t3_cast = "t3" in cast
         conds = getattr(model, "conds", None)
-        if conds is not None and dtype == "float16":
+        if conds is not None and t3_cast:
             cast_conds = 0
             t3_cond = getattr(conds, "t3", None)
             for field, value in list(vars(t3_cond).items()) if t3_cond else []:
@@ -468,14 +430,7 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
                     cast_conds += 1
             log(f"cast {cast_conds} built-in conditioning tensor(s) to float16")
 
-        # HiFT's harmonic excitation is generated in float32 and projected by a
-        # layer we just put in float16. Patch the projections rather than
-        # upcasting the whole generator back, which would undo the fp16 win.
-        if dtype == "float16":
-            safe = make_dtype_safe(model.s3gen)
-            if not safe:
-                log("no HiFT projections wrapped — a dtype error may surface in "
-                    "s3gen", "WARN")
+        if t3_cast:
             if not cast_conds:
                 log("no conditioning tensors were cast — generate() may raise a "
                     "dtype mismatch", "WARN")
@@ -484,7 +439,9 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
         try:
             output = model.generate(TRANSCRIPT)
         except RuntimeError as exc:
-            if "same dtype" not in str(exc):
+            message = str(exc)
+            if not any(marker in message for marker in
+                       ("same dtype", "same type", "should be the same")):
                 raise
             # Last resort: chatterbox has dtype-sensitive internals we cannot
             # enumerate ahead of time. fp32 still fits on an empty 14.5 GB card,

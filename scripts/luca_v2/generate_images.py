@@ -22,6 +22,7 @@ Run: python generate_images.py
 from __future__ import annotations
 
 import fcntl
+import inspect
 import json
 import os
 import shutil
@@ -64,6 +65,10 @@ SCENE_FILES = {
     "porsche": "03_luca_porsche.png",
     "party": "04_luca_party.png",
 }
+
+# The caching allocator reads this once, when CUDA initialises (during model
+# loading), so it must be set at import time rather than in configure_pipeline().
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 MASTER_SIZE = (1024, 1024)
 SCENE_SIZE = (832, 1024)
@@ -421,12 +426,17 @@ def load_instantid_pipeline(timings: Dict[str, float]):
 
     with timed("configure_pipeline", timings):
         pipe.to(DEVICE)                 # no CPU offload, no .to("cpu") anywhere
+        limits = configure_memory_limits()
+        attention = enable_attention_slicing(pipe)
         slicing = enable_vae_slicing(pipe)
         try:
             pipe.set_progress_bar_config(disable=True)
         except Exception:
             pass
-        log(f"pipeline on {DEVICE} · vae slicing: {slicing}")
+        log(f"pipeline on {DEVICE} · vae slicing: {slicing} · attention slicing: "
+            f"{'on' if attention else 'off'} · tf32: "
+            f"{'on' if limits['tf32'] else 'off'} · "
+            f"{limits['alloc_conf']}")
 
     return pipe
 
@@ -446,6 +456,41 @@ def build_compel(pipe):
     log("compel ready: CompelForSDXL with truncate_long_prompts=False on both "
         "encoders — prompts are chunked, not truncated at 77 tokens")
     return compel
+
+
+def configure_memory_limits() -> Dict[str, Any]:
+    """
+    Cheap VRAM headroom for a 14.56 GiB T4.
+
+    Run 45952128760 peaked at 14.40 GiB allocated, so once the duplicate SDXL
+    copy is gone there is still very little slack. None of this changes the
+    model or the sampler: expandable_segments stops the caching allocator from
+    fragmenting, attention slicing trades a little speed for a smaller peak at
+    the attention step, and TF32 is free on Ampere-class tensor cores.
+
+    Split out from the loader so it can be asserted without a GPU.
+    """
+    import torch
+
+    applied: Dict[str, Any] = {
+        "alloc_conf": os.environ["PYTORCH_CUDA_ALLOC_CONF"],
+        "attention_slicing": False,
+        "tf32": False,
+    }
+    if torch.cuda.is_available():
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        applied["tf32"] = True
+    return applied
+
+
+def enable_attention_slicing(pipe) -> bool:
+    """Slice attention, or leave it alone if the class has no helper."""
+    helper = getattr(pipe, "enable_attention_slicing", None)
+    if helper is None:
+        return False
+    helper()
+    return True
 
 
 def enable_vae_slicing(pipe) -> str:
@@ -521,22 +566,51 @@ def build_master_pipe(pipe, timings: Dict[str, float]):
     "image must be passed and be one of PIL image, ..." before a single step
     runs (run 45950802624).
 
-    `from_pipe` reuses the already-loaded UNet/text encoders/VAE rather than
-    allocating a second copy, which is what keeps this affordable on a 14.5 GB
-    T4 while process 2 holds the other card.
+    Constructing the pipeline from the live component objects allocates nothing —
+    they are the same tensors the InstantID pipeline already holds — which is
+    what keeps this affordable on a 14.5 GB T4 while the second process holds
+    the other card.
     """
     from diffusers import StableDiffusionXLPipeline
 
     with timed("build_master_pipe", timings):
-        master_pipe = StableDiffusionXLPipeline.from_pipe(pipe)
-        master_pipe.scheduler = pipe.scheduler
-        master_pipe.to(DEVICE)          # no CPU offload anywhere
+        # StableDiffusionXLPipeline.from_pipe() looks like the obvious choice, and
+        # it does share the components the new class expects — but it *reloads*
+        # any optional component the source pipeline lacks (here `image_encoder`
+        # and `feature_extractor`, which the InstantID class does not declare)
+        # straight from the hub, in float32. On a 14.5 GB T4 that is a second
+        # ~7 GB of weights on top of the ones already resident, and the run died
+        # with "Tried to allocate 50.00 MiB ... 14.40 GiB allocated by PyTorch"
+        # (run 45952128760). Constructing the pipeline from the live objects
+        # allocates nothing at all: the tensors are the very same tensors.
+        signature = inspect.signature(StableDiffusionXLPipeline.__init__).parameters
+        required = [name for name, param in signature.items()
+                    if name != "self" and param.default is inspect._empty]
+        source = dict(pipe.components)
+        components, missing = {}, []
+        for name in required:
+            if source.get(name) is None:
+                missing.append(name)
+            else:
+                components[name] = source[name]
+        if missing:
+            raise RuntimeError(
+                f"cannot build the master pipeline: no {missing} on the InstantID "
+                f"pipeline (have {sorted(source)})")
+        master_pipe = StableDiffusionXLPipeline(
+            **components,
+            image_encoder=None,       # not needed for txt2img, and must not be fetched
+            feature_extractor=None,
+        )
+        for name in required:
+            assert getattr(master_pipe, name) is components[name], name
+        master_pipe.to(DEVICE)        # already resident: a no-op re-assertion
         try:
             master_pipe.set_progress_bar_config(disable=True)
         except Exception:
             pass
-        log("master txt2img pipeline built via from_pipe (shared SDXL weights, "
-            "no InstantID conditioning on the master)")
+        log("master txt2img pipeline built from the live SDXL components "
+            f"({', '.join(sorted(components))}) — nothing reallocated")
     return master_pipe
 
 
