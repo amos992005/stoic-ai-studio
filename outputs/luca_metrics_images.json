@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "success",
-  "started_at": "2026-11-27T07:37:53Z",
+  "started_at": "2026-11-27T07:48:39Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,18 +14,18 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 39.073,
-    "img/load_controlnet": 37.595,
-    "img/load_sdxl": 52.622,
-    "img/load_identity_adapter": 20.242,
-    "img/configure_pipeline": 13.309,
-    "img/configure_scheduler": 0.024,
-    "img/build_master_pipe": 0.04,
-    "img/master_portrait": 44.285,
-    "img/stage_antelopev2": 14.76,
-    "img/scene_02_luca_yacht": 53.668,
-    "img/scene_03_luca_porsche": 51.582,
-    "img/scene_04_luca_party": 52.451
+    "img/pip_install_deps": 39.84,
+    "img/load_controlnet": 35.828,
+    "img/load_sdxl": 37.508,
+    "img/load_identity_adapter": 18.477,
+    "img/configure_pipeline": 13.074,
+    "img/configure_scheduler": 0.005,
+    "img/build_master_pipe": 0.043,
+    "img/master_portrait": 38.151,
+    "img/stage_antelopev2": 8.851,
+    "img/scene_02_luca_yacht": 55.228,
+    "img/scene_03_luca_porsche": 44.842,
+    "img/scene_04_luca_party": 46.257
   },
   "errors": [],
   "artifacts": [
@@ -73,6 +73,6 @@
     ],
     "sex": "M"
   },
-  "total_seconds": 387.2,
-  "finished_at": "2026-11-27T07:44:21Z"
+  "total_seconds": 363.7,
+  "finished_at": "2026-11-27T07:54:42Z"
 }

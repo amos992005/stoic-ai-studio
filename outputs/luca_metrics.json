@@ -2,8 +2,8 @@
   "video": {
     "process": "video",
     "device": "cuda:0",
-    "status": "failed",
-    "started_at": "2026-11-27T07:37:53Z",
+    "status": "success",
+    "started_at": "2026-11-27T07:48:39Z",
     "prohibitions_honoured": {
       "pipe.to_cpu": false,
       "inswapper_128": false,
@@ -11,30 +11,91 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "vid/pip_install_deps": 9.057,
-      "vid/load_chatterbox": 112.561
+      "vid/pip_install_deps": 6.901,
+      "vid/load_chatterbox": 99.381,
+      "vid/generate_speech": 25.691,
+      "vid/release_tts_vram": 0.557,
+      "vid/wait_for_master": 45.013,
+      "vid/clone_musetalk": 2.12,
+      "vid/fetch_musetalk_weights": 44.534,
+      "vid/load_musetalk": 23.557,
+      "vid/prepare_avatar": 5.062,
+      "vid/musetalk_inference": 29.953,
+      "vid/encode_talking": 4.432,
+      "vid/mux_reel": 0.257,
+      "vid/verify_reel": 0.231
     },
-    "errors": [
-      {
-        "stage": "fatal",
-        "error": "RuntimeError: chatterbox-tts could not be loaded: CUDA error: invalid device ordinal\nGPU device may be out of range, do you have enough GPUs?\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n"
-      }
+    "errors": [],
+    "artifacts": [
+      "luca_voice.wav",
+      "luca_reel.mp4"
     ],
-    "artifacts": [],
-    "total_seconds": 128.2,
-    "finished_at": "2026-11-27T07:40:01Z"
+    "voice": {
+      "engine": "chatterbox-tts",
+      "class": "chatterbox.tts_turbo.ChatterboxTurboTTS",
+      "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
+      "dtype": "float16",
+      "sample_rate": 24000,
+      "duration_s": 5.84,
+      "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
+      "normalisation": "peak to -1.0 dBFS",
+      "file": "luca_voice.wav"
+    },
+    "musetalk": {
+      "engine": "MuseTalk v1.5 (fp16)",
+      "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
+      "fps": 25,
+      "frames": 146,
+      "face_box": [
+        362,
+        161,
+        734,
+        694
+      ],
+      "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
+      "mmpose_bypassed": true,
+      "silent_video": "/kaggle/working/luca_work/talking_silent.mp4"
+    },
+    "reel_probe": {
+      "tool": "ffprobe",
+      "video": {
+        "codec": "h264",
+        "width": 1024,
+        "height": 1024,
+        "frames": "146",
+        "duration_s": 5.84,
+        "fps": "25/1"
+      },
+      "audio": {
+        "codec": "aac",
+        "sample_rate": "24000",
+        "channels": 1,
+        "duration_s": 5.84
+      },
+      "duration_s": 5.84,
+      "sync": {
+        "video_s": 5.84,
+        "audio_s": 5.84,
+        "drift_s": 0.0,
+        "ok": true
+      }
+    },
+    "total_seconds": 296.0,
+    "finished_at": "2026-11-27T07:53:35Z"
   },
   "artifacts": [
     "01_luca_master.png",
     "02_luca_yacht.png",
     "03_luca_porsche.png",
-    "04_luca_party.png"
+    "04_luca_party.png",
+    "luca_reel.mp4",
+    "luca_voice.wav"
   ],
   "images": {
     "process": "images",
     "device": "cuda:0",
     "status": "success",
-    "started_at": "2026-11-27T07:37:53Z",
+    "started_at": "2026-11-27T07:48:39Z",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
     "face_encoder": "insightface antelopev2",
@@ -46,18 +107,18 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 39.073,
-      "img/load_controlnet": 37.595,
-      "img/load_sdxl": 52.622,
-      "img/load_identity_adapter": 20.242,
-      "img/configure_pipeline": 13.309,
-      "img/configure_scheduler": 0.024,
-      "img/build_master_pipe": 0.04,
-      "img/master_portrait": 44.285,
-      "img/stage_antelopev2": 14.76,
-      "img/scene_02_luca_yacht": 53.668,
-      "img/scene_03_luca_porsche": 51.582,
-      "img/scene_04_luca_party": 52.451
+      "img/pip_install_deps": 39.84,
+      "img/load_controlnet": 35.828,
+      "img/load_sdxl": 37.508,
+      "img/load_identity_adapter": 18.477,
+      "img/configure_pipeline": 13.074,
+      "img/configure_scheduler": 0.005,
+      "img/build_master_pipe": 0.043,
+      "img/master_portrait": 38.151,
+      "img/stage_antelopev2": 8.851,
+      "img/scene_02_luca_yacht": 55.228,
+      "img/scene_03_luca_porsche": 44.842,
+      "img/scene_04_luca_party": 46.257
     },
     "errors": [],
     "artifacts": [
@@ -105,7 +166,7 @@
       ],
       "sex": "M"
     },
-    "total_seconds": 387.2,
-    "finished_at": "2026-11-27T07:44:21Z"
+    "total_seconds": 363.7,
+    "finished_at": "2026-11-27T07:54:42Z"
   }
 }
