@@ -80,6 +80,47 @@ jobs:
             scripts/run_luca_job.py
           # The kernel is generated; a stale copy silently ships old workers.
           python scripts/build_luca_kernel.py --check
+          # Run the kernel the way Kaggle does — as a SCRIPT, not an import.
+          # Importing skips `if __name__ == "__main__"`, which is exactly how an
+          # entrypoint placed above its embedded payload reached the GPU
+          # (run 45950387190). No GPU here, so it is expected to stop after the
+          # staging/verification stages; what must not happen is a NameError.
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+          import tempfile
+
+          work = tempfile.mkdtemp()
+          env = dict(os.environ,
+                     OUTPUT_DIR=work,
+                     LUCA_WORKER_DIR=os.path.join(work, "luca_workers"),
+                     CUDA_VISIBLE_DEVICES="")
+          proc = subprocess.run(
+              [sys.executable, "kaggle_kernel_luca/luca_studio.py"],
+              capture_output=True, text=True, env=env, timeout=600)
+          log = (proc.stdout or "") + (proc.stderr or "")
+          markers = [
+              "embedded payload verified",
+              "prohibition check passed",
+              "using committed vendored pipeline",
+              "launching both pipelines in parallel",
+          ]
+          missing = [m for m in markers if m not in log]
+          assert not missing, (
+              "the generated kernel does not reach " + repr(missing)
+              + "\n--- kernel output ---\n" + log[-3000:])
+          # Only the launcher's own startup is under test here. The workers then
+          # try to pip-install their deps, which this runner may not be able to
+          # do — that is expected and not a kernel defect.
+          startup = log.split("[launcher] launching both pipelines in parallel")[0]
+          for fatal in ("NameError", "AttributeError", "ModuleNotFoundError",
+                        "SyntaxError", "ImportError"):
+              assert fatal not in startup, (
+                  f"generated kernel raised {fatal} during startup:\n"
+                  + startup[-3000:])
+          print("kernel runs as a script: staged, verified, vendored, launched")
+          PY
           python - <<'PY'
           import pathlib
           import re
