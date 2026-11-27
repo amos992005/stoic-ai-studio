@@ -1,32 +1,35 @@
-[2026-11-27T05:48:45Z] [INFO ] [img] ▶ start: pip_install_deps
-[2026-11-27T05:48:45Z] [WARN ] [img] compel: ModuleNotFoundError
-[2026-11-27T05:48:46Z] [WARN ] [img] onnxruntime: ModuleNotFoundError
-[2026-11-27T05:48:46Z] [WARN ] [img] insightface: ModuleNotFoundError
-[2026-11-27T05:48:46Z] [INFO ] [img] installing: ['compel>=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']
-[2026-11-27T05:48:48Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130
-[2026-11-27T05:48:48Z] [INFO ] [vid] ▶ start: pip_install_deps
-[2026-11-27T05:48:49Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2
-[2026-11-27T05:48:54Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)
-[2026-11-27T05:48:55Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)
-[2026-11-27T05:48:55Z] [INFO ] [vid] ✔ done:  pip_install_deps (6.8s)
-[2026-11-27T05:48:55Z] [INFO ] [vid] ▶ start: load_chatterbox
-[2026-11-27T05:49:11Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*
-[2026-11-27T05:49:50Z] [INFO ] [img] image dependencies import cleanly
-[2026-11-27T05:49:50Z] [INFO ] [img] ✔ done:  pip_install_deps (64.8s)
-[2026-11-27T05:49:50Z] [INFO ] [img] environment: {"python": "3.13.16", "torch": "2.11.0+cu130", "diffusers": "0.42.0", "cuda_available": true, "gpu_count": 2}
+[2026-11-27T06:06:37Z] [INFO ] [img] ▶ start: pip_install_deps
+[2026-11-27T06:06:37Z] [WARN ] [img] compel: ModuleNotFoundError
+[2026-11-27T06:06:37Z] [WARN ] [img] onnxruntime: ModuleNotFoundError
+[2026-11-27T06:06:37Z] [WARN ] [img] insightface: ModuleNotFoundError
+[2026-11-27T06:06:37Z] [INFO ] [img] installing: ['compel>=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']
+[2026-11-27T06:06:39Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130
+[2026-11-27T06:06:39Z] [INFO ] [vid] ▶ start: pip_install_deps
+[2026-11-27T06:06:40Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2
+[2026-11-27T06:06:46Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)
+[2026-11-27T06:06:48Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)
+[2026-11-27T06:06:48Z] [INFO ] [vid] ✔ done:  pip_install_deps (8.7s)
+[2026-11-27T06:06:48Z] [INFO ] [vid] ▶ start: load_chatterbox
+[2026-11-27T06:07:01Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*
+[2026-11-27T06:07:11Z] [INFO ] [img] image dependencies import cleanly
+[2026-11-27T06:07:11Z] [INFO ] [img] ✔ done:  pip_install_deps (34.6s)
+[2026-11-27T06:07:11Z] [INFO ] [img] environment: {"python": "3.13.16", "torch": "2.11.0+cu130", "diffusers": "0.42.0", "cuda_available": true, "gpu_count": 2}
 [instantid] using existing pipeline: /kaggle/working/luca_workers/instantid_pipeline.py
-[2026-11-27T05:49:51Z] [INFO ] [img] ▶ start: load_controlnet
-[2026-11-27T05:50:08Z] [INFO ] [img] IdentityNet ControlNet loaded
-[2026-11-27T05:50:08Z] [INFO ] [img] ✔ done:  load_controlnet (17.6s)
-[2026-11-27T05:50:08Z] [INFO ] [img] ▶ start: load_sdxl
+[2026-11-27T06:07:12Z] [INFO ] [img] ▶ start: load_controlnet
+[2026-11-27T06:07:48Z] [INFO ] [img] IdentityNet ControlNet loaded
+[2026-11-27T06:07:48Z] [INFO ] [img] ✔ done:  load_controlnet (36.0s)
+[2026-11-27T06:07:48Z] [INFO ] [img] ▶ start: load_sdxl
+[2026-11-27T06:08:26Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16
+[2026-11-27T06:08:26Z] [INFO ] [img] ✔ done:  load_sdxl (38.7s)
+[2026-11-27T06:08:26Z] [INFO ] [img] ▶ start: load_identity_adapter
 loaded PerthNet (Implicit) at step 250,000
-[2026-11-27T05:50:10Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz
-[2026-11-27T05:50:10Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])
-[2026-11-27T05:50:10Z] [INFO ] [vid] ✔ done:  load_chatterbox (75.3s)
-[2026-11-27T05:50:10Z] [INFO ] [vid] ▶ start: generate_speech
-[2026-11-27T05:50:11Z] [INFO ] [vid] ✔ done:  generate_speech (0.7s)
-[2026-11-27T05:50:11Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half
-[2026-11-27T05:50:11Z] [ERROR] [vid] Traceback (most recent call last):
+[2026-11-27T06:08:41Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz
+[2026-11-27T06:08:41Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])
+[2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  load_chatterbox (113.3s)
+[2026-11-27T06:08:41Z] [INFO ] [vid] ▶ start: generate_speech
+[2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  generate_speech (0.1s)
+[2026-11-27T06:08:41Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half
+[2026-11-27T06:08:41Z] [ERROR] [vid] Traceback (most recent call last):
   File "/kaggle/working/luca_workers/generate_video.py", line 956, in main
     metrics["voice"] = synth_voice(timings)
                        ~~~~~~~~~~~^^^^^^^^^
@@ -73,18 +76,15 @@ loaded PerthNet (Implicit) at step 250,000
            ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half
 
-[2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================
-[2026-11-27T05:50:11Z] [INFO ] [vid] video pipeline status: failed · 85.5s
-[2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================
-[2026-11-27T05:50:46Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16
-[2026-11-27T05:50:46Z] [INFO ] [img] ✔ done:  load_sdxl (37.8s)
-[2026-11-27T05:50:46Z] [INFO ] [img] ▶ start: load_identity_adapter
-[2026-11-27T05:51:03Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)
-[2026-11-27T05:51:03Z] [INFO ] [img] ✔ done:  load_identity_adapter (16.6s)
-[2026-11-27T05:51:03Z] [INFO ] [img] ▶ start: configure_pipeline
-[2026-11-27T05:51:08Z] [INFO ] [img] ✔ done:  configure_pipeline (5.8s)
-[2026-11-27T05:51:08Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'
-[2026-11-27T05:51:08Z] [ERROR] [img] Traceback (most recent call last):
+[2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================
+[2026-11-27T06:08:41Z] [INFO ] [vid] video pipeline status: failed · 124.4s
+[2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================
+[2026-11-27T06:08:46Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)
+[2026-11-27T06:08:46Z] [INFO ] [img] ✔ done:  load_identity_adapter (20.0s)
+[2026-11-27T06:08:46Z] [INFO ] [img] ▶ start: configure_pipeline
+[2026-11-27T06:09:00Z] [INFO ] [img] ✔ done:  configure_pipeline (14.0s)
+[2026-11-27T06:09:00Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'
+[2026-11-27T06:09:00Z] [ERROR] [img] Traceback (most recent call last):
   File "/kaggle/working/luca_workers/generate_images.py", line 638, in main
     pipe = load_instantid_pipeline(timings)
   File "/kaggle/working/luca_workers/generate_images.py", line 387, in load_instantid_pipeline
@@ -94,9 +94,9 @@ RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half
     raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'
 
-[2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================
-[2026-11-27T05:51:08Z] [INFO ] [img] image pipeline status: failed · 142.9s
-[2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================
+[2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================
+[2026-11-27T06:09:01Z] [INFO ] [img] image pipeline status: failed · 143.9s
+[2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================
     | Downloading build.lock to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
     | 
     | Output file downloaded to /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/build.lock
@@ -138,437 +138,437 @@ AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'en
     ! 0.00B [00:00, ?B/s]
     ! 0.00B [00:00, ?B/s]
     ! 
-    !   0%|          | 0.00/6.71k [00:00<?, ?B/s]
-    ! 100%|██████████| 6.71k/6.71k [00:00<00:00, 16.0MB/s]
+    !   0%|          | 0.00/6.72k [00:00<?, ?B/s]
+    ! 100%|██████████| 6.72k/6.72k [00:00<00:00, 18.3MB/s]
     ! 
-    !   0%|          | 0.00/1.86k [00:00<?, ?B/s]
-    ! 100%|██████████| 1.86k/1.86k [00:00<00:00, 10.1MB/s]
+    !   0%|          | 0.00/1.87k [00:00<?, ?B/s]
+    ! 100%|██████████| 1.87k/1.87k [00:00<00:00, 11.5MB/s]
     ! 
     ! 0.00B [00:00, ?B/s]
     ! 0.00B [00:00, ?B/s]
     ! 
     !   0%|          | 0.00/1.09k [00:00<?, ?B/s]
-    ! 100%|██████████| 1.09k/1.09k [00:00<00:00, 7.18MB/s]
+    ! 100%|██████████| 1.09k/1.09k [00:00<00:00, 6.32MB/s]
     ! 
-    !   0%|          | 0.00/618 [00:00<?, ?B/s]
-    ! 100%|██████████| 618/618 [00:00<00:00, 4.36MB/s]
+    !   0%|          | 0.00/620 [00:00<?, ?B/s]
+    ! 100%|██████████| 620/620 [00:00<00:00, 4.40MB/s]
     ! 
     !   0%|          | 0.00/7.70k [00:00<?, ?B/s]
-    ! 100%|██████████| 7.70k/7.70k [00:00<00:00, 43.1MB/s]
+    ! 100%|██████████| 7.70k/7.70k [00:00<00:00, 41.5MB/s]
     ! 
     !   0%|          | 0.00/50.1k [00:00<?, ?B/s]
-    ! 100%|██████████| 50.1k/50.1k [00:00<00:00, 5.17MB/s]
+    ! 100%|██████████| 50.1k/50.1k [00:00<00:00, 12.7MB/s]
     ! 
     !   0%|          | 0.00/5.62k [00:00<?, ?B/s]
-    ! 100%|██████████| 5.62k/5.62k [00:00<00:00, 33.0MB/s]
+    ! 100%|██████████| 5.62k/5.62k [00:00<00:00, 34.0MB/s]
     ! 
     !   0%|          | 0.00/27.8k [00:00<?, ?B/s]
-    ! 100%|██████████| 27.8k/27.8k [00:00<00:00, 4.40MB/s]
+    ! 100%|██████████| 27.8k/27.8k [00:00<00:00, 43.2MB/s]
     ! 
     !   0%|          | 0.00/39.5k [00:00<?, ?B/s]
-    ! 100%|██████████| 39.5k/39.5k [00:00<00:00, 5.35MB/s]
+    ! 100%|██████████| 39.5k/39.5k [00:00<00:00, 17.3MB/s]
     ! 
     !   0%|          | 0.00/48.6k [00:00<?, ?B/s]
-    ! 100%|██████████| 48.6k/48.6k [00:00<00:00, 5.84MB/s]
-[2026-11-27 05:51:41Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
+    ! 100%|██████████| 48.6k/48.6k [00:00<00:00, 15.2MB/s]
+[2026-11-27 06:09:30Z] [INFO ] outputs downloaded into /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs
 ::endgroup::
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_video.py → generate_video.py
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/fetch_instantid.py → fetch_instantid.py
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_images.py → generate_images.py
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/instantid_pipeline.py → instantid_pipeline.py
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/instantid_pipeline.cpython-313.pyc → instantid_pipeline.cpython-313.pyc
-[2026-11-27 05:51:41Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/fetch_instantid.cpython-313.pyc → fetch_instantid.cpython-313.pyc
-[2026-11-27 05:51:41Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-luca-studio
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_images.py → generate_images.py
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/fetch_instantid.py → fetch_instantid.py
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/instantid_pipeline.py → instantid_pipeline.py
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/generate_video.py → generate_video.py
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/fetch_instantid.cpython-313.pyc → fetch_instantid.cpython-313.pyc
+[2026-11-27 06:09:30Z] [INFO ] hoisted /home/runner/work/stoic-ai-studio/stoic-ai-studio/outputs/luca_workers/__pycache__/instantid_pipeline.cpython-313.pyc → instantid_pipeline.cpython-313.pyc
+[2026-11-27 06:09:30Z] [INFO ] $ kaggle kernels logs amosovadia/stoic-luca-studio
 
-===== kaggle kernels logs · fetched 2026-11-27 05:51:42Z =====
-[{"stream_name":"stdout","time":1.305437641,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":1.305487269,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
-,{"stream_name":"stdout","time":1.305492101,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":1.5527114,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found generate_images.py at /kaggle/input/luca-v2-workers/generate_images.py\n"}
-,{"stream_name":"stdout","time":1.672892196,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged generate_images.py (27.8 KB)\n"}
-,{"stream_name":"stdout","time":1.6737891139999999,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found generate_video.py at /kaggle/input/luca-v2-workers/generate_video.py\n"}
-,{"stream_name":"stdout","time":1.761546195,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged generate_video.py (39.5 KB)\n"}
-,{"stream_name":"stdout","time":1.762596053,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found fetch_instantid.py at /kaggle/input/luca-v2-workers/fetch_instantid.py\n"}
-,{"stream_name":"stdout","time":1.875111462,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged fetch_instantid.py (5.6 KB)\n"}
-,{"stream_name":"stdout","time":1.949060969,"data":"[2026-11-27T05:48:18Z] [WARN ] [launcher] no _vendor/ directory — fetch_instantid.py will use the network\n"}
-,{"stream_name":"stdout","time":1.977399234,"data":"[2026-11-27T05:48:19Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
-,{"stream_name":"stdout","time":28.840309806,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] fetching pipeline from v0.42.0\n"}
-,{"stream_name":"stdout","time":28.840340073,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] wrote /kaggle/working/luca_workers/instantid_pipeline.py (48 KB) from ref=v0.42.0\n"}
-,{"stream_name":"stdout","time":28.840345398,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
-,{"stream_name":"stdout","time":28.840591307,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":28.840607654,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
-,{"stream_name":"stdout","time":28.840612639,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher]   images → cuda:0 : /usr/bin/python3 generate_images.py\n"}
-,{"stream_name":"stdout","time":28.840617246,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher]   video  → cuda:1 : /usr/bin/python3 generate_video.py\n"}
-,{"stream_name":"stdout","time":28.840623903,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":28.841527236,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] started images (pid 21)\n"}
-,{"stream_name":"stdout","time":28.842165033,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] started video (pid 22)\n"}
-,{"stream_name":"stdout","time":28.947498391,"data":"[images] [2026-11-27T05:48:45Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
-,{"stream_name":"stdout","time":28.947993972,"data":"[images] [2026-11-27T05:48:45Z] [WARN ] [img] compel: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.372685749,"data":"[images] [2026-11-27T05:48:46Z] [WARN ] [img] onnxruntime: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.863636774,"data":"[images] [2026-11-27T05:48:46Z] [WARN ] [img] insightface: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.864242579,"data":"[images] [2026-11-27T05:48:46Z] [INFO ] [img] installing: ['compel\u003e=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']\n"}
-,{"stream_name":"stdout","time":31.577790099,"data":"[video] [2026-11-27T05:48:48Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130\n"}
-,{"stream_name":"stdout","time":31.577819879,"data":"[video] [2026-11-27T05:48:48Z] [INFO ] [vid] ▶ start: pip_install_deps\n"}
-,{"stream_name":"stdout","time":32.534869113,"data":"[video] [2026-11-27T05:48:49Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
-,{"stream_name":"stdout","time":37.356137441,"data":"[video] [2026-11-27T05:48:54Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)\n"}
-,{"stream_name":"stdout","time":38.334641817,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)\n"}
-,{"stream_name":"stdout","time":38.334744768,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] ✔ done:  pip_install_deps (6.8s)\n"}
-,{"stream_name":"stdout","time":38.334944474,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] ▶ start: load_chatterbox\n"}
-,{"stream_name":"stdout","time":54.270638896,"data":"[video] [2026-11-27T05:49:11Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*\n"}
-,{"stream_name":"stdout","time":54.370140051,"data":"[video] /usr/local/lib/python3.13/dist-packages/perth/perth_net/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools\u003c81.\n"}
-,{"stream_name":"stdout","time":54.370168252,"data":"[video]   from pkg_resources import resource_filename\n"}
-,{"stream_name":"stdout","time":61.997948328,"data":"[video] \n"}
-,{"stream_name":"stdout","time":62.062392638,"data":"[video] Fetching 10 files:   0%|          | 0/10 [00:00\u003c?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
-,{"stream_name":"stdout","time":62.197284337,"data":"[video] \n"}
-,{"stream_name":"stdout","time":62.35501862,"data":"[video] Fetching 10 files:  10%|█         | 1/10 [00:00\u003c00:01,  5.02it/s]\n"}
-,{"stream_name":"stdout","time":62.801803838,"data":"[video] Fetching 10 files:  50%|█████     | 5/10 [00:00\u003c00:00, 15.81it/s]\n"}
-,{"stream_name":"stdout","time":81.998071253,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:00\u003c00:00,  8.08it/s]\n"}
-,{"stream_name":"stdout","time":84.750991732,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:20\u003c00:00,  8.08it/s]\n"}
-,{"stream_name":"stdout","time":88.259319915,"data":"[video] Fetching 10 files:  80%|████████  | 8/10 [00:22\u003c00:09,  4.76s/it]\n"}
-,{"stream_name":"stdout","time":88.26141018,"data":"[video] Fetching 10 files:  90%|█████████ | 9/10 [00:26\u003c00:04,  4.47s/it]\n"}
-,{"stream_name":"stdout","time":88.26142986,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:26\u003c00:00,  2.63s/it]\n"}
-,{"stream_name":"stdout","time":93.757066433,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] image dependencies import cleanly\n"}
-,{"stream_name":"stdout","time":93.757167808,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] ✔ done:  pip_install_deps (64.8s)\n"}
-,{"stream_name":"stdout","time":93.786549642,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"cuda_available\": true, \"gpu_count\": 2}\n"}
-,{"stream_name":"stdout","time":94.036314142,"data":"[images] [instantid] using existing pipeline: /kaggle/working/luca_workers/instantid_pipeline.py\n"}
-,{"stream_name":"stdout","time":94.056122366,"data":"[images] To use instant id pipelines, please make sure you have the `insightface` library installed: `pip install insightface`.Please refer to: https://huggingface.co/InstantX/InstantID for further instructions regarding inference\n"}
-,{"stream_name":"stdout","time":94.05675605,"data":"[images] [2026-11-27T05:49:51Z] [INFO ] [img] ▶ start: load_controlnet\n"}
-,{"stream_name":"stdout","time":94.199070749,"data":"[images] /usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.\n"}
-,{"stream_name":"stdout","time":94.199096446,"data":"[images]   warnings.warn(\n"}
-,{"stream_name":"stdout","time":94.357579187,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
-,{"stream_name":"stdout","time":100.120369313,"data":"[video] /usr/local/lib/python3.13/dist-packages/diffusers/models/lora.py:391: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.\n"}
-,{"stream_name":"stdout","time":100.120424003,"data":"[video]   deprecate(\"LoRACompatibleLinear\", \"1.0.0\", deprecation_message)\n"}
-,{"stream_name":"stdout","time":111.619252876,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] IdentityNet ControlNet loaded\n"}
-,{"stream_name":"stdout","time":111.619366756,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] ✔ done:  load_controlnet (17.6s)\n"}
-,{"stream_name":"stdout","time":111.619484135,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] ▶ start: load_sdxl\n"}
-,{"stream_name":"stdout","time":111.619846566,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
-,{"stream_name":"stdout","time":111.619855239,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
-,{"stream_name":"stdout","time":111.974529737,"data":"[images] \n"}
-,{"stream_name":"stdout","time":112.107326667,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
-,{"stream_name":"stdout","time":112.224640465,"data":"[images] Fetching 18 files:  17%|█▋        | 3/18 [00:00\u003c00:00, 22.77it/s]\n"}
-,{"stream_name":"stdout","time":113.155841828,"data":"[video] loaded PerthNet (Implicit) at step 250,000\n"}
-,{"stream_name":"stdout","time":113.19616161,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz\n"}
-,{"stream_name":"stdout","time":113.61183667,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])\n"}
-,{"stream_name":"stdout","time":114.201786095,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] ✔ done:  load_chatterbox (75.3s)\n"}
-,{"stream_name":"stdout","time":114.201803676,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] ▶ start: generate_speech\n"}
-,{"stream_name":"stdout","time":114.219107474,"data":"[images] Fetching 18 files:  56%|█████▌    | 10/18 [00:00\u003c00:00, 43.24it/s]\n"}
-,{"stream_name":"stdout","time":114.341496237,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ✔ done:  generate_speech (0.7s)\n"}
-,{"stream_name":"stdout","time":114.346152624,"data":"[video] [2026-11-27T05:50:11Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
-,{"stream_name":"stdout","time":114.365267191,"data":"[video] [2026-11-27T05:50:11Z] [ERROR] [vid] Traceback (most recent call last):\n"}
-,{"stream_name":"stdout","time":114.365289159,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 956, in main\n"}
-,{"stream_name":"stdout","time":114.365295009,"data":"[video]     metrics[\"voice\"] = synth_voice(timings)\n"}
-,{"stream_name":"stdout","time":114.365308077,"data":"[video]                        ~~~~~~~~~~~^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365312255,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 402, in synth_voice\n"}
-,{"stream_name":"stdout","time":114.365316533,"data":"[video]     output = model.generate(TRANSCRIPT)\n"}
-,{"stream_name":"stdout","time":114.365320698,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/tts_turbo.py\", line 274, in generate\n"}
-,{"stream_name":"stdout","time":114.365325119,"data":"[video]     speech_tokens = self.t3.inference_turbo(\n"}
-,{"stream_name":"stdout","time":114.365329103,"data":"[video]         t3_cond=self.conds.t3,\n"}
-,{"stream_name":"stdout","time":114.365333299,"data":"[video]     ...\u003c4 lines\u003e...\n"}
-,{"stream_name":"stdout","time":114.365338113,"data":"[video]         repetition_penalty=repetition_penalty,\n"}
-,{"stream_name":"stdout","time":114.365342726,"data":"[video]     )\n"}
-,{"stream_name":"stdout","time":114.365346997,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
-,{"stream_name":"stdout","time":114.365351809,"data":"[video]     return func(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365356191,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 430, in inference_turbo\n"}
-,{"stream_name":"stdout","time":114.365360784,"data":"[video]     embeds, _ = self.prepare_input_embeds(\n"}
-,{"stream_name":"stdout","time":114.365364978,"data":"[video]                 ~~~~~~~~~~~~~~~~~~~~~~~~~^\n"}
-,{"stream_name":"stdout","time":114.365369265,"data":"[video]         t3_cond=t3_cond,\n"}
-,{"stream_name":"stdout","time":114.365373427,"data":"[video]         ^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365377674,"data":"[video]     ...\u003c2 lines\u003e...\n"}
-,{"stream_name":"stdout","time":114.365381989,"data":"[video]         cfg_weight=0.0,\n"}
-,{"stream_name":"stdout","time":114.365386256,"data":"[video]         ^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365390335,"data":"[video]     )\n"}
-,{"stream_name":"stdout","time":114.365394223,"data":"[video]     ^\n"}
-,{"stream_name":"stdout","time":114.365398215,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 112, in prepare_input_embeds\n"}
-,{"stream_name":"stdout","time":114.365402895,"data":"[video]     cond_emb = self.prepare_conditioning(t3_cond)  # (B, len_cond, dim)\n"}
-,{"stream_name":"stdout","time":114.365407452,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 101, in prepare_conditioning\n"}
-,{"stream_name":"stdout","time":114.365412292,"data":"[video]     return self.cond_enc(t3_cond)  # (B, len_cond, dim)\n"}
-,{"stream_name":"stdout","time":114.365416363,"data":"[video]            ~~~~~~~~~~~~~^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365420491,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
-,{"stream_name":"stdout","time":114.365433706,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365438376,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365442825,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
-,{"stream_name":"stdout","time":114.365448979,"data":"[video]     return forward_call(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365452657,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/modules/cond_enc.py\", line 70, in forward\n"}
-,{"stream_name":"stdout","time":114.365457429,"data":"[video]     cond_spkr = self.spkr_enc(cond.speaker_emb.view(-1, self.hp.speaker_embed_size))[:, None]  # (B, 1, dim)\n"}
-,{"stream_name":"stdout","time":114.365462027,"data":"[video]                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365466473,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
-,{"stream_name":"stdout","time":114.365471122,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365475434,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365479707,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
-,{"stream_name":"stdout","time":114.365484302,"data":"[video]     return forward_call(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365488529,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
-,{"stream_name":"stdout","time":114.36549313,"data":"[video]     return F.linear(input, self.weight, self.bias)\n"}
-,{"stream_name":"stdout","time":114.365497428,"data":"[video]            ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365501846,"data":"[video] RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
-,{"stream_name":"stdout","time":114.368731232,"data":"[video] \n"}
-,{"stream_name":"stdout","time":114.479643112,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================\n"}
-,{"stream_name":"stdout","time":114.480398211,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] video pipeline status: failed · 85.5s\n"}
-,{"stream_name":"stdout","time":114.480459022,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================\n"}
-,{"stream_name":"stdout","time":124.309117673,"data":"[images] Fetching 18 files:  83%|████████▎ | 15/18 [00:02\u003c00:00,  5.31it/s]\n"}
-,{"stream_name":"stdout","time":146.059960155,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:12\u003c00:00,  5.31it/s]\n"}
-,{"stream_name":"stdout","time":146.071564258,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:34\u003c00:03,  3.35s/it]\n"}
-,{"stream_name":"stdout","time":146.071586827,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  1.89s/it]\n"}
-,{"stream_name":"stdout","time":146.075292375,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.430661065,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
-,{"stream_name":"stdout","time":146.430691227,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.531747223,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.532407897,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.63273785,"data":"[images] Loading weights:  46%|████▌     | 239/517 [00:00\u003c00:00, 2369.32it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.632913663,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.636967447,"data":"[images] Loading weights:  95%|█████████▌| 493/517 [00:00\u003c00:00, 2454.40it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.636986651,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2508.92it/s]\n"}
-,{"stream_name":"stdout","time":146.650497144,"data":"[images] \n"}
-,{"stream_name":"stdout","time":148.614831645,"data":"[images] Loading pipeline components...:  29%|██▊       | 2/7 [00:00\u003c00:01,  3.48it/s]\n"}
-,{"stream_name":"stdout","time":148.689272782,"data":"[images] Loading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:03,  1.01it/s]\n"}
-,{"stream_name":"stdout","time":148.689405781,"data":"[images] \n"}
-,{"stream_name":"stdout","time":148.776268173,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":148.776301026,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2262.10it/s]\n"}
-,{"stream_name":"stdout","time":148.789461487,"data":"[images] \n"}
-,{"stream_name":"stdout","time":149.056624641,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:02,  1.46it/s]\n"}
-,{"stream_name":"stdout","time":149.385289624,"data":"[images] Loading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:01,  1.86it/s]\n"}
-,{"stream_name":"stdout","time":149.441177924,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:03\u003c00:00,  2.13it/s]\n"}
-,{"stream_name":"stdout","time":149.441243754,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.08it/s]\n"}
-,{"stream_name":"stdout","time":149.44225718,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16\n"}
-,{"stream_name":"stdout","time":149.442407742,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] ✔ done:  load_sdxl (37.8s)\n"}
-,{"stream_name":"stdout","time":149.443372725,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] ▶ start: load_identity_adapter\n"}
-,{"stream_name":"stdout","time":166.083953727,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)\n"}
-,{"stream_name":"stdout","time":166.0843827,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ✔ done:  load_identity_adapter (16.6s)\n"}
-,{"stream_name":"stdout","time":166.085505468,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ▶ start: configure_pipeline\n"}
-,{"stream_name":"stdout","time":171.841313736,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ✔ done:  configure_pipeline (5.8s)\n"}
-,{"stream_name":"stdout","time":171.841500575,"data":"[images] [2026-11-27T05:51:08Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
-,{"stream_name":"stdout","time":171.845618359,"data":"[images] [2026-11-27T05:51:08Z] [ERROR] [img] Traceback (most recent call last):\n"}
-,{"stream_name":"stdout","time":171.845636969,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 638, in main\n"}
-,{"stream_name":"stdout","time":171.845652601,"data":"[images]     pipe = load_instantid_pipeline(timings)\n"}
-,{"stream_name":"stdout","time":171.845656679,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 387, in load_instantid_pipeline\n"}
-,{"stream_name":"stdout","time":171.845660693,"data":"[images]     pipe.enable_vae_slicing()\n"}
-,{"stream_name":"stdout","time":171.845664263,"data":"[images]     ^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":171.845667811,"data":"[images]   File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
-,{"stream_name":"stdout","time":171.84567165,"data":"[images]     raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
-,{"stream_name":"stdout","time":171.845675537,"data":"[images] AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
-,{"stream_name":"stdout","time":171.845679356,"data":"[images] \n"}
-,{"stream_name":"stdout","time":171.858306932,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================\n"}
-,{"stream_name":"stdout","time":171.858877401,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] image pipeline status: failed · 142.9s\n"}
-,{"stream_name":"stdout","time":171.858887984,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================\n"}
-,{"stream_name":"stdout","time":173.630894201,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] images exited with code 1\n"}
-,{"stream_name":"stdout","time":173.630939797,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] video exited with code 1\n"}
-,{"stream_name":"stdout","time":173.631182869,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
-,{"stream_name":"stdout","time":173.631400362,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 01_luca_master.png\n"}
-,{"stream_name":"stdout","time":173.633355043,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
-,{"stream_name":"stdout","time":173.63337141,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
-,{"stream_name":"stdout","time":173.633376262,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
-,{"stream_name":"stdout","time":173.633380342,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
-,{"stream_name":"stdout","time":173.633384862,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
-,{"stream_name":"stdout","time":173.633388777,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
-,{"stream_name":"stderr","time":175.570033079,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
-,{"stream_name":"stderr","time":175.570072657,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
-,{"stream_name":"stderr","time":175.799133758,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
-,{"stream_name":"stderr","time":175.799160333,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
-,{"stream_name":"stderr","time":176.643282505,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
-,{"stream_name":"stderr","time":177.670859227,"data":"[NbConvertApp] Writing 321636 bytes to __results__.html\n"}
+===== kaggle kernels logs · fetched 2026-11-27 06:09:30Z =====
+[{"stream_name":"stdout","time":0.768842377,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.768897887,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
+,{"stream_name":"stdout","time":0.768902315,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.064452482,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found generate_images.py at /kaggle/input/luca-v2-workers/generate_images.py\n"}
+,{"stream_name":"stdout","time":1.105651543,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged generate_images.py (27.8 KB)\n"}
+,{"stream_name":"stdout","time":1.106775609,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found generate_video.py at /kaggle/input/luca-v2-workers/generate_video.py\n"}
+,{"stream_name":"stdout","time":1.132926309,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged generate_video.py (39.5 KB)\n"}
+,{"stream_name":"stdout","time":1.133809714,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found fetch_instantid.py at /kaggle/input/luca-v2-workers/fetch_instantid.py\n"}
+,{"stream_name":"stdout","time":1.162632093,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged fetch_instantid.py (5.6 KB)\n"}
+,{"stream_name":"stdout","time":1.180918517,"data":"[2026-11-27T06:06:14Z] [WARN ] [launcher] no _vendor/ directory — fetch_instantid.py will use the network\n"}
+,{"stream_name":"stdout","time":1.207039691,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
+,{"stream_name":"stdout","time":23.332197732,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] fetching pipeline from v0.42.0\n"}
+,{"stream_name":"stdout","time":23.332230478,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] wrote /kaggle/working/luca_workers/instantid_pipeline.py (48 KB) from ref=v0.42.0\n"}
+,{"stream_name":"stdout","time":23.332234555,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
+,{"stream_name":"stdout","time":23.332453545,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":23.332464603,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
+,{"stream_name":"stdout","time":23.332469378,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher]   images → cuda:0 : /usr/bin/python3 generate_images.py\n"}
+,{"stream_name":"stdout","time":23.332474001,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher]   video  → cuda:1 : /usr/bin/python3 generate_video.py\n"}
+,{"stream_name":"stdout","time":23.332486469,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":23.333196304,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] started images (pid 23)\n"}
+,{"stream_name":"stdout","time":23.333796787,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] started video (pid 24)\n"}
+,{"stream_name":"stdout","time":23.432423129,"data":"[images] [2026-11-27T06:06:37Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":23.432797423,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] compel: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":23.799173862,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] onnxruntime: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":24.185585142,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] insightface: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":24.185670544,"data":"[images] [2026-11-27T06:06:37Z] [INFO ] [img] installing: ['compel\u003e=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']\n"}
+,{"stream_name":"stdout","time":25.755126613,"data":"[video] [2026-11-27T06:06:39Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130\n"}
+,{"stream_name":"stdout","time":25.755235405,"data":"[video] [2026-11-27T06:06:39Z] [INFO ] [vid] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":26.716438679,"data":"[video] [2026-11-27T06:06:40Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
+,{"stream_name":"stdout","time":33.026210888,"data":"[video] [2026-11-27T06:06:46Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)\n"}
+,{"stream_name":"stdout","time":34.43288372,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)\n"}
+,{"stream_name":"stdout","time":34.433045432,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] ✔ done:  pip_install_deps (8.7s)\n"}
+,{"stream_name":"stdout","time":34.433058577,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] ▶ start: load_chatterbox\n"}
+,{"stream_name":"stdout","time":47.396544324,"data":"[video] [2026-11-27T06:07:01Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*\n"}
+,{"stream_name":"stdout","time":47.466552609,"data":"[video] /usr/local/lib/python3.13/dist-packages/perth/perth_net/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools\u003c81.\n"}
+,{"stream_name":"stdout","time":47.466575686,"data":"[video]   from pkg_resources import resource_filename\n"}
+,{"stream_name":"stdout","time":54.351993028,"data":"[video] \n"}
+,{"stream_name":"stdout","time":54.554033808,"data":"[video] Fetching 10 files:   0%|          | 0/10 [00:00\u003c?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":54.614530577,"data":"[video] \n"}
+,{"stream_name":"stdout","time":54.848332525000004,"data":"[video] Fetching 10 files:  10%|█         | 1/10 [00:00\u003c00:02,  3.81it/s]\n"}
+,{"stream_name":"stdout","time":56.465741598,"data":"[video] Fetching 10 files:  50%|█████     | 5/10 [00:00\u003c00:00, 11.26it/s]\n"}
+,{"stream_name":"stdout","time":58.065457475,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] image dependencies import cleanly\n"}
+,{"stream_name":"stdout","time":58.066006708,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] ✔ done:  pip_install_deps (34.6s)\n"}
+,{"stream_name":"stdout","time":58.102517856,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"cuda_available\": true, \"gpu_count\": 2}\n"}
+,{"stream_name":"stdout","time":58.442475764,"data":"[images] [instantid] using existing pipeline: /kaggle/working/luca_workers/instantid_pipeline.py\n"}
+,{"stream_name":"stdout","time":58.474845926,"data":"[images] To use instant id pipelines, please make sure you have the `insightface` library installed: `pip install insightface`.Please refer to: https://huggingface.co/InstantX/InstantID for further instructions regarding inference\n"}
+,{"stream_name":"stdout","time":58.475557641,"data":"[images] [2026-11-27T06:07:12Z] [INFO ] [img] ▶ start: load_controlnet\n"}
+,{"stream_name":"stdout","time":58.778399993,"data":"[images] /usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.\n"}
+,{"stream_name":"stdout","time":58.778433481,"data":"[images]   warnings.warn(\n"}
+,{"stream_name":"stdout","time":59.197857828,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":79.476222448,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:02\u003c00:01,  2.77it/s]\n"}
+,{"stream_name":"stdout","time":94.334735363,"data":"[video] Fetching 10 files:  80%|████████  | 8/10 [00:25\u003c00:10,  5.18s/it]\n"}
+,{"stream_name":"stdout","time":94.335844055,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:39\u003c00:00,  6.03s/it]\n"}
+,{"stream_name":"stdout","time":94.335865051,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:39\u003c00:00,  4.00s/it]\n"}
+,{"stream_name":"stdout","time":94.519507221,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] IdentityNet ControlNet loaded\n"}
+,{"stream_name":"stdout","time":94.520153616,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] ✔ done:  load_controlnet (36.0s)\n"}
+,{"stream_name":"stdout","time":94.520167987,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] ▶ start: load_sdxl\n"}
+,{"stream_name":"stdout","time":94.520229362,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stdout","time":94.520243729,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stdout","time":95.390373616,"data":"[images] \n"}
+,{"stream_name":"stdout","time":95.605193852,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":95.835917193,"data":"[images] Fetching 18 files:  11%|█         | 2/18 [00:00\u003c00:01,  9.32it/s]\n"}
+,{"stream_name":"stdout","time":96.065051431,"data":"[images] Fetching 18 files:  44%|████▍     | 8/18 [00:00\u003c00:00, 19.43it/s]\n"}
+,{"stream_name":"stdout","time":109.001196685,"data":"[images] Fetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 22.55it/s]\n"}
+,{"stream_name":"stdout","time":118.717479184,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:13\u003c00:00, 22.55it/s]\n"}
+,{"stream_name":"stdout","time":130.159320159,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:23\u003c00:02,  2.12s/it]\n"}
+,{"stream_name":"stdout","time":130.160588847,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  3.21s/it]\n"}
+,{"stream_name":"stdout","time":130.160609888,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  1.93s/it]\n"}
+,{"stream_name":"stdout","time":130.164029035,"data":"[images] \n"}
+,{"stream_name":"stdout","time":130.29511299,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":131.525407631,"data":"[video] /usr/local/lib/python3.13/dist-packages/diffusers/models/lora.py:391: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.\n"}
+,{"stream_name":"stdout","time":131.525473347,"data":"[video]   deprecate(\"LoRACompatibleLinear\", \"1.0.0\", deprecation_message)\n"}
+,{"stream_name":"stdout","time":131.904730435,"data":"[images] Loading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:00,  7.64it/s]\n"}
+,{"stream_name":"stdout","time":132.08411679,"data":"[images] Loading pipeline components...:  29%|██▊       | 2/7 [00:01\u003c00:05,  1.00s/it]\n"}
+,{"stream_name":"stdout","time":132.084144875,"data":"[images] \n"}
+,{"stream_name":"stdout","time":132.158578798,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":132.158604174,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2665.02it/s]\n"}
+,{"stream_name":"stdout","time":132.167532733,"data":"[images] \n"}
+,{"stream_name":"stdout","time":132.513578196,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:01,  2.19it/s]\n"}
+,{"stream_name":"stdout","time":132.98974685,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.10it/s]\n"}
+,{"stream_name":"stdout","time":132.989776344,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.089962635,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.09014712,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.190404116,"data":"[images] Loading weights:  49%|████▊     | 251/517 [00:00\u003c00:00, 2509.78it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.190573671,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.19158175,"data":"[images] Loading weights:  97%|█████████▋| 502/517 [00:00\u003c00:00, 2503.90it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.191600714,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2564.41it/s]\n"}
+,{"stream_name":"stdout","time":133.203760165,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.203896296,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.41it/s]\n"}
+,{"stream_name":"stdout","time":133.203905896,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.30it/s]\n"}
+,{"stream_name":"stdout","time":133.205197303,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16\n"}
+,{"stream_name":"stdout","time":133.205431175,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] ✔ done:  load_sdxl (38.7s)\n"}
+,{"stream_name":"stdout","time":133.205562526,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] ▶ start: load_identity_adapter\n"}
+,{"stream_name":"stdout","time":147.6322654,"data":"[video] loaded PerthNet (Implicit) at step 250,000\n"}
+,{"stream_name":"stdout","time":147.669133231,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz\n"}
+,{"stream_name":"stdout","time":147.745245472,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])\n"}
+,{"stream_name":"stdout","time":147.745446955,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  load_chatterbox (113.3s)\n"}
+,{"stream_name":"stdout","time":147.745462154,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ▶ start: generate_speech\n"}
+,{"stream_name":"stdout","time":147.800986758,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  generate_speech (0.1s)\n"}
+,{"stream_name":"stdout","time":147.801175521,"data":"[video] [2026-11-27T06:08:41Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
+,{"stream_name":"stdout","time":147.806921646,"data":"[video] [2026-11-27T06:08:41Z] [ERROR] [vid] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":147.806937277,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 956, in main\n"}
+,{"stream_name":"stdout","time":147.806941265,"data":"[video]     metrics[\"voice\"] = synth_voice(timings)\n"}
+,{"stream_name":"stdout","time":147.806944833,"data":"[video]                        ~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.80694892100001,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 402, in synth_voice\n"}
+,{"stream_name":"stdout","time":147.806952478,"data":"[video]     output = model.generate(TRANSCRIPT)\n"}
+,{"stream_name":"stdout","time":147.806955768,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/tts_turbo.py\", line 274, in generate\n"}
+,{"stream_name":"stdout","time":147.806959246,"data":"[video]     speech_tokens = self.t3.inference_turbo(\n"}
+,{"stream_name":"stdout","time":147.806963071,"data":"[video]         t3_cond=self.conds.t3,\n"}
+,{"stream_name":"stdout","time":147.806966405,"data":"[video]     ...\u003c4 lines\u003e...\n"}
+,{"stream_name":"stdout","time":147.806985829,"data":"[video]         repetition_penalty=repetition_penalty,\n"}
+,{"stream_name":"stdout","time":147.80706735,"data":"[video]     )\n"}
+,{"stream_name":"stdout","time":147.807100439,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":147.807105731,"data":"[video]     return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807109162,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 430, in inference_turbo\n"}
+,{"stream_name":"stdout","time":147.807112723,"data":"[video]     embeds, _ = self.prepare_input_embeds(\n"}
+,{"stream_name":"stdout","time":147.807116426,"data":"[video]                 ~~~~~~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":147.807120184,"data":"[video]         t3_cond=t3_cond,\n"}
+,{"stream_name":"stdout","time":147.807123506,"data":"[video]         ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807126727,"data":"[video]     ...\u003c2 lines\u003e...\n"}
+,{"stream_name":"stdout","time":147.807130771,"data":"[video]         cfg_weight=0.0,\n"}
+,{"stream_name":"stdout","time":147.807134054,"data":"[video]         ^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807137277,"data":"[video]     )\n"}
+,{"stream_name":"stdout","time":147.807140424,"data":"[video]     ^\n"}
+,{"stream_name":"stdout","time":147.80714772,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 112, in prepare_input_embeds\n"}
+,{"stream_name":"stdout","time":147.807151425,"data":"[video]     cond_emb = self.prepare_conditioning(t3_cond)  # (B, len_cond, dim)\n"}
+,{"stream_name":"stdout","time":147.807154825,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 101, in prepare_conditioning\n"}
+,{"stream_name":"stdout","time":147.807158887,"data":"[video]     return self.cond_enc(t3_cond)  # (B, len_cond, dim)\n"}
+,{"stream_name":"stdout","time":147.807162282,"data":"[video]            ~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807181499,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stdout","time":147.807185742,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807200046,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807203587,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stdout","time":147.807207035,"data":"[video]     return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.80721079,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/modules/cond_enc.py\", line 70, in forward\n"}
+,{"stream_name":"stdout","time":147.807214817,"data":"[video]     cond_spkr = self.spkr_enc(cond.speaker_emb.view(-1, self.hp.speaker_embed_size))[:, None]  # (B, 1, dim)\n"}
+,{"stream_name":"stdout","time":147.807218456,"data":"[video]                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807221841,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stdout","time":147.807226245,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807229589,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807232887,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stdout","time":147.807238415,"data":"[video]     return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.80724183,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
+,{"stream_name":"stdout","time":147.807261642,"data":"[video]     return F.linear(input, self.weight, self.bias)\n"}
+,{"stream_name":"stdout","time":147.80726509,"data":"[video]            ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807268383,"data":"[video] RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
+,{"stream_name":"stdout","time":147.807272909,"data":"[video] \n"}
+,{"stream_name":"stdout","time":147.849920504,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================\n"}
+,{"stream_name":"stdout","time":147.850039304,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] video pipeline status: failed · 124.4s\n"}
+,{"stream_name":"stdout","time":147.850555446,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================\n"}
+,{"stream_name":"stdout","time":153.240668663,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)\n"}
+,{"stream_name":"stdout","time":153.241194404,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ✔ done:  load_identity_adapter (20.0s)\n"}
+,{"stream_name":"stdout","time":153.241215644,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ▶ start: configure_pipeline\n"}
+,{"stream_name":"stdout","time":167.284781804,"data":"[images] [2026-11-27T06:09:00Z] [INFO ] [img] ✔ done:  configure_pipeline (14.0s)\n"}
+,{"stream_name":"stdout","time":167.284896283,"data":"[images] [2026-11-27T06:09:00Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":167.287536109,"data":"[images] [2026-11-27T06:09:00Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":167.287553108,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 638, in main\n"}
+,{"stream_name":"stdout","time":167.287576766,"data":"[images]     pipe = load_instantid_pipeline(timings)\n"}
+,{"stream_name":"stdout","time":167.287581569,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 387, in load_instantid_pipeline\n"}
+,{"stream_name":"stdout","time":167.287585265,"data":"[images]     pipe.enable_vae_slicing()\n"}
+,{"stream_name":"stdout","time":167.287588695,"data":"[images]     ^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":167.287591936,"data":"[images]   File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
+,{"stream_name":"stdout","time":167.287595649,"data":"[images]     raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
+,{"stream_name":"stdout","time":167.28760065,"data":"[images] AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":167.287616216,"data":"[images] \n"}
+,{"stream_name":"stdout","time":167.300499685,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":167.300517134,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] image pipeline status: failed · 143.9s\n"}
+,{"stream_name":"stdout","time":167.300570562,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":169.053052552,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] images exited with code 1\n"}
+,{"stream_name":"stdout","time":169.053082591,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] video exited with code 1\n"}
+,{"stream_name":"stdout","time":169.053302567,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
+,{"stream_name":"stdout","time":169.053502374,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 01_luca_master.png\n"}
+,{"stream_name":"stdout","time":169.053572346,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
+,{"stream_name":"stdout","time":169.053670395,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
+,{"stream_name":"stdout","time":169.05367971,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
+,{"stream_name":"stdout","time":169.053766275,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
+,{"stream_name":"stdout","time":169.053825843,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
+,{"stream_name":"stdout","time":169.053835668,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
+,{"stream_name":"stderr","time":170.816356807,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":170.816386431,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":171.001869446,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":171.001893991,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":171.773951835,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":172.651508703,"data":"[NbConvertApp] Writing 321636 bytes to __results__.html\n"}
 ]
-[2026-11-27 05:51:42Z] [INFO ] appended kaggle kernels logs → outputs/build.log (25882 chars)
+[2026-11-27 06:09:30Z] [INFO ] appended kaggle kernels logs → outputs/build.log (25883 chars)
 
-===== kernel log file stoic-luca-studio.log · fetched 2026-11-27 05:51:42Z =====
-[{"stream_name":"stdout","time":1.305437641,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":1.305487269,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
-,{"stream_name":"stdout","time":1.305492101,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":1.5527114,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found generate_images.py at /kaggle/input/luca-v2-workers/generate_images.py\n"}
-,{"stream_name":"stdout","time":1.672892196,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged generate_images.py (27.8 KB)\n"}
-,{"stream_name":"stdout","time":1.6737891139999999,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found generate_video.py at /kaggle/input/luca-v2-workers/generate_video.py\n"}
-,{"stream_name":"stdout","time":1.761546195,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged generate_video.py (39.5 KB)\n"}
-,{"stream_name":"stdout","time":1.762596053,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] found fetch_instantid.py at /kaggle/input/luca-v2-workers/fetch_instantid.py\n"}
-,{"stream_name":"stdout","time":1.875111462,"data":"[2026-11-27T05:48:18Z] [INFO ] [launcher] staged fetch_instantid.py (5.6 KB)\n"}
-,{"stream_name":"stdout","time":1.949060969,"data":"[2026-11-27T05:48:18Z] [WARN ] [launcher] no _vendor/ directory — fetch_instantid.py will use the network\n"}
-,{"stream_name":"stdout","time":1.977399234,"data":"[2026-11-27T05:48:19Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
-,{"stream_name":"stdout","time":28.840309806,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] fetching pipeline from v0.42.0\n"}
-,{"stream_name":"stdout","time":28.840340073,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] wrote /kaggle/working/luca_workers/instantid_pipeline.py (48 KB) from ref=v0.42.0\n"}
-,{"stream_name":"stdout","time":28.840345398,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
-,{"stream_name":"stdout","time":28.840591307,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":28.840607654,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
-,{"stream_name":"stdout","time":28.840612639,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher]   images → cuda:0 : /usr/bin/python3 generate_images.py\n"}
-,{"stream_name":"stdout","time":28.840617246,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher]   video  → cuda:1 : /usr/bin/python3 generate_video.py\n"}
-,{"stream_name":"stdout","time":28.840623903,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] ======================================================================\n"}
-,{"stream_name":"stdout","time":28.841527236,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] started images (pid 21)\n"}
-,{"stream_name":"stdout","time":28.842165033,"data":"[2026-11-27T05:48:45Z] [INFO ] [launcher] started video (pid 22)\n"}
-,{"stream_name":"stdout","time":28.947498391,"data":"[images] [2026-11-27T05:48:45Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
-,{"stream_name":"stdout","time":28.947993972,"data":"[images] [2026-11-27T05:48:45Z] [WARN ] [img] compel: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.372685749,"data":"[images] [2026-11-27T05:48:46Z] [WARN ] [img] onnxruntime: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.863636774,"data":"[images] [2026-11-27T05:48:46Z] [WARN ] [img] insightface: ModuleNotFoundError\n"}
-,{"stream_name":"stdout","time":29.864242579,"data":"[images] [2026-11-27T05:48:46Z] [INFO ] [img] installing: ['compel\u003e=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']\n"}
-,{"stream_name":"stdout","time":31.577790099,"data":"[video] [2026-11-27T05:48:48Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130\n"}
-,{"stream_name":"stdout","time":31.577819879,"data":"[video] [2026-11-27T05:48:48Z] [INFO ] [vid] ▶ start: pip_install_deps\n"}
-,{"stream_name":"stdout","time":32.534869113,"data":"[video] [2026-11-27T05:48:49Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
-,{"stream_name":"stdout","time":37.356137441,"data":"[video] [2026-11-27T05:48:54Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)\n"}
-,{"stream_name":"stdout","time":38.334641817,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)\n"}
-,{"stream_name":"stdout","time":38.334744768,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] ✔ done:  pip_install_deps (6.8s)\n"}
-,{"stream_name":"stdout","time":38.334944474,"data":"[video] [2026-11-27T05:48:55Z] [INFO ] [vid] ▶ start: load_chatterbox\n"}
-,{"stream_name":"stdout","time":54.270638896,"data":"[video] [2026-11-27T05:49:11Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*\n"}
-,{"stream_name":"stdout","time":54.370140051,"data":"[video] /usr/local/lib/python3.13/dist-packages/perth/perth_net/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools\u003c81.\n"}
-,{"stream_name":"stdout","time":54.370168252,"data":"[video]   from pkg_resources import resource_filename\n"}
-,{"stream_name":"stdout","time":61.997948328,"data":"[video] \n"}
-,{"stream_name":"stdout","time":62.062392638,"data":"[video] Fetching 10 files:   0%|          | 0/10 [00:00\u003c?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
-,{"stream_name":"stdout","time":62.197284337,"data":"[video] \n"}
-,{"stream_name":"stdout","time":62.35501862,"data":"[video] Fetching 10 files:  10%|█         | 1/10 [00:00\u003c00:01,  5.02it/s]\n"}
-,{"stream_name":"stdout","time":62.801803838,"data":"[video] Fetching 10 files:  50%|█████     | 5/10 [00:00\u003c00:00, 15.81it/s]\n"}
-,{"stream_name":"stdout","time":81.998071253,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:00\u003c00:00,  8.08it/s]\n"}
-,{"stream_name":"stdout","time":84.750991732,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:20\u003c00:00,  8.08it/s]\n"}
-,{"stream_name":"stdout","time":88.259319915,"data":"[video] Fetching 10 files:  80%|████████  | 8/10 [00:22\u003c00:09,  4.76s/it]\n"}
-,{"stream_name":"stdout","time":88.26141018,"data":"[video] Fetching 10 files:  90%|█████████ | 9/10 [00:26\u003c00:04,  4.47s/it]\n"}
-,{"stream_name":"stdout","time":88.26142986,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:26\u003c00:00,  2.63s/it]\n"}
-,{"stream_name":"stdout","time":93.757066433,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] image dependencies import cleanly\n"}
-,{"stream_name":"stdout","time":93.757167808,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] ✔ done:  pip_install_deps (64.8s)\n"}
-,{"stream_name":"stdout","time":93.786549642,"data":"[images] [2026-11-27T05:49:50Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"cuda_available\": true, \"gpu_count\": 2}\n"}
-,{"stream_name":"stdout","time":94.036314142,"data":"[images] [instantid] using existing pipeline: /kaggle/working/luca_workers/instantid_pipeline.py\n"}
-,{"stream_name":"stdout","time":94.056122366,"data":"[images] To use instant id pipelines, please make sure you have the `insightface` library installed: `pip install insightface`.Please refer to: https://huggingface.co/InstantX/InstantID for further instructions regarding inference\n"}
-,{"stream_name":"stdout","time":94.05675605,"data":"[images] [2026-11-27T05:49:51Z] [INFO ] [img] ▶ start: load_controlnet\n"}
-,{"stream_name":"stdout","time":94.199070749,"data":"[images] /usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.\n"}
-,{"stream_name":"stdout","time":94.199096446,"data":"[images]   warnings.warn(\n"}
-,{"stream_name":"stdout","time":94.357579187,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
-,{"stream_name":"stdout","time":100.120369313,"data":"[video] /usr/local/lib/python3.13/dist-packages/diffusers/models/lora.py:391: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.\n"}
-,{"stream_name":"stdout","time":100.120424003,"data":"[video]   deprecate(\"LoRACompatibleLinear\", \"1.0.0\", deprecation_message)\n"}
-,{"stream_name":"stdout","time":111.619252876,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] IdentityNet ControlNet loaded\n"}
-,{"stream_name":"stdout","time":111.619366756,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] ✔ done:  load_controlnet (17.6s)\n"}
-,{"stream_name":"stdout","time":111.619484135,"data":"[images] [2026-11-27T05:50:08Z] [INFO ] [img] ▶ start: load_sdxl\n"}
-,{"stream_name":"stdout","time":111.619846566,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
-,{"stream_name":"stdout","time":111.619855239,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
-,{"stream_name":"stdout","time":111.974529737,"data":"[images] \n"}
-,{"stream_name":"stdout","time":112.107326667,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
-,{"stream_name":"stdout","time":112.224640465,"data":"[images] Fetching 18 files:  17%|█▋        | 3/18 [00:00\u003c00:00, 22.77it/s]\n"}
-,{"stream_name":"stdout","time":113.155841828,"data":"[video] loaded PerthNet (Implicit) at step 250,000\n"}
-,{"stream_name":"stdout","time":113.19616161,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz\n"}
-,{"stream_name":"stdout","time":113.61183667,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])\n"}
-,{"stream_name":"stdout","time":114.201786095,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] ✔ done:  load_chatterbox (75.3s)\n"}
-,{"stream_name":"stdout","time":114.201803676,"data":"[video] [2026-11-27T05:50:10Z] [INFO ] [vid] ▶ start: generate_speech\n"}
-,{"stream_name":"stdout","time":114.219107474,"data":"[images] Fetching 18 files:  56%|█████▌    | 10/18 [00:00\u003c00:00, 43.24it/s]\n"}
-,{"stream_name":"stdout","time":114.341496237,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ✔ done:  generate_speech (0.7s)\n"}
-,{"stream_name":"stdout","time":114.346152624,"data":"[video] [2026-11-27T05:50:11Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
-,{"stream_name":"stdout","time":114.365267191,"data":"[video] [2026-11-27T05:50:11Z] [ERROR] [vid] Traceback (most recent call last):\n"}
-,{"stream_name":"stdout","time":114.365289159,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 956, in main\n"}
-,{"stream_name":"stdout","time":114.365295009,"data":"[video]     metrics[\"voice\"] = synth_voice(timings)\n"}
-,{"stream_name":"stdout","time":114.365308077,"data":"[video]                        ~~~~~~~~~~~^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365312255,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 402, in synth_voice\n"}
-,{"stream_name":"stdout","time":114.365316533,"data":"[video]     output = model.generate(TRANSCRIPT)\n"}
-,{"stream_name":"stdout","time":114.365320698,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/tts_turbo.py\", line 274, in generate\n"}
-,{"stream_name":"stdout","time":114.365325119,"data":"[video]     speech_tokens = self.t3.inference_turbo(\n"}
-,{"stream_name":"stdout","time":114.365329103,"data":"[video]         t3_cond=self.conds.t3,\n"}
-,{"stream_name":"stdout","time":114.365333299,"data":"[video]     ...\u003c4 lines\u003e...\n"}
-,{"stream_name":"stdout","time":114.365338113,"data":"[video]         repetition_penalty=repetition_penalty,\n"}
-,{"stream_name":"stdout","time":114.365342726,"data":"[video]     )\n"}
-,{"stream_name":"stdout","time":114.365346997,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
-,{"stream_name":"stdout","time":114.365351809,"data":"[video]     return func(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365356191,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 430, in inference_turbo\n"}
-,{"stream_name":"stdout","time":114.365360784,"data":"[video]     embeds, _ = self.prepare_input_embeds(\n"}
-,{"stream_name":"stdout","time":114.365364978,"data":"[video]                 ~~~~~~~~~~~~~~~~~~~~~~~~~^\n"}
-,{"stream_name":"stdout","time":114.365369265,"data":"[video]         t3_cond=t3_cond,\n"}
-,{"stream_name":"stdout","time":114.365373427,"data":"[video]         ^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365377674,"data":"[video]     ...\u003c2 lines\u003e...\n"}
-,{"stream_name":"stdout","time":114.365381989,"data":"[video]         cfg_weight=0.0,\n"}
-,{"stream_name":"stdout","time":114.365386256,"data":"[video]         ^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365390335,"data":"[video]     )\n"}
-,{"stream_name":"stdout","time":114.365394223,"data":"[video]     ^\n"}
-,{"stream_name":"stdout","time":114.365398215,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 112, in prepare_input_embeds\n"}
-,{"stream_name":"stdout","time":114.365402895,"data":"[video]     cond_emb = self.prepare_conditioning(t3_cond)  # (B, len_cond, dim)\n"}
-,{"stream_name":"stdout","time":114.365407452,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 101, in prepare_conditioning\n"}
-,{"stream_name":"stdout","time":114.365412292,"data":"[video]     return self.cond_enc(t3_cond)  # (B, len_cond, dim)\n"}
-,{"stream_name":"stdout","time":114.365416363,"data":"[video]            ~~~~~~~~~~~~~^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365420491,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
-,{"stream_name":"stdout","time":114.365433706,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365438376,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365442825,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
-,{"stream_name":"stdout","time":114.365448979,"data":"[video]     return forward_call(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365452657,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/modules/cond_enc.py\", line 70, in forward\n"}
-,{"stream_name":"stdout","time":114.365457429,"data":"[video]     cond_spkr = self.spkr_enc(cond.speaker_emb.view(-1, self.hp.speaker_embed_size))[:, None]  # (B, 1, dim)\n"}
-,{"stream_name":"stdout","time":114.365462027,"data":"[video]                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365466473,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
-,{"stream_name":"stdout","time":114.365471122,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365475434,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365479707,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
-,{"stream_name":"stdout","time":114.365484302,"data":"[video]     return forward_call(*args, **kwargs)\n"}
-,{"stream_name":"stdout","time":114.365488529,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
-,{"stream_name":"stdout","time":114.36549313,"data":"[video]     return F.linear(input, self.weight, self.bias)\n"}
-,{"stream_name":"stdout","time":114.365497428,"data":"[video]            ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":114.365501846,"data":"[video] RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
-,{"stream_name":"stdout","time":114.368731232,"data":"[video] \n"}
-,{"stream_name":"stdout","time":114.479643112,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================\n"}
-,{"stream_name":"stdout","time":114.480398211,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] video pipeline status: failed · 85.5s\n"}
-,{"stream_name":"stdout","time":114.480459022,"data":"[video] [2026-11-27T05:50:11Z] [INFO ] [vid] ==========================================================================\n"}
-,{"stream_name":"stdout","time":124.309117673,"data":"[images] Fetching 18 files:  83%|████████▎ | 15/18 [00:02\u003c00:00,  5.31it/s]\n"}
-,{"stream_name":"stdout","time":146.059960155,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:12\u003c00:00,  5.31it/s]\n"}
-,{"stream_name":"stdout","time":146.071564258,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:34\u003c00:03,  3.35s/it]\n"}
-,{"stream_name":"stdout","time":146.071586827,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  1.89s/it]\n"}
-,{"stream_name":"stdout","time":146.075292375,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.430661065,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
-,{"stream_name":"stdout","time":146.430691227,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.531747223,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.532407897,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.63273785,"data":"[images] Loading weights:  46%|████▌     | 239/517 [00:00\u003c00:00, 2369.32it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.632913663,"data":"[images] \n"}
-,{"stream_name":"stdout","time":146.636967447,"data":"[images] Loading weights:  95%|█████████▌| 493/517 [00:00\u003c00:00, 2454.40it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":146.636986651,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2508.92it/s]\n"}
-,{"stream_name":"stdout","time":146.650497144,"data":"[images] \n"}
-,{"stream_name":"stdout","time":148.614831645,"data":"[images] Loading pipeline components...:  29%|██▊       | 2/7 [00:00\u003c00:01,  3.48it/s]\n"}
-,{"stream_name":"stdout","time":148.689272782,"data":"[images] Loading pipeline components...:  43%|████▎     | 3/7 [00:02\u003c00:03,  1.01it/s]\n"}
-,{"stream_name":"stdout","time":148.689405781,"data":"[images] \n"}
-,{"stream_name":"stdout","time":148.776268173,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
-,{"stream_name":"stdout","time":148.776301026,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2262.10it/s]\n"}
-,{"stream_name":"stdout","time":148.789461487,"data":"[images] \n"}
-,{"stream_name":"stdout","time":149.056624641,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:02,  1.46it/s]\n"}
-,{"stream_name":"stdout","time":149.385289624,"data":"[images] Loading pipeline components...:  71%|███████▏  | 5/7 [00:02\u003c00:01,  1.86it/s]\n"}
-,{"stream_name":"stdout","time":149.441177924,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:03\u003c00:00,  2.13it/s]\n"}
-,{"stream_name":"stdout","time":149.441243754,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.08it/s]\n"}
-,{"stream_name":"stdout","time":149.44225718,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16\n"}
-,{"stream_name":"stdout","time":149.442407742,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] ✔ done:  load_sdxl (37.8s)\n"}
-,{"stream_name":"stdout","time":149.443372725,"data":"[images] [2026-11-27T05:50:46Z] [INFO ] [img] ▶ start: load_identity_adapter\n"}
-,{"stream_name":"stdout","time":166.083953727,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)\n"}
-,{"stream_name":"stdout","time":166.0843827,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ✔ done:  load_identity_adapter (16.6s)\n"}
-,{"stream_name":"stdout","time":166.085505468,"data":"[images] [2026-11-27T05:51:03Z] [INFO ] [img] ▶ start: configure_pipeline\n"}
-,{"stream_name":"stdout","time":171.841313736,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ✔ done:  configure_pipeline (5.8s)\n"}
-,{"stream_name":"stdout","time":171.841500575,"data":"[images] [2026-11-27T05:51:08Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
-,{"stream_name":"stdout","time":171.845618359,"data":"[images] [2026-11-27T05:51:08Z] [ERROR] [img] Traceback (most recent call last):\n"}
-,{"stream_name":"stdout","time":171.845636969,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 638, in main\n"}
-,{"stream_name":"stdout","time":171.845652601,"data":"[images]     pipe = load_instantid_pipeline(timings)\n"}
-,{"stream_name":"stdout","time":171.845656679,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 387, in load_instantid_pipeline\n"}
-,{"stream_name":"stdout","time":171.845660693,"data":"[images]     pipe.enable_vae_slicing()\n"}
-,{"stream_name":"stdout","time":171.845664263,"data":"[images]     ^^^^^^^^^^^^^^^^^^^^^^^\n"}
-,{"stream_name":"stdout","time":171.845667811,"data":"[images]   File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
-,{"stream_name":"stdout","time":171.84567165,"data":"[images]     raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
-,{"stream_name":"stdout","time":171.845675537,"data":"[images] AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
-,{"stream_name":"stdout","time":171.845679356,"data":"[images] \n"}
-,{"stream_name":"stdout","time":171.858306932,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================\n"}
-,{"stream_name":"stdout","time":171.858877401,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] image pipeline status: failed · 142.9s\n"}
-,{"stream_name":"stdout","time":171.858887984,"data":"[images] [2026-11-27T05:51:08Z] [INFO ] [img] ==========================================================================\n"}
-,{"stream_name":"stdout","time":173.630894201,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] images exited with code 1\n"}
-,{"stream_name":"stdout","time":173.630939797,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] video exited with code 1\n"}
-,{"stream_name":"stdout","time":173.631182869,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
-,{"stream_name":"stdout","time":173.631400362,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 01_luca_master.png\n"}
-,{"stream_name":"stdout","time":173.633355043,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
-,{"stream_name":"stdout","time":173.63337141,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
-,{"stream_name":"stdout","time":173.633376262,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
-,{"stream_name":"stdout","time":173.633380342,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
-,{"stream_name":"stdout","time":173.633384862,"data":"[2026-11-27T05:51:10Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
-,{"stream_name":"stdout","time":173.633388777,"data":"[2026-11-27T05:51:10Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
-,{"stream_name":"stderr","time":175.570033079,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
-,{"stream_name":"stderr","time":175.570072657,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
-,{"stream_name":"stderr","time":175.799133758,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
-,{"stream_name":"stderr","time":175.799160333,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
-,{"stream_name":"stderr","time":176.643282505,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
-,{"stream_name":"stderr","time":177.670859227,"data":"[NbConvertApp] Writing 321636 bytes to __results__.html\n"}
+===== kernel log file stoic-luca-studio.log · fetched 2026-11-27 06:09:30Z =====
+[{"stream_name":"stdout","time":0.768842377,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":0.768897887,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] stoic-ai-studio · LUCA v2 · parallel dual-GPU architecture\n"}
+,{"stream_name":"stdout","time":0.768902315,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":1.064452482,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found generate_images.py at /kaggle/input/luca-v2-workers/generate_images.py\n"}
+,{"stream_name":"stdout","time":1.105651543,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged generate_images.py (27.8 KB)\n"}
+,{"stream_name":"stdout","time":1.106775609,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found generate_video.py at /kaggle/input/luca-v2-workers/generate_video.py\n"}
+,{"stream_name":"stdout","time":1.132926309,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged generate_video.py (39.5 KB)\n"}
+,{"stream_name":"stdout","time":1.133809714,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] found fetch_instantid.py at /kaggle/input/luca-v2-workers/fetch_instantid.py\n"}
+,{"stream_name":"stdout","time":1.162632093,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] staged fetch_instantid.py (5.6 KB)\n"}
+,{"stream_name":"stdout","time":1.180918517,"data":"[2026-11-27T06:06:14Z] [WARN ] [launcher] no _vendor/ directory — fetch_instantid.py will use the network\n"}
+,{"stream_name":"stdout","time":1.207039691,"data":"[2026-11-27T06:06:14Z] [INFO ] [launcher] prohibition check passed: no pipe.to('cpu'), inswapper, SVD-XT or img2img adetailer in either worker\n"}
+,{"stream_name":"stdout","time":23.332197732,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] fetching pipeline from v0.42.0\n"}
+,{"stream_name":"stdout","time":23.332230478,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] wrote /kaggle/working/luca_workers/instantid_pipeline.py (48 KB) from ref=v0.42.0\n"}
+,{"stream_name":"stdout","time":23.332234555,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] [instantid] import check skipped — not installed yet: insightface (the worker installs these)\n"}
+,{"stream_name":"stdout","time":23.332453545,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":23.332464603,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] launching both pipelines in parallel\n"}
+,{"stream_name":"stdout","time":23.332469378,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher]   images → cuda:0 : /usr/bin/python3 generate_images.py\n"}
+,{"stream_name":"stdout","time":23.332474001,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher]   video  → cuda:1 : /usr/bin/python3 generate_video.py\n"}
+,{"stream_name":"stdout","time":23.332486469,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] ======================================================================\n"}
+,{"stream_name":"stdout","time":23.333196304,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] started images (pid 23)\n"}
+,{"stream_name":"stdout","time":23.333796787,"data":"[2026-11-27T06:06:37Z] [INFO ] [launcher] started video (pid 24)\n"}
+,{"stream_name":"stdout","time":23.432423129,"data":"[images] [2026-11-27T06:06:37Z] [INFO ] [img] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":23.432797423,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] compel: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":23.799173862,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] onnxruntime: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":24.185585142,"data":"[images] [2026-11-27T06:06:37Z] [WARN ] [img] insightface: ModuleNotFoundError\n"}
+,{"stream_name":"stdout","time":24.185670544,"data":"[images] [2026-11-27T06:06:37Z] [INFO ] [img] installing: ['compel\u003e=2.0.2', 'onnxruntime-gpu==1.22.0', 'insightface==2.1']\n"}
+,{"stream_name":"stdout","time":25.755126613,"data":"[video] [2026-11-27T06:06:39Z] [INFO ] [vid] protecting torch=2.11.0+cu130 torchaudio=2.11.0+cu130\n"}
+,{"stream_name":"stdout","time":25.755235405,"data":"[video] [2026-11-27T06:06:39Z] [INFO ] [vid] ▶ start: pip_install_deps\n"}
+,{"stream_name":"stdout","time":26.716438679,"data":"[video] [2026-11-27T06:06:40Z] [INFO ] [vid] pip install ffmpeg-python pykakasi s3tokenizer spacy-pkuseg resemble-perth pyloudnorm conformer==0.3.2\n"}
+,{"stream_name":"stdout","time":33.026210888,"data":"[video] [2026-11-27T06:06:46Z] [INFO ] [vid] pip install chatterbox-tts (no-deps)\n"}
+,{"stream_name":"stdout","time":34.43288372,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] chatterbox-tts installed --no-deps (torch untouched)\n"}
+,{"stream_name":"stdout","time":34.433045432,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] ✔ done:  pip_install_deps (8.7s)\n"}
+,{"stream_name":"stdout","time":34.433058577,"data":"[video] [2026-11-27T06:06:48Z] [INFO ] [vid] ▶ start: load_chatterbox\n"}
+,{"stream_name":"stdout","time":47.396544324,"data":"[video] [2026-11-27T06:07:01Z] [INFO ] [vid] diffusers 0.42.0 still ships LoRACompatible*\n"}
+,{"stream_name":"stdout","time":47.466552609,"data":"[video] /usr/local/lib/python3.13/dist-packages/perth/perth_net/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools\u003c81.\n"}
+,{"stream_name":"stdout","time":47.466575686,"data":"[video]   from pkg_resources import resource_filename\n"}
+,{"stream_name":"stdout","time":54.351993028,"data":"[video] \n"}
+,{"stream_name":"stdout","time":54.554033808,"data":"[video] Fetching 10 files:   0%|          | 0/10 [00:00\u003c?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":54.614530577,"data":"[video] \n"}
+,{"stream_name":"stdout","time":54.848332525000004,"data":"[video] Fetching 10 files:  10%|█         | 1/10 [00:00\u003c00:02,  3.81it/s]\n"}
+,{"stream_name":"stdout","time":56.465741598,"data":"[video] Fetching 10 files:  50%|█████     | 5/10 [00:00\u003c00:00, 11.26it/s]\n"}
+,{"stream_name":"stdout","time":58.065457475,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] image dependencies import cleanly\n"}
+,{"stream_name":"stdout","time":58.066006708,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] ✔ done:  pip_install_deps (34.6s)\n"}
+,{"stream_name":"stdout","time":58.102517856,"data":"[images] [2026-11-27T06:07:11Z] [INFO ] [img] environment: {\"python\": \"3.13.16\", \"torch\": \"2.11.0+cu130\", \"diffusers\": \"0.42.0\", \"cuda_available\": true, \"gpu_count\": 2}\n"}
+,{"stream_name":"stdout","time":58.442475764,"data":"[images] [instantid] using existing pipeline: /kaggle/working/luca_workers/instantid_pipeline.py\n"}
+,{"stream_name":"stdout","time":58.474845926,"data":"[images] To use instant id pipelines, please make sure you have the `insightface` library installed: `pip install insightface`.Please refer to: https://huggingface.co/InstantX/InstantID for further instructions regarding inference\n"}
+,{"stream_name":"stdout","time":58.475557641,"data":"[images] [2026-11-27T06:07:12Z] [INFO ] [img] ▶ start: load_controlnet\n"}
+,{"stream_name":"stdout","time":58.778399993,"data":"[images] /usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.\n"}
+,{"stream_name":"stdout","time":58.778433481,"data":"[images]   warnings.warn(\n"}
+,{"stream_name":"stdout","time":59.197857828,"data":"[images] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":79.476222448,"data":"[video] Fetching 10 files:  70%|███████   | 7/10 [00:02\u003c00:01,  2.77it/s]\n"}
+,{"stream_name":"stdout","time":94.334735363,"data":"[video] Fetching 10 files:  80%|████████  | 8/10 [00:25\u003c00:10,  5.18s/it]\n"}
+,{"stream_name":"stdout","time":94.335844055,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:39\u003c00:00,  6.03s/it]\n"}
+,{"stream_name":"stdout","time":94.335865051,"data":"[video] Fetching 10 files: 100%|██████████| 10/10 [00:39\u003c00:00,  4.00s/it]\n"}
+,{"stream_name":"stdout","time":94.519507221,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] IdentityNet ControlNet loaded\n"}
+,{"stream_name":"stdout","time":94.520153616,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] ✔ done:  load_controlnet (36.0s)\n"}
+,{"stream_name":"stdout","time":94.520167987,"data":"[images] [2026-11-27T06:07:48Z] [INFO ] [img] ▶ start: load_sdxl\n"}
+,{"stream_name":"stdout","time":94.520229362,"data":"[images] /usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stdout","time":94.520243729,"data":"[images]   deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stdout","time":95.390373616,"data":"[images] \n"}
+,{"stream_name":"stdout","time":95.605193852,"data":"[images] Fetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":95.835917193,"data":"[images] Fetching 18 files:  11%|█         | 2/18 [00:00\u003c00:01,  9.32it/s]\n"}
+,{"stream_name":"stdout","time":96.065051431,"data":"[images] Fetching 18 files:  44%|████▍     | 8/18 [00:00\u003c00:00, 19.43it/s]\n"}
+,{"stream_name":"stdout","time":109.001196685,"data":"[images] Fetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 22.55it/s]\n"}
+,{"stream_name":"stdout","time":118.717479184,"data":"[images] Fetching 18 files:  89%|████████▉ | 16/18 [00:13\u003c00:00, 22.55it/s]\n"}
+,{"stream_name":"stdout","time":130.159320159,"data":"[images] Fetching 18 files:  94%|█████████▍| 17/18 [00:23\u003c00:02,  2.12s/it]\n"}
+,{"stream_name":"stdout","time":130.160588847,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  3.21s/it]\n"}
+,{"stream_name":"stdout","time":130.160609888,"data":"[images] Fetching 18 files: 100%|██████████| 18/18 [00:34\u003c00:00,  1.93s/it]\n"}
+,{"stream_name":"stdout","time":130.164029035,"data":"[images] \n"}
+,{"stream_name":"stdout","time":130.29511299,"data":"[images] Loading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":131.525407631,"data":"[video] /usr/local/lib/python3.13/dist-packages/diffusers/models/lora.py:391: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.\n"}
+,{"stream_name":"stdout","time":131.525473347,"data":"[video]   deprecate(\"LoRACompatibleLinear\", \"1.0.0\", deprecation_message)\n"}
+,{"stream_name":"stdout","time":131.904730435,"data":"[images] Loading pipeline components...:  14%|█▍        | 1/7 [00:00\u003c00:00,  7.64it/s]\n"}
+,{"stream_name":"stdout","time":132.08411679,"data":"[images] Loading pipeline components...:  29%|██▊       | 2/7 [00:01\u003c00:05,  1.00s/it]\n"}
+,{"stream_name":"stdout","time":132.084144875,"data":"[images] \n"}
+,{"stream_name":"stdout","time":132.158578798,"data":"[images] Loading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":132.158604174,"data":"[images] Loading weights: 100%|██████████| 196/196 [00:00\u003c00:00, 2665.02it/s]\n"}
+,{"stream_name":"stdout","time":132.167532733,"data":"[images] \n"}
+,{"stream_name":"stdout","time":132.513578196,"data":"[images] Loading pipeline components...:  57%|█████▋    | 4/7 [00:02\u003c00:01,  2.19it/s]\n"}
+,{"stream_name":"stdout","time":132.98974685,"data":"[images] Loading pipeline components...:  86%|████████▌ | 6/7 [00:02\u003c00:00,  3.10it/s]\n"}
+,{"stream_name":"stdout","time":132.989776344,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.089962635,"data":"[images] Loading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.09014712,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.190404116,"data":"[images] Loading weights:  49%|████▊     | 251/517 [00:00\u003c00:00, 2509.78it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.190573671,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.19158175,"data":"[images] Loading weights:  97%|█████████▋| 502/517 [00:00\u003c00:00, 2503.90it/s]\u001b[A\n"}
+,{"stream_name":"stdout","time":133.191600714,"data":"[images] Loading weights: 100%|██████████| 517/517 [00:00\u003c00:00, 2564.41it/s]\n"}
+,{"stream_name":"stdout","time":133.203760165,"data":"[images] \n"}
+,{"stream_name":"stdout","time":133.203896296,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.41it/s]\n"}
+,{"stream_name":"stdout","time":133.203905896,"data":"[images] Loading pipeline components...: 100%|██████████| 7/7 [00:03\u003c00:00,  2.30it/s]\n"}
+,{"stream_name":"stdout","time":133.205197303,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] SG161222/RealVisXL_V5.0 loaded in float16\n"}
+,{"stream_name":"stdout","time":133.205431175,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] ✔ done:  load_sdxl (38.7s)\n"}
+,{"stream_name":"stdout","time":133.205562526,"data":"[images] [2026-11-27T06:08:26Z] [INFO ] [img] ▶ start: load_identity_adapter\n"}
+,{"stream_name":"stdout","time":147.6322654,"data":"[video] loaded PerthNet (Implicit) at step 250,000\n"}
+,{"stream_name":"stdout","time":147.669133231,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] using chatterbox.tts_turbo.ChatterboxTurboTTS @ 24000 Hz\n"}
+,{"stream_name":"stdout","time":147.745245472,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] chatterbox dtype=float16 (cast: ['t3', 's3gen', 've'])\n"}
+,{"stream_name":"stdout","time":147.745446955,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  load_chatterbox (113.3s)\n"}
+,{"stream_name":"stdout","time":147.745462154,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ▶ start: generate_speech\n"}
+,{"stream_name":"stdout","time":147.800986758,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ✔ done:  generate_speech (0.1s)\n"}
+,{"stream_name":"stdout","time":147.801175521,"data":"[video] [2026-11-27T06:08:41Z] [ERROR] [vid] FATAL — RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
+,{"stream_name":"stdout","time":147.806921646,"data":"[video] [2026-11-27T06:08:41Z] [ERROR] [vid] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":147.806937277,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 956, in main\n"}
+,{"stream_name":"stdout","time":147.806941265,"data":"[video]     metrics[\"voice\"] = synth_voice(timings)\n"}
+,{"stream_name":"stdout","time":147.806944833,"data":"[video]                        ~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.80694892100001,"data":"[video]   File \"/kaggle/working/luca_workers/generate_video.py\", line 402, in synth_voice\n"}
+,{"stream_name":"stdout","time":147.806952478,"data":"[video]     output = model.generate(TRANSCRIPT)\n"}
+,{"stream_name":"stdout","time":147.806955768,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/tts_turbo.py\", line 274, in generate\n"}
+,{"stream_name":"stdout","time":147.806959246,"data":"[video]     speech_tokens = self.t3.inference_turbo(\n"}
+,{"stream_name":"stdout","time":147.806963071,"data":"[video]         t3_cond=self.conds.t3,\n"}
+,{"stream_name":"stdout","time":147.806966405,"data":"[video]     ...\u003c4 lines\u003e...\n"}
+,{"stream_name":"stdout","time":147.806985829,"data":"[video]         repetition_penalty=repetition_penalty,\n"}
+,{"stream_name":"stdout","time":147.80706735,"data":"[video]     )\n"}
+,{"stream_name":"stdout","time":147.807100439,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stdout","time":147.807105731,"data":"[video]     return func(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807109162,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 430, in inference_turbo\n"}
+,{"stream_name":"stdout","time":147.807112723,"data":"[video]     embeds, _ = self.prepare_input_embeds(\n"}
+,{"stream_name":"stdout","time":147.807116426,"data":"[video]                 ~~~~~~~~~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stdout","time":147.807120184,"data":"[video]         t3_cond=t3_cond,\n"}
+,{"stream_name":"stdout","time":147.807123506,"data":"[video]         ^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807126727,"data":"[video]     ...\u003c2 lines\u003e...\n"}
+,{"stream_name":"stdout","time":147.807130771,"data":"[video]         cfg_weight=0.0,\n"}
+,{"stream_name":"stdout","time":147.807134054,"data":"[video]         ^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807137277,"data":"[video]     )\n"}
+,{"stream_name":"stdout","time":147.807140424,"data":"[video]     ^\n"}
+,{"stream_name":"stdout","time":147.80714772,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 112, in prepare_input_embeds\n"}
+,{"stream_name":"stdout","time":147.807151425,"data":"[video]     cond_emb = self.prepare_conditioning(t3_cond)  # (B, len_cond, dim)\n"}
+,{"stream_name":"stdout","time":147.807154825,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/t3.py\", line 101, in prepare_conditioning\n"}
+,{"stream_name":"stdout","time":147.807158887,"data":"[video]     return self.cond_enc(t3_cond)  # (B, len_cond, dim)\n"}
+,{"stream_name":"stdout","time":147.807162282,"data":"[video]            ~~~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807181499,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stdout","time":147.807185742,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807200046,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807203587,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stdout","time":147.807207035,"data":"[video]     return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.80721079,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/chatterbox/models/t3/modules/cond_enc.py\", line 70, in forward\n"}
+,{"stream_name":"stdout","time":147.807214817,"data":"[video]     cond_spkr = self.spkr_enc(cond.speaker_emb.view(-1, self.hp.speaker_embed_size))[:, None]  # (B, 1, dim)\n"}
+,{"stream_name":"stdout","time":147.807218456,"data":"[video]                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807221841,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stdout","time":147.807226245,"data":"[video]     return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.807229589,"data":"[video]            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807232887,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stdout","time":147.807238415,"data":"[video]     return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stdout","time":147.80724183,"data":"[video]   File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
+,{"stream_name":"stdout","time":147.807261642,"data":"[video]     return F.linear(input, self.weight, self.bias)\n"}
+,{"stream_name":"stdout","time":147.80726509,"data":"[video]            ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":147.807268383,"data":"[video] RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half\n"}
+,{"stream_name":"stdout","time":147.807272909,"data":"[video] \n"}
+,{"stream_name":"stdout","time":147.849920504,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================\n"}
+,{"stream_name":"stdout","time":147.850039304,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] video pipeline status: failed · 124.4s\n"}
+,{"stream_name":"stdout","time":147.850555446,"data":"[video] [2026-11-27T06:08:41Z] [INFO ] [vid] ==========================================================================\n"}
+,{"stream_name":"stdout","time":153.240668663,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ip-adapter.bin loaded (1691 MB)\n"}
+,{"stream_name":"stdout","time":153.241194404,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ✔ done:  load_identity_adapter (20.0s)\n"}
+,{"stream_name":"stdout","time":153.241215644,"data":"[images] [2026-11-27T06:08:46Z] [INFO ] [img] ▶ start: configure_pipeline\n"}
+,{"stream_name":"stdout","time":167.284781804,"data":"[images] [2026-11-27T06:09:00Z] [INFO ] [img] ✔ done:  configure_pipeline (14.0s)\n"}
+,{"stream_name":"stdout","time":167.284896283,"data":"[images] [2026-11-27T06:09:00Z] [ERROR] [img] FATAL — AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":167.287536109,"data":"[images] [2026-11-27T06:09:00Z] [ERROR] [img] Traceback (most recent call last):\n"}
+,{"stream_name":"stdout","time":167.287553108,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 638, in main\n"}
+,{"stream_name":"stdout","time":167.287576766,"data":"[images]     pipe = load_instantid_pipeline(timings)\n"}
+,{"stream_name":"stdout","time":167.287581569,"data":"[images]   File \"/kaggle/working/luca_workers/generate_images.py\", line 387, in load_instantid_pipeline\n"}
+,{"stream_name":"stdout","time":167.287585265,"data":"[images]     pipe.enable_vae_slicing()\n"}
+,{"stream_name":"stdout","time":167.287588695,"data":"[images]     ^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stdout","time":167.287591936,"data":"[images]   File \"/usr/local/lib/python3.13/dist-packages/diffusers/configuration_utils.py\", line 175, in __getattr__\n"}
+,{"stream_name":"stdout","time":167.287595649,"data":"[images]     raise AttributeError(f\"'{type(self).__name__}' object has no attribute '{name}'\")\n"}
+,{"stream_name":"stdout","time":167.28760065,"data":"[images] AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'\n"}
+,{"stream_name":"stdout","time":167.287616216,"data":"[images] \n"}
+,{"stream_name":"stdout","time":167.300499685,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":167.300517134,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] image pipeline status: failed · 143.9s\n"}
+,{"stream_name":"stdout","time":167.300570562,"data":"[images] [2026-11-27T06:09:01Z] [INFO ] [img] ==========================================================================\n"}
+,{"stream_name":"stdout","time":169.053052552,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] images exited with code 1\n"}
+,{"stream_name":"stdout","time":169.053082591,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] video exited with code 1\n"}
+,{"stream_name":"stdout","time":169.053302567,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher] summary: images=FAILED video=FAILED\n"}
+,{"stream_name":"stdout","time":169.053502374,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 01_luca_master.png\n"}
+,{"stream_name":"stdout","time":169.053572346,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 02_luca_yacht.png\n"}
+,{"stream_name":"stdout","time":169.053670395,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 03_luca_porsche.png\n"}
+,{"stream_name":"stdout","time":169.05367971,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ 04_luca_party.png\n"}
+,{"stream_name":"stdout","time":169.053766275,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ luca_voice.wav\n"}
+,{"stream_name":"stdout","time":169.053825843,"data":"[2026-11-27T06:09:02Z] [INFO ] [launcher]   ✗ luca_reel.mp4\n"}
+,{"stream_name":"stdout","time":169.053835668,"data":"[2026-11-27T06:09:02Z] [ERROR] [launcher] image pipeline failed — the carousel is the deliverable\n"}
+,{"stream_name":"stderr","time":170.816356807,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":170.816386431,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":171.001869446,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":171.001893991,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":171.773951835,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":172.651508703,"data":"[NbConvertApp] Writing 321636 bytes to __results__.html\n"}
 ]
-[2026-11-27 05:51:42Z] [INFO ] appended kernel log file stoic-luca-studio.log → outputs/build.log (25882 chars)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ 01_luca_master.png (missing)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ 02_luca_yacht.png (missing)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ 03_luca_porsche.png (missing)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ 04_luca_party.png (missing)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ luca_voice.wav (missing)
-[2026-11-27 05:51:42Z] [WARN ] artifact ✘ luca_reel.mp4 (missing)
-[2026-11-27 05:51:42Z] [INFO ] artifact ✔ luca_metrics.json (2 KB)
-[2026-11-27 05:51:42Z] [INFO ] artifact ✔ luca_metrics_images.json (1 KB)
-[2026-11-27 05:51:42Z] [INFO ] artifact ✔ luca_metrics_video.json (1 KB)
-[2026-11-27 05:51:42Z] [INFO ] artifact ✔ build.log (64 KB)
-[2026-11-27 05:51:42Z] [INFO ] artifact ○ luca_metrics_images.json (1 KB, optional)
-[2026-11-27 05:51:42Z] [INFO ] artifact ○ luca_metrics_video.json (1 KB, optional)
-[2026-11-27 05:51:42Z] [INFO ] artifact ○ build.log (65 KB, optional)
-[2026-11-27 05:51:42Z] [ERROR] required artifacts absent: 01_luca_master.png, 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_voice.wav, luca_reel.mp4
-[2026-11-27 05:51:42Z] [WARN ] missing artifacts: 01_luca_master.png, 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_voice.wav, luca_reel.mp4
+[2026-11-27 06:09:30Z] [INFO ] appended kernel log file stoic-luca-studio.log → outputs/build.log (25883 chars)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ 01_luca_master.png (missing)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ 02_luca_yacht.png (missing)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ 03_luca_porsche.png (missing)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ 04_luca_party.png (missing)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ luca_voice.wav (missing)
+[2026-11-27 06:09:30Z] [WARN ] artifact ✘ luca_reel.mp4 (missing)
+[2026-11-27 06:09:30Z] [INFO ] artifact ✔ luca_metrics.json (2 KB)
+[2026-11-27 06:09:30Z] [INFO ] artifact ✔ luca_metrics_images.json (1 KB)
+[2026-11-27 06:09:30Z] [INFO ] artifact ✔ luca_metrics_video.json (1 KB)
+[2026-11-27 06:09:30Z] [INFO ] artifact ✔ build.log (64 KB)
+[2026-11-27 06:09:30Z] [INFO ] artifact ○ luca_metrics_images.json (1 KB, optional)
+[2026-11-27 06:09:30Z] [INFO ] artifact ○ luca_metrics_video.json (1 KB, optional)
+[2026-11-27 06:09:30Z] [INFO ] artifact ○ build.log (64 KB, optional)
+[2026-11-27 06:09:30Z] [ERROR] required artifacts absent: 01_luca_master.png, 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_voice.wav, luca_reel.mp4
+[2026-11-27 06:09:30Z] [WARN ] missing artifacts: 01_luca_master.png, 02_luca_yacht.png, 03_luca_porsche.png, 04_luca_party.png, luca_voice.wav, luca_reel.mp4
 ::error::character forge did not produce a complete result (status=error, downloaded=True). See outputs/build.log.
-[2026-11-27 05:51:42Z] [ERROR] ✘ job failed — inspect outputs/build.log
+[2026-11-27 06:09:30Z] [ERROR] ✘ job failed — inspect outputs/build.log

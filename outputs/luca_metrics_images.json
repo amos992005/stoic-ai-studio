@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T05:48:45Z",
+  "started_at": "2026-11-27T06:06:37Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,11 +14,11 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 64.81,
-    "img/load_controlnet": 17.562,
-    "img/load_sdxl": 37.823,
-    "img/load_identity_adapter": 16.641,
-    "img/configure_pipeline": 5.757
+    "img/pip_install_deps": 34.633,
+    "img/load_controlnet": 36.044,
+    "img/load_sdxl": 38.686,
+    "img/load_identity_adapter": 20.035,
+    "img/configure_pipeline": 14.044
   },
   "errors": [
     {
@@ -35,6 +35,6 @@
     "cuda_available": true,
     "gpu_count": 2
   },
-  "total_seconds": 142.9,
-  "finished_at": "2026-11-27T05:51:08Z"
+  "total_seconds": 143.9,
+  "finished_at": "2026-11-27T06:09:01Z"
 }

@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:1",
   "status": "failed",
-  "started_at": "2026-11-27T05:48:45Z",
+  "started_at": "2026-11-27T06:06:37Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,9 +10,9 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 6.757,
-    "vid/load_chatterbox": 75.277,
-    "vid/generate_speech": 0.726
+    "vid/pip_install_deps": 8.678,
+    "vid/load_chatterbox": 113.312,
+    "vid/generate_speech": 0.055
   },
   "errors": [
     {
@@ -21,6 +21,6 @@
     }
   ],
   "artifacts": [],
-  "total_seconds": 85.5,
-  "finished_at": "2026-11-27T05:50:11Z"
+  "total_seconds": 124.4,
+  "finished_at": "2026-11-27T06:08:41Z"
 }
