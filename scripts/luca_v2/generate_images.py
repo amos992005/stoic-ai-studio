@@ -32,6 +32,7 @@ from __future__ import annotations
 import gc
 import json
 import os
+import re
 import sys
 import time
 import traceback
@@ -493,11 +494,20 @@ def load_adapter(pipe, lora_path: Path) -> Tuple[bool, str]:
     try:
         pipe.load_lora_weights(str(lora_path.parent), weight_name=lora_path.name,
                                adapter_name="luca")
+        report = verify_adapter_loaded(pipe, lora_path)
         pipe.set_adapters(["luca"], [LORA_SCALE])
-        return True, "diffusers.load_lora_weights"
+        return True, (f"diffusers.load_lora_weights "
+                      f"({report['weights_matched']}/{report['lora_tensors']} "
+                      f"tensors verified)")
     except Exception as exc:
-        log(f"diffusers LoRA loader refused ({type(exc).__name__}: {exc}) — "
-            f"retrying through peft", "WARN")
+        log(f"diffusers LoRA loader did not take ({type(exc).__name__}: {exc}) "
+            f"— retrying through peft", "WARN")
+        # A refused load still leaves the empty layers it created behind; they
+        # would show up as unmatched parameters and skew the retry's verdict.
+        try:
+            pipe.unload_lora_weights()
+        except Exception:
+            pass
 
     try:
         from safetensors.torch import load_file
@@ -506,10 +516,64 @@ def load_adapter(pipe, lora_path: Path) -> Tuple[bool, str]:
         loaded = _peft_fallback(pipe, state)
         if loaded == 0:
             return False, "peft fallback matched no attention modules"
+        report = verify_adapter_loaded(pipe, lora_path)
         pipe.set_adapters(["luca"], [LORA_SCALE])
-        return True, f"peft direct ({loaded} modules)"
+        return True, (f"peft direct ({loaded} modules, "
+                      f"{report['weights_matched']}/{report['lora_tensors']} "
+                      f"tensors verified)")
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
+
+
+def verify_adapter_loaded(pipe, lora_path: Path) -> Dict[str, Any]:
+    """
+    Prove the trained weights are in the model, not just that no error was
+    raised.
+
+    diffusers reports a mismatched key prefix as an INFO log and finishes
+    "successfully" with every LoRA layer left empty. That is exactly what
+    happened in run 46004724589, where ``lora_A.default.weight`` was silently
+    dropped. So compare the parameters against the file: if not one tensor
+    matches, the load did not happen.
+    """
+    import torch
+    from safetensors.torch import load_file
+
+    state = load_file(str(lora_path))
+    live = {name: tensor for name, tensor in pipe.unet.named_parameters()
+            if "lora_" in name}
+    if not live:
+        raise RuntimeError("the UNet holds no LoRA parameters after the load")
+
+    # Both sides carry an adapter-name segment that the file cannot know about
+    # ("lora_A.luca.weight" live, "lora_A.weight" in the file), so compare on
+    # the module path and the A/B side only.
+    shape = re.compile(r"\.lora_([AB])(\.[^.]+)?\.weight$")
+
+    def normalise(name: str) -> str:
+        return shape.sub(lambda m: f".lora_{m.group(1)}.weight", name)
+
+    expected = {normalise(key.split(".", 1)[-1]): tensor
+                for key, tensor in state.items()}
+
+    matched = 0
+    for name, tensor in live.items():
+        want = expected.get(normalise(name))
+        if want is None or want.shape != tensor.shape:
+            continue
+        got = tensor.detach().float().cpu()
+        if torch.allclose(got, want.float(), atol=1e-2, rtol=1e-2):
+            matched += 1
+
+    report = {"lora_tensors": len(live), "weights_matched": matched,
+              "tensors_saved": len(expected),
+              "dtypes": sorted({str(t.dtype) for t in live.values()})}
+    if matched < len(expected):
+        raise RuntimeError(
+            f"{matched}/{len(expected)} adapter tensors reached the UNet — the "
+            f"state dict keys do not match this model (checked {len(live)} "
+            f"LoRA parameters)")
+    return report
 
 
 def _peft_fallback(pipe, state: Dict[str, Any]) -> int:

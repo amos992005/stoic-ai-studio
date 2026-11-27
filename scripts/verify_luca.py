@@ -404,8 +404,23 @@ def adapter_attaches():
 
     body = code_of(source("generate_images.py"))
     assert "def load_adapter" in body and "diffusers.load_lora_weights" in body
+
+    # The save format is what makes the adapter loadable at all. diffusers
+    # rewrites the adapter-name segment itself, so "...lora_A.default.weight"
+    # matches nothing and is dropped in silence.
+    keys = list(load_file(str(checkpoint)))
+    assert all(".default." not in key for key in keys), \
+        f"save_adapter emitted a key diffusers cannot match: {keys[0]}"
+
+    saved = {key.split(".", 1)[-1] for key in keys}
+    unet = trained.__class__.from_config(trained.config).half()
+    unet.load_lora_adapter(load_file(str(checkpoint)), prefix="unet",
+                           adapter_name="luca")
+    live = {name for name, _ in unet.named_parameters() if "lora_" in name}
+    assert len(live) == len(saved), f"{len(live)} live vs {len(saved)} saved"
+    assert all(name.replace(".luca.", ".") in saved for name in live)
     return (f"{attached} modules attached via peft, output differs from base, "
-            f"meta tensors rejected up front")
+            f"meta tensors rejected, {len(saved)}/{len(saved)} tensors land")
 
 
 check("adapter attaches even when diffusers refuses", adapter_attaches)

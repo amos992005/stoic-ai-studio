@@ -105,10 +105,18 @@ def save_adapter(model, path: Path) -> Path:
     ``load_lora_weights()``.
 
     peft emits keys like
-    ``base_model.model.down_blocks.1....to_q.lora_A.weight``; diffusers expects
-    ``unet.down_blocks.1....to_q.lora_A.default.weight``. The rename is done
-    explicitly rather than through ``convert_state_dict_to_peft``, which cannot
-    infer the direction from a peft-shaped dict.
+    ``base_model.model.down_blocks.1....to_q.lora_A.weight``; diffusers wants
+    them under an ``unet.`` prefix. The rename is done explicitly rather than
+    through ``convert_state_dict_to_peft``, which cannot infer the direction
+    from a peft-shaped dict.
+
+    Do NOT add ``.default.`` (i.e. ``lora_A.default.weight``). diffusers
+    rewrites the adapter-name segment itself, so ``lora_A.default.weight``
+    becomes ``lora_A.<adapter>.default.weight`` and matches nothing: the layers
+    are created but stay empty (zero-init ``lora_B``, and with
+    ``low_cpu_mem_usage`` — the default — a meta tensor, which is the
+    "Cannot copy out of meta tensor" from run 46004724589). Verified: the
+    ``.default.`` form lands 0/64 tensors, the plain form 64/64.
     """
     import torch
     from peft.utils import get_peft_model_state_dict
@@ -118,8 +126,8 @@ def save_adapter(model, path: Path) -> Path:
     converted: Dict[str, Any] = {}
     for key, value in state.items():
         key = key.replace("base_model.model.", "")
-        key = key.replace(".lora_A.weight", ".lora_A.default.weight")
-        key = key.replace(".lora_B.weight", ".lora_B.default.weight")
+        key = key.replace(".lora_A.default.weight", ".lora_A.weight")
+        key = key.replace(".lora_B.default.weight", ".lora_B.weight")
         if not key.startswith("unet."):
             key = "unet." + key
         # Keep the tensors in float32: the LoRA is applied to fp16 weights at

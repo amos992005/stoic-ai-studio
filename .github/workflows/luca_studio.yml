@@ -300,6 +300,13 @@ jobs:
                "the adapter needs a fallback loader (diffusers can refuse it)")
           want("def check_no_meta" in images,
                "meta-device parameters must be diagnosed, not copied")
+          # diffusers drops keys whose adapter-name segment it cannot match, so
+          # the saved format is what makes the adapter loadable at all: a
+          # ".default." segment lands 0/64 tensors and renders the base model.
+          want(".lora_A.default.weight" not in code_of(lora),
+               "save_adapter must not emit '.default.' keys (diffusers drops them)")
+          want("def verify_adapter_loaded" in images,
+               "a load must be proven by the weights landing, not by no error")
           want("produced[\"lora_load\"]" in images,
                "the metrics must record how the adapter was attached")
           want("LORA_SCALE = float(os.environ.get(\"LUCA_LORA_SCALE\", \"0.85\"))" in images,
