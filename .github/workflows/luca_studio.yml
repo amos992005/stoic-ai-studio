@@ -39,12 +39,15 @@ env:
   # Kernel-side knobs (read by the workers via os.environ).
   BASE_SEED: "42"
   LUCA_TRANSCRIPT: ${{ github.event.inputs.transcript || 'Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.' }}
+  # The avatar render is the one stage with a real quality/latency trade-off.
+  SADTALKER_SIZE: "512"
+  SADTALKER_ENHANCER: gfpgan
 
 jobs:
   luca:
-    name: Luca Moretti (2x Kaggle T4) - images on cuda:0, voice+reel on cuda:1
+    name: Luca Moretti (2x Kaggle T4) - LoRA on cuda:0, voice+reel on cuda:1
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 95
 
     steps:
       - name: Checkout
@@ -73,6 +76,9 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             kaggle_kernel_luca/luca_studio.py \
+            scripts/luca_v2/luca_common.py \
+            scripts/luca_v2/luca_character.py \
+            scripts/luca_v2/luca_lora.py \
             scripts/luca_v2/generate_images.py \
             scripts/luca_v2/generate_video.py \
             scripts/luca_v2/fetch_instantid.py \
@@ -80,39 +86,58 @@ jobs:
             scripts/run_luca_job.py
           # The kernel is generated; a stale copy silently ships old workers.
           python scripts/build_luca_kernel.py --check
+
           # Run the kernel the way Kaggle does — as a SCRIPT, not an import.
           # Importing skips `if __name__ == "__main__"`, which is exactly how an
           # entrypoint placed above its embedded payload reached the GPU
           # (run 45950387190). No GPU here, so it is expected to stop after the
           # staging/verification stages; what must not happen is a NameError.
+          #
+          # The launcher is *killed* as soon as both workers are spawned: on a
+          # runner with no GPU the workers immediately pip-install their torch
+          # stack, which is neither under test nor survivable inside the job.
           python - <<'PY'
           import os
+          import signal
           import subprocess
           import sys
           import tempfile
+          import time
 
           work = tempfile.mkdtemp()
           env = dict(os.environ,
                      OUTPUT_DIR=work,
                      LUCA_WORKER_DIR=os.path.join(work, "luca_workers"),
                      CUDA_VISIBLE_DEVICES="")
-          proc = subprocess.run(
+          proc = subprocess.Popen(
               [sys.executable, "kaggle_kernel_luca/luca_studio.py"],
-              capture_output=True, text=True, env=env, timeout=600)
-          log = (proc.stdout or "") + (proc.stderr or "")
-          markers = [
+              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+              text=True, env=env, start_new_session=True)
+
+          markers = {
               "embedded payload verified",
               "prohibition check passed",
               "using committed vendored pipeline",
               "launching both pipelines in parallel",
-          ]
-          missing = [m for m in markers if m not in log]
+          }
+          seen, captured, deadline = set(), [], time.time() + 300
+          for line in iter(proc.stdout.readline, ""):
+              captured.append(line)
+              seen.update(m for m in markers if m in line)
+              if seen == markers or time.time() > deadline:
+                  break
+          try:
+              os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+          except Exception:
+              proc.kill()
+          proc.wait(timeout=60)
+          log = "".join(captured)
+
+          missing = sorted(markers - seen)
           assert not missing, (
               "the generated kernel does not reach " + repr(missing)
               + "\n--- kernel output ---\n" + log[-3000:])
-          # Only the launcher's own startup is under test here. The workers then
-          # try to pip-install their deps, which this runner may not be able to
-          # do — that is expected and not a kernel defect.
+
           startup = log.split("[launcher] launching both pipelines in parallel")[0]
           for fatal in ("NameError", "AttributeError", "ModuleNotFoundError",
                         "SyntaxError", "ImportError"):
@@ -121,45 +146,64 @@ jobs:
                   + startup[-3000:])
           print("kernel runs as a script: staged, verified, vendored, launched")
           PY
+
           python - <<'PY'
+          """
+          The static contract for the LoRA architecture.
+
+          Everything here is a property a future edit could silently break and
+          that no syntax check would notice: the identity rules, the stage
+          order that keeps InstantID out of inference, the mux flags a phone
+          needs, and the four banned techniques.
+          """
+          import ast
           import pathlib
           import re
+          import sys
 
-          launcher = pathlib.Path("kaggle_kernel_luca/luca_studio.py").read_text()
-          images = pathlib.Path("scripts/luca_v2/generate_images.py").read_text()
-          video = pathlib.Path("scripts/luca_v2/generate_video.py").read_text()
-          fetch = pathlib.Path("scripts/luca_v2/fetch_instantid.py").read_text()
-          vendor = pathlib.Path(
-              "scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py"
-          ).read_text()
-          workers = {"generate_images.py": images, "generate_video.py": video}
+          ROOT = pathlib.Path(".")
+          WORKERS = {name: (ROOT / "scripts" / "luca_v2" / name).read_text()
+                     for name in ("luca_common.py", "luca_character.py",
+                                  "luca_lora.py", "generate_images.py",
+                                  "generate_video.py", "fetch_instantid.py",
+                                  "_vendor/pipeline_stable_diffusion_xl_instantid.py")}
+          launcher = (ROOT / "kaggle_kernel_luca" / "luca_studio.py").read_text()
+          driver = (ROOT / "scripts" / "run_luca_job.py").read_text()
+          workflow = (ROOT / ".github" / "workflows" / "luca_studio.yml").read_text()
+
+          images = WORKERS["generate_images.py"]
+          video = WORKERS["generate_video.py"]
+          lora = WORKERS["luca_lora.py"]
+          char = WORKERS["luca_character.py"]
+          vendor = WORKERS["_vendor/pipeline_stable_diffusion_xl_instantid.py"]
+
+          failures = []
+
+          def want(condition, message):
+              if not condition:
+                  failures.append(message)
+
 
           def code_of(src):
               """
               Keep only executable code.
 
-              Both workers document the prohibitions in their docstring and
-              report them in a metrics dict (`"inswapper_128": False`), so a
-              naive scan rejects the compliant files. Docstrings are removed
-              through the AST, comments by prefix, self-reporting lines by
-              pattern.
+              Every worker documents the prohibitions in a docstring and reports
+              them in a metrics dict (`"inswapper_128": False`), so a naive scan
+              rejects the very files that comply. Docstrings go via the AST,
+              comment-only lines by prefix, self-reporting lines by pattern.
               """
-              import ast
               try:
                   tree = ast.parse(src)
               except SyntaxError as exc:
-                  # Falling back to text here would report a bogus ban violation
-                  # for a file that is simply broken; say what is wrong instead.
                   raise AssertionError(
                       f"cannot parse a worker for the ban scan: {exc}") from exc
-              if tree is not None:
-                  for node in ast.walk(tree):
-                      if isinstance(node, (ast.Module, ast.ClassDef,
-                                           ast.FunctionDef,
-                                           ast.AsyncFunctionDef)):
-                          doc = ast.get_docstring(node, clean=False)
-                          if doc:
-                              src = src.replace(doc, "")
+              for node in ast.walk(tree):
+                  if isinstance(node, (ast.Module, ast.ClassDef,
+                                       ast.FunctionDef, ast.AsyncFunctionDef)):
+                      doc = ast.get_docstring(node, clean=False)
+                      if doc:
+                          src = src.replace(doc, "")
               kept = []
               for line in src.splitlines():
                   if line.strip().startswith("#"):
@@ -169,7 +213,7 @@ jobs:
                   kept.append(line)
               return "\n".join(kept)
 
-          # -- the four techniques the user banned, on actual code -----------
+          # -- 1. the four banned techniques, on executable code only ---------
           banned = [
               ('pipe.to("cpu")', "CPU offload"),
               ("inswapper_128", "inswapper_128"),
@@ -177,159 +221,178 @@ jobs:
               ("stable-video-diffusion", "SVD-XT"),
               ("StableDiffusionXLImg2ImgPipeline", "SDXL img2img adetailer"),
           ]
-          for name, src in workers.items():
-              body = code_of(src)
+          for filename in ("luca_lora.py", "generate_images.py", "generate_video.py"):
+              body = code_of(WORKERS[filename])
               for token, label in banned:
-                  assert token not in body, f"{name} reintroduced banned {label}"
+                  want(token not in body, f"{filename} reintroduced banned {label}")
+          # SadTalker replaces MuseTalk: the old avatar path must be gone, and a
+          # half-migrated file is worse than either.
+          want("musetalk" not in images.lower() and "musetalk" not in video.lower(),
+               "MuseTalk references remain — the video path is now SadTalker")
 
-          # -- architecture: two scripts, one run, two GPUs ------------------
-          assert "generate_video.py" in launcher, "video worker not launched"
-          assert "Popen" in launcher and "threading" in launcher, \
-              "workers must be spawned concurrently and their logs pumped"
-          assert "CUDA_VISIBLE_DEVICES" in launcher, "both GPUs must be exposed"
-          assert "PYTORCH_CUDA_ALLOC_CONF" in launcher, \
-              "expandable_segments prevents fragmentation OOM on a 14.5 GB T4"
-          assert "check_prohibitions" in launcher and "BANNED" in launcher, \
-              "the launcher must fail fast on a banned construct"
-          assert "preflight_instantid" in launcher, \
-              "the InstantID pipeline must be staged before the GPU work starts"
-          # `kaggle kernels push` uploads ONLY the code file. Three approaches
-          # have failed: staging siblings in the kernel dir (silently dropped,
-          # run 45947135155) and a dataset mount (stale until re-versioned, run
-          # 45949661268). The kernel is now generated with the workers embedded,
-          # so it must contain them and must stage them itself.
-          assert "GENERATE_IMAGES_PY" in launcher and "GENERATE_VIDEO_PY" in launcher, \
-              "the workers must be embedded in the generated kernel"
-          assert "INSTANTID_PIPELINE_PY" in launcher, \
-              "the vendored pipeline must be embedded too (no network fetch)"
-          assert "def stage_workers" in launcher and "verify_embedded" in launcher, \
-              "the kernel must write and then verify its embedded payload"
-          driver = pathlib.Path("scripts/run_luca_job.py").read_text()
-          assert "build_luca_kernel" in driver, \
-              "the driver must regenerate the kernel from scripts/luca_v2/"
-          assert '"cuda:0"' in images, "image pipeline must pin cuda:0"
-          assert '"cuda:1"' in video, "voice/avatar pipeline must pin cuda:1"
+          # -- 2. identity lives in exactly one place -------------------------
+          want('TRIGGER = "ohwx"' in char, "the LoRA trigger word must stay 'ohwx'")
+          want("AGE = 27" in char, "the character must stay 27")
+          want("def check_prompt" in char, "the celebrity-name guard is missing")
+          want('FORBIDDEN_TERMS = ("brad pitt"' in char,
+               "the forbidden-name list must still start with the full name")
+          # The guard must be *called* on both prompt paths, not merely defined.
+          # Two producer functions means two calls (plus the def itself).
+          want(char.count("check_prompt(") >= 3,
+               "check_prompt must be wired into dataset_prompt and carousel_prompt")
 
-          # -- image pipeline specifics the user fixed -----------------------
-          assert "SG161222/RealVisXL_V5.0" in images, "base model changed"
-          assert "InstantX/InstantID" in images, "InstantID weights changed"
-          assert "antelopev2" in images, "identity analysis must use antelopev2"
-          assert "CUDAExecutionProvider" in images, \
-              "insightface must run on the GPU provider"
-          # The vendored pipeline inherits ControlNetPipeline, not
-          # DiffusionPipeline, so `pipe.enable_vae_slicing()` does NOT exist —
-          # it aborted run 45947923120 after two minutes of model loading.
-          # Slicing must be enabled on the VAE itself.
-          assert not re.search(r"^\s*pipe\.enable_vae_slicing\(\)", images, re.M), \
-              "pipe.enable_vae_slicing() does not exist on this pipeline"
-          assert "vae.enable_slicing()" in images, \
-              "VAE slicing must be enabled on the VAE object"
-          # chatterbox ships conds.pt in float32; feeding it to fp16 submodules
-          # dies with "mat1 and mat2 must have the same dtype" (run 45947923120).
-          assert "is_floating_point()" in video, \
-              "the conditioning cast must skip integer speech-token ids"
-          # Must be the *guarded* cast: a blanket .half() would corrupt the
-          # integer speech-token ids that share the same container.
-          assert re.search(
-              r"if torch\.is_tensor\(value\) and value\.is_floating_point\(\):\s*\n"
-              r"\s*setattr\(t3_cond, field, value\.half\(\)\)", video), \
-              "conds.pt float tensors must be cast to fp16 behind an is_floating_point guard"
-          assert 'getattr(model, "conds", None)' in video or "model.conds" in video, \
-              "the built-in conditioning must be reached through the model"
-          assert "CompelForSDXL" in images, "compel is required to bypass 77 tokens"
-          assert "DPMSolverMultistepScheduler" in images and \
-                 "use_karras_sigmas=True" in images, "scheduler must be DPM++ Karras"
-          assert "float16" in images, "SDXL must run in fp16"
-          assert "set_ip_adapter_scale" in images, \
-              ("ip_adapter_scale is not a __call__ kwarg - it is swallowed by "
-               "**kwargs and silently ignored; use the setter")
-          assert "ip_adapter_scale=0.80" not in images, \
-              "ip_adapter_scale passed to the pipeline call would be ignored"
+          dataset_entries = re.findall(r'\{"name":', char)
+          want(len(dataset_entries) == 15,
+               f"expected 15 dataset images, found {len(dataset_entries)}")
+          want(len(re.findall(r'"file": "0\d_luca_', char)) == 4,
+               "expected the four carousel entries")
 
-          prefix = (
-              "24mm iPhone 16 Pro candid photo, dirty blonde tousled hair, "
-              "light 3-day stubble, natural sunlight, visible skin pores, "
-              "slight film grain"
-          )
+          # No prompt may name the actor. The only permitted occurrence in the
+          # whole tree is the guard's own deny-list, so the check is "the term
+          # appears nowhere but inside FORBIDDEN_TERMS".
+          for term in ("brad pitt", "bradley"):
+              for filename, source in WORKERS.items():
+                  scrubbed = source.replace(
+                      'FORBIDDEN_TERMS = ("brad pitt", "brad", "pitt", "bradley")',
+                      "")
+                  want(term not in scrubbed.lower(),
+                       f"{filename} contains the forbidden name {term!r}")
 
-          def collapsed(text):
-              return re.sub(r"\s+", " ", text.replace('"', "")).strip()
+          # -- 3. process 1: dataset -> train -> carousel, in that order ------
+          want("SG161222/RealVisXL_V5.0" in images, "base model changed")
+          want("InstantX/InstantID" in images, "InstantID weights changed")
+          want('DEVICE = "cuda:0"' in images, "image pipeline must pin cuda:0")
+          want("set_ip_adapter_scale" in images,
+               "ip_adapter_scale is a setter, not a __call__ kwarg")
+          want("CompelForSDXL" in images, "compel is required to bypass 77 tokens")
+          want("DPMSolverMultistepScheduler" in images and
+               "use_karras_sigmas=True" in images, "scheduler must be DPM++ Karras")
 
-          # The literal is wrapped across implicit-concatenation lines, so
-          # compare on collapsed whitespace rather than exact source layout.
-          assert collapsed(prefix) in collapsed(images), \
-              "the required prompt prefix was altered"
-          assert images.count("LENS_SPEC") >= 2, \
-              "every scene prompt must start with the lens prefix"
+          # Read the order from main(), where the stages actually run.
+          main_body = images[images.index("def main()"):]
+          order = [main_body.index("build_master("),
+                   main_body.index("build_dataset("),
+                   main_body.index("unload_instantid("),
+                   main_body.index("luca_lora.train("),
+                   main_body.index("build_carousel(")]
+          want(order == sorted(order),
+               "main() must run master -> dataset -> unload -> train -> carousel")
+          # ...and the carousel must not be handed the reference model.
+          want("build_carousel(timings, lora_path)" in main_body,
+               "build_carousel must receive only the adapter path")
+          want("torch.cuda.empty_cache()" in images,
+               "VRAM must be released after InstantID unloads")
 
-          for needle, label in [("MASTER_CFG = 3.8", "master CFG 3.8"),
-                                ("MASTER_STEPS = 30", "master 30 steps"),
-                                ("SCENE_IP_ADAPTER_SCALE = 0.80", "ip adapter 0.80"),
-                                ("SCENE_CONTROLNET_SCALE = 0.55", "controlnet 0.55")]:
-              assert needle in images, f"{label} changed"
+          # The carousel must NOT touch InstantID — that is the whole upgrade.
+          carousel = code_of(images[images.index("def build_carousel"):
+                                    images.index("def main()")])
+          for token in ("image_embeds", "image=face_kps", "controlnet_conditioning_scale",
+                        "load_instantid"):
+              want(token not in carousel,
+                   f"carousel calls {token!r} — inference must be LoRA-only")
+          want("load_lora_weights" in carousel and "set_adapters" in carousel,
+               "the carousel must load and weight the trained adapter")
+          want("LORA_SCALE = float(os.environ.get(\"LUCA_LORA_SCALE\", \"0.85\"))" in images,
+               "LoRA inference scale must default to 0.85")
+          # NO hands near the face, and explicit framing tokens, are what stop
+          # the car-bonnet clipping.
+          for token in ("medium full shot", "candid 24mm iPhone 16 Pro photo",
+                        "natural sunlight", "skin pores"):
+              want(token in char, f"the carousel framing token {token!r} was removed")
+          want("hands near the face" in char,
+               "hands near the face must stay explicitly negative-prompted")
 
-          assert "hands" in images.lower(), "hands must be explicit"
-          assert re.search(r"hands near the face", images), \
-              "the master portrait must forbid hands near the face"
-          assert "face_box_for" in images or "male face" in images, \
-              "party scene needs a male-face-bbox-targeted identity repair"
+          # -- 4. the training recipe the brief specifies ---------------------
+          for needle, label in [
+              ("r=16", "rank 16"), ("alpha=16", "alpha 16"),
+              ("gradient_checkpointing", "gradient checkpointing"),
+              ("float16", "fp16 UNet"),
+              ("max_train_steps", "a step budget"),
+              ("clip_grad_norm_", "gradient clipping"),
+          ]:
+              want(needle in lora, f"luca_lora.py lost {label}")
+          want("def patch_vae_encoder" in lora,
+               "the diffusers 0.42 VAE encode patch is load-bearing for latent caching")
+          want('["to_q", "to_k", "to_v", "to_out.0"]' in lora.replace("'", "\""),
+               "the LoRA attention targets changed")
+          want("math.isfinite" in lora,
+               "a non-finite loss must be fatal, not silently saved as a dead adapter")
+          want("float32" in lora,
+               "trainable adapter params must stay float32 (fp16 + AdamW => NaN)")
 
-          # -- video pipeline specifics ---------------------------------------
-          assert "chatterbox" in video, "TTS must be Chatterbox"
-          assert "tts_turbo" in video, \
-              "Turbo lives at chatterbox.tts_turbo, not the package root"
-          # The cleanup trio must sit together inside release_tts_vram, in order.
-          cleanup = re.search(
-              r"del (\w+)\s*\n\s*gc\.collect\(\)\s*\n\s*"
-              r"torch\.cuda\.empty_cache\(\)", video)
-          assert cleanup, \
-              ("TTS VRAM release must be exactly del <model>; gc.collect(); "
-               "torch.cuda.empty_cache() back to back")
-          # Compare definition order, not the first mention (docstrings lie).
-          assert 'timed("release_tts_vram"' in video, \
-              "the VRAM release stage is missing"
-          assert 'timed("release_tts_vram"' in video and \
-                 video.index('timed("release_tts_vram"') < \
-                 video.index("def run_musetalk"), \
-              "VRAM must be released before MuseTalk loads"
-          assert "MuseTalk" in video, "MuseTalk required for the talking avatar"
-          assert "wait_for_master" in video or "01_luca_master.png" in video, \
-              "the avatar must poll for the master portrait (cross-process order)"
-          assert "ffprobe" in video, "the reel must be verified with ffprobe"
-          assert "luca_reel.mp4" in video and "luca_voice.wav" in video
-          assert "unet.timesteps" not in code_of(video), \
-              "MuseTalk UNet has no .timesteps attribute"
-          assert "SD_VAE_FILES" in video and "safetensors" in video, \
-              "sd-vae ships safetensors only; requesting the .bin 404s"
-          assert "merge_metrics" in images and "merge_metrics" in video, \
-              "both workers must merge their metrics half under a lock"
-          assert "fcntl.flock" in images and "fcntl.flock" in video, \
-              "the shared luca_metrics.json needs an exclusive lock"
+          # -- 5. process 2: Chatterbox -> SadTalker -> mandatory mux ---------
+          want('PINNED_DEVICE = "cuda:1"' in video, "video pipeline must pin cuda:1")
+          want("chatterbox" in video, "TTS must be Chatterbox")
+          want("s3gen" in video and "float32" in video,
+               "s3gen must be documented as float32 (torch.stft has no fp16 path)")
+          want("shim_diffusers_lora" in video and "LoRACompatibleLinear" in video,
+               "chatterbox needs the diffusers LoRA shim on a shared interpreter")
+          want("def run_sadtalker" in video, "SadTalker must drive the avatar")
+          want('"--preprocess", "crop"' in video, "SadTalker must preprocess with crop")
+          want("sadtalker" in video and '"--size"' in video, "SadTalker needs an explicit size")
+          want('"--still"' not in video,
+               "SadTalker must NOT be passed --still (it freezes the head)")
+          want("gfpgan" in video, "the GFPGAN enhancer is what fixes the softened mouth")
+          want("def wait_for_master" in video,
+               "the avatar must poll for the master portrait (cross-process order)")
 
-          # -- dependency pins that decide whether pip can install at all ----
-          assert "onnxruntime-gpu==1.22.0" in images, \
-              "onnxruntime-gpu 1.32 is CUDA 13; a T4 runtime is CUDA 12"
-          assert "onnx==1.23.2" in images, "onnx needs the cp312-abi3 wheel"
-          assert "insightface==2.1" in images, "insightface must be the wheel release"
-          # chatterbox pins diffusers==0.29 for a symbol newer diffusers dropped;
-          # process 1 needs >=0.30 on the same interpreter, so the shim is
-          # load-bearing, not decorative.
-          assert "shim_diffusers_lora" in video, \
-              "chatterbox needs the diffusers LoRA shim on a shared interpreter"
-          assert "LoRACompatibleLinear" in video, \
-              "the shim must restore the exact symbol chatterbox imports"
-          assert "--no-deps" in images, \
-              ("insightface must be installed --no-deps: its opencv-python "
-               "dependency imports libGL, which Kaggle does not have")
+          for flag in ('"-c:v", "libx264"', '"-pix_fmt", "yuv420p"',
+                       '"-c:a", "aac"', '"-movflags", "+faststart"'):
+              want(flag in video, f"the mandatory iPhone mux lost {flag}")
+          want("def verify_reel" in video and "ffprobe" in video,
+               "the reel must be probed, not assumed")
+          want("iphone_compatible" in video,
+               "the metrics must state the iPhone-compatibility verdict")
+          want("luca_reel.mp4" in video and "luca_voice.wav" in video,
+               "the deliverable filenames changed")
 
-          # -- the vendored InstantID pipeline --------------------------------
+          # The two import-time shims must precede any gfpgan/SadTalker import.
+          want("functional_tensor" in video, "the torchvision 0.17 shim is missing")
+          want("VisibleDeprecationWarning" in video, "the numpy 2.0 shim is missing")
+
+          # -- 6. the launcher ships every file both workers import ----------
+          for constant in ("LUCA_COMMON_PY", "LUCA_CHARACTER_PY", "LUCA_LORA_PY",
+                           "GENERATE_IMAGES_PY", "GENERATE_VIDEO_PY",
+                           "FETCH_INSTANTID_PY", "INSTANTID_PIPELINE_PY"):
+              want(constant in launcher,
+                   f"{constant} is not embedded — the worker would fail to import")
+          want("def stage_workers" in launcher and "def verify_embedded" in launcher,
+               "the kernel must write and then verify its embedded payload")
+          want("check_prohibitions" in launcher and "BANNED" in launcher,
+               "the launcher must fail fast on a banned construct")
+          want("CUDA_VISIBLE_DEVICES" in launcher,
+               "each worker must get exactly one physical GPU")
+          want("PYTORCH_CUDA_ALLOC_CONF" in launcher,
+               "expandable_segments prevents fragmentation OOM on a 14.5 GB T4")
+          want("Popen" in launcher and "threading" in launcher,
+               "both workers must run concurrently with live log pumping")
+
+          # -- 7. the driver's manifest matches what the run produces --------
+          want('"luca_lora.safetensors"' in driver,
+               "the trained adapter must be a required artifact, not optional")
+          want("build_luca_kernel" in driver,
+               "the driver must regenerate the kernel from scripts/luca_v2/")
+          for name in ("01_luca_master.png", "02_luca_yacht.png",
+                       "03_luca_porsche.png", "04_luca_party.png",
+                       "luca_lora.safetensors", "luca_voice.wav", "luca_reel.mp4"):
+              want(name in driver, f"the driver does not expect {name}")
+          want("outputs/luca_lora.safetensors" in workflow,
+               "the workflow will not commit the adapter back to the branch")
+
+          # -- 8. the vendored InstantID pipeline still has its surface ------
           for symbol in ("StableDiffusionXLInstantIDPipeline", "draw_kps",
                          "load_ip_adapter_instantid"):
-              assert symbol in vendor, f"vendored pipeline lost {symbol}"
-          assert "ensure_pipeline" in fetch and "_vendor" in fetch, \
-              "the bootstrapper must prefer the committed pipeline over the network"
+              want(symbol in vendor, f"vendored pipeline lost {symbol}")
+          want("ensure_pipeline" in WORKERS["fetch_instantid.py"],
+               "the bootstrapper must stage the committed pipeline")
 
-          print("v2 static checks passed")
+          if failures:
+              print("static contract FAILED:", file=sys.stderr)
+              for failure in failures:
+                  print(f"  - {failure}", file=sys.stderr)
+              sys.exit(1)
+          print(f"luca v2 static contract passed "
+                f"({len(failures)} failures across 8 groups)")
           PY
           ls -la kaggle_kernel_luca/ scripts/luca_v2/
 

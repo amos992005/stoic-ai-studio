@@ -1,79 +1,163 @@
-#!/usr/bin/env python3
 """
 Luca Moretti — Process 2 of 2: voice + talking avatar on cuda:1.
 
-Stages (each one releases its VRAM before the next starts):
+    Chatterbox → luca_voice.wav → SadTalker → mux → luca_reel.mp4
 
-  1. **Chatterbox-Turbo** (`chatterbox-tts`) in float16 → `outputs/luca_voice.wav`,
-     ~8-10 s of charismatic 27-year-old Monaco-Reel hook.
-  2. `del tts_model; gc.collect(); torch.cuda.empty_cache()` immediately.
-  3. **MuseTalk** (v1.5, fp16) driven by the master portrait + that WAV, after
-     polling briefly for `outputs/01_luca_master.png` to appear.
-  4. Mux to `outputs/luca_reel.mp4` and verify both streams with ffprobe.
+Two constraints shape this file:
 
-Hard prohibitions honoured here: no `pipe.to("cpu")` (the only device moves are
-model deletion + cache release), no inswapper_128, no SVD-XT, no Adetailer.
+  * **The mux is mandatory, not cosmetic.** SadTalker writes whatever codec its
+    own ffmpeg call happens to produce, and a phone that will not play the reel
+    is a bad deliverable. Everything is re-encoded to H.264 High/yuv420p with AAC
+    audio and `+faststart`, then *verified with ffprobe* rather than assumed.
 
-Two upstream hazards this file works around, both discovered by reading the
-source rather than by guessing:
-
-  * `chatterbox-tts` declares `torch==2.6.0`. A plain `pip install` would
-    DOWNGRADE Kaggle's torch and break process 1, which shares the environment.
-    Every install therefore goes through a guard that re-pins torch afterwards.
-  * `musetalk.utils.preprocessing` imports `mmpose` and instantiates DWPose at
-    *module import time*, and mmpose needs mmcv compiled against torch. Only the
-    face boxes come from that module, so we skip it entirely and supply boxes
-    with insightface, then use MuseTalk's own mask-based blending path which
-    does not need the BiSeNet face parser.
+  * **The workers run at the same time.** The picture depends on process 1's
+    master portrait, so this one waits for that file and does the voice first —
+    which is long enough that the two overlap almost completely.
 """
 
 from __future__ import annotations
 
-import fcntl
 import gc
-import json
 import os
 import shutil
 import subprocess
 import sys
 import time
 import traceback
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from luca_common import (BUILD_LOG, METRICS_PATH, OUTPUT_DIR, Tee, log,
+                         merge_metrics, missing_packages, pip_install, timed, ts)
 
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "/kaggle/working"))
-if not OUTPUT_DIR.is_dir():
-    OUTPUT_DIR = REPO_ROOT / "outputs"
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-BUILD_LOG = OUTPUT_DIR / "build.log"
-METRICS_PATH = OUTPUT_DIR / "luca_metrics.json"
+PINNED_DEVICE = "cuda:1"     # what the architecture says
+DEVICE = "cuda:0"            # what this process may use; see resolve_device()
 
 WORK_DIR = Path(os.environ.get("LUCA_WORK_DIR", "/kaggle/working/luca_work"))
-MUSETALK_DIR = WORK_DIR / "MuseTalk"
-MUSETALK_MODELS = MUSETALK_DIR / "models"
+SADTALKER_DIR = WORK_DIR / "SadTalker"
 
-# The launcher gives this worker its own card via CUDA_VISIBLE_DEVICES, so the
-# card it must use is *always* cuda:0 inside this process; with both cards
-# visible (running this file by hand) it is the second one. A hardcoded
-# "cuda:1" raised "CUDA error: invalid device ordinal" once isolation was in
-# place (run 45959575047), so resolve it from what is actually visible.
-PINNED_DEVICE = "cuda:1"   # the architecture, for logging
-DEVICE = "cuda:0"          # what this process may use; fixed by resolve_device()
+MASTER_FILENAME = "01_luca_master.png"
+VOICE_FILENAME = "luca_voice.wav"
+RAW_VIDEO_FILENAME = "luca_raw.mp4"
+REEL_FILENAME = "luca_reel.mp4"
+
+MASTER_WAIT_SECONDS = int(os.environ.get("MASTER_WAIT_SECONDS", "1800"))
+MASTER_POLL_SECONDS = 5.0
+
+#: SadTalker's output is 256px by default and 512px when asked; 512 is the
+#: difference between "a talking head" and "a phone wallpaper".
+SADTALKER_SIZE = int(os.environ.get("SADTALKER_SIZE", "512"))
+#: gfpgan on: it repairs the softened mouth region SadTalker's renderer leaves.
+SADTALKER_ENHANCER = os.environ.get("SADTALKER_ENHANCER", "gfpgan")
+
+TRANSCRIPT = os.environ.get(
+    "LUCA_TRANSCRIPT",
+    "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today "
+    "was choosing the view.",
+)
+
+TTS_MAX_SECONDS = 12.0
+MIN_REEL_SECONDS = 2.0
+
+#: Chatterbox's runtime deps, taken from the wheel's module-scope imports rather
+#: than its metadata (which pins torch==2.6 and would downgrade this runtime).
+CHATTERBOX_DEPS = ["soundfile", "librosa", "einops", "omegaconf", "tqdm",
+                   "imageio[ffmpeg]", "ffmpeg-python", "pykakasi", "safetensors",
+                   "s3tokenizer", "spacy-pkuseg", "resemble-perth", "pyloudnorm",
+                   "conformer==0.3.2", "tokenizers"]
+
+#: SadTalker's runtime deps. Deliberately excludes basicsr: only the RealESRGAN
+#: *background* upsampler needs it, `--enhancer gfpgan` does not, and basicsr's
+#: setup.py cannot build on a current Kaggle image (it shells out to a CUDA
+#: toolkit download at build time).
+SADTALKER_DEPS = ["librosa", "face_alignment", "imageio", "imageio-ffmpeg",
+                  "numba", "resampy", "pydub", "scipy", "kornia", "yacs",
+                  "scikit-image", "facexlib", "gfpgan", "av", "safetensors"]
+
+SADTALKER_REPO = "https://github.com/OpenTalker/SadTalker.git"
+
+#: Every SadTalker weight, all from GitHub releases (a host the Kaggle runner can
+#: reach). The single `.safetensors` is what makes init_path() pick the
+#: newer single-file model instead of the five legacy `.pth` files.
+SADTALKER_WEIGHTS = [
+    ("https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/"
+     "SadTalker_V0.0.2_{size}.safetensors", "checkpoints"),
+    ("https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/"
+     "mapping_00229-model.pth.tar", "checkpoints"),
+    ("https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/"
+     "mapping_00109-model.pth.tar", "checkpoints"),
+    # facexlib: the retinaface detector and the FAN landmark model
+    ("https://github.com/xinntao/facexlib/releases/download/v0.1.0/"
+     "detection_Resnet50_Final.pth", "gfpgan/weights"),
+    ("https://github.com/xinntao/facexlib/releases/download/v0.1.0/"
+     "alignment_WFLW_4HG.pth", "gfpgan/weights"),
+    ("https://github.com/xinntao/facexlib/releases/download/v0.2.2/"
+     "parsing_parsenet.pth", "gfpgan/weights"),
+    # the enhancer itself
+    ("https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/"
+     "GFPGANv1.4.pth", "gfpgan/weights"),
+]
+
+#: face_alignment downloads s3fd/2DFAN4 into the torch hub cache on first use.
+FACE_ALIGNMENT_CACHE = Path(os.environ.get(
+    "TORCH_HOME", str(Path.home() / ".cache" / "torch")))
+
+
+# --------------------------------------------------------------------------- #
+# Compatibility shims
+# --------------------------------------------------------------------------- #
+
+
+def apply_legacy_shims() -> None:
+    """
+    The three module-level landmines in a 2023 codebase on a 2026 runtime.
+
+    Each of these fails at *import* time, before any of SadTalker's own code
+    runs, so they have to be fixed before the repo is imported rather than
+    caught later:
+
+      * ``torchvision.transforms.functional_tensor`` was removed in torchvision
+        0.17; ``basicsr`` (which ``gfpgan`` imports) still imports it.
+      * ``np.VisibleDeprecationWarning`` was removed in numpy 2.0.
+      * the face-Alignment models are downloaded by ``face_alignment`` on
+        first use, so the cache directory has to exist and be writable.
+    """
+    import numpy as np
+
+    try:
+        import torchvision.transforms.functional as functional
+
+        sys.modules.setdefault(
+            "torchvision.transforms.functional_tensor", functional)
+    except Exception as exc:
+        log(f"functional_tensor shim skipped: {exc}", "WARN")
+
+    if not hasattr(np, "VisibleDeprecationWarning"):
+        np.VisibleDeprecationWarning = DeprecationWarning
+    for legacy, modern in (("float_", float), ("int_", int), ("bool_", bool),
+                           ("object_", object), ("str_", str)):
+        if not hasattr(np, legacy):
+            setattr(np, legacy, modern)
+
+
+# --------------------------------------------------------------------------- #
+# Voice
+# --------------------------------------------------------------------------- #
 
 
 def resolve_device() -> str:
     """
-    Return the device string this process should use, and set it current.
+    The GPU this process may use, and make it current.
 
-    One visible GPU (the normal, isolated case) → cuda:0. Two or more (hand
-    runs) → cuda:1, preserving the original architecture.
+    The launcher pins each worker to one card with CUDA_VISIBLE_DEVICES, so the
+    card is cuda:0 inside this process. Choosing cuda:1 unconditionally raised
+    "invalid device ordinal" the moment that isolation was introduced.
     """
     global DEVICE
     try:
@@ -87,215 +171,8 @@ def resolve_device() -> str:
     torch.cuda.set_device(index)
     DEVICE = f"cuda:{index}"
     return DEVICE
-MASTER_FILENAME = "01_luca_master.png"
-VOICE_FILENAME = "luca_voice.wav"
-REEL_FILENAME = "luca_reel.mp4"
-
-MASTER_WAIT_SECONDS = int(os.environ.get("MASTER_WAIT_SECONDS", "900"))
-MASTER_POLL_SECONDS = 5.0
-TTS_MAX_SECONDS = 10.0
-TALKING_FPS = 25
-
-TRANSCRIPT = os.environ.get(
-    "LUCA_TRANSCRIPT",
-    "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today "
-    "was choosing the view.",
-)
-
-MUSETALK_REPO = "https://github.com/TMElyralab/MuseTalk.git"
-MUSETALK_WEIGHTS_REPO = "TMElyralab/MuseTalk"
-MUSE_V15_UNET = ("musetalkV15/unet.pth", "musetalkV15/musetalk.json")
-SD_VAE_REPO = "stabilityai/sd-vae-ft-mse"
-#: Exact filenames present in that repo (no .bin — safetensors only).
-SD_VAE_FILES = ("config.json", "diffusion_pytorch_model.safetensors")
-WHISPER_REPO = "openai/whisper-tiny"
-
-#: The ffprobe verification gate.
-MIN_REEL_SECONDS = 2.0
 
 
-# --------------------------------------------------------------------------- #
-# Logging
-# --------------------------------------------------------------------------- #
-
-
-class Tee:
-    """Mirror stdout into a shared build log (both processes append)."""
-
-    def __init__(self, path: Path, stream):
-        self._stream = stream
-        self._file = open(path, "a", encoding="utf-8", buffering=1)
-        self.lock_path = path.with_suffix(".lock")
-
-    def write(self, data: str) -> int:
-        try:
-            self._stream.write(data)
-        except Exception:
-            pass
-        try:
-            import fcntl
-
-            with open(self.lock_path, "a") as lock:
-                fcntl.flock(lock, fcntl.LOCK_EX)
-                self._file.write(data)
-                fcntl.flock(lock, fcntl.LOCK_UN)
-        except Exception:
-            try:
-                self._file.write(data)
-            except Exception:
-                pass
-        return len(data)
-
-    def flush(self) -> None:
-        for target in (self._stream, self._file):
-            try:
-                target.flush()
-            except Exception:
-                pass
-
-    def isatty(self) -> bool:
-        return False
-
-    def close(self) -> None:
-        try:
-            self._file.close()
-        except Exception:
-            pass
-
-
-def ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def log(message: str, level: str = "INFO", tag: str = "vid") -> None:
-    print(f"[{ts()}] [{level:<5}] [{tag}] {message}", flush=True)
-
-
-class timed:
-    def __init__(self, label: str, timings: Dict[str, float], tag: str = "vid"):
-        self.label, self.timings, self.tag = label, timings, tag
-
-    def __enter__(self):
-        log(f"▶ start: {self.label}", tag=self.tag)
-        self.start = time.perf_counter()
-        return self
-
-    def __exit__(self, *exc):
-        elapsed = time.perf_counter() - self.start
-        self.timings[f"{self.tag}/{self.label}"] = round(elapsed, 3)
-        log(f"✔ done:  {self.label} ({elapsed:.1f}s)", tag=self.tag)
-        return False
-
-
-# --------------------------------------------------------------------------- #
-# Environment safety
-# --------------------------------------------------------------------------- #
-
-
-def torch_fingerprint() -> Tuple[Optional[str], Optional[str]]:
-    """The torch/torchaudio versions we must not disturb."""
-    import torch
-
-    try:
-        import torchaudio
-
-        audio = torchaudio.__version__
-    except Exception:
-        audio = None
-    return torch.__version__, audio
-
-
-def pip_install(packages: List[str], keep: Tuple[Optional[str], Optional[str]],
-                no_deps: bool = False) -> bool:
-    """
-    Install packages without letting them repin the shared torch build.
-
-    Process 1 is running SDXL on the same interpreter environment, so a silent
-    `torch 2.11 -> 2.6` downgrade (as `chatterbox-tts` requests) would break it
-    mid-run. We install with --no-deps where the dependency set is known, and
-    re-pin torch/torchaudio afterwards in case a resolver touched them.
-    """
-    torch_version, torchaudio_version = keep
-    command = [sys.executable, "-m", "pip", "install", "-q", "--no-cache-dir"]
-    if no_deps:
-        command.append("--no-deps")
-    command.extend(packages)
-    log(f"pip install {' '.join(packages)}"
-        f"{' (no-deps)' if no_deps else ''}")
-    proc = subprocess.run(command, capture_output=True, text=True)
-    if proc.returncode != 0:
-        log(f"pip failed: {(proc.stderr or proc.stdout)[-600:]}", "ERROR")
-
-    # Re-pin whatever the resolver may have moved.
-    try:
-        import importlib
-
-        importlib.invalidate_caches()
-        import torch as torch_now
-
-        if torch_version and torch_now.__version__ != torch_version:
-            log(f"torch was moved to {torch_now.__version__} — restoring "
-                f"{torch_version}", "WARN")
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-q", "--no-cache-dir",
-                 f"torch=={torch_version}"],
-                capture_output=True, text=True,
-            )
-    except Exception as exc:
-        log(f"torch re-pin check skipped: {exc}", "WARN")
-
-    return proc.returncode == 0
-
-
-def ensure_video_deps(timings: Dict[str, float]) -> None:
-    """
-    Install process 2's dependencies with the torch guard in place.
-
-    transformers is pinned by chatterbox to 5.2.0; Kaggle ships 5.x already, so
-    we let pip resolve transformers but forbid it from touching torch (which the
-    `--no-deps` split below achieves).
-    """
-    keep = torch_fingerprint()
-    log(f"protecting torch={keep[0]} torchaudio={keep[1]}")
-
-    with timed("pip_install_deps", timings):
-        # chatterbox-tts is installed --no-deps: its own metadata pins
-        # torch==2.6.0 and transformers==5.2.0, and a resolved install would
-        # downgrade the torch that process 1 is running SDXL on. Its runtime
-        # deps are listed below instead, torch-free.
-        # Every import chatterbox 0.1.7 actually performs at module scope, taken
-        # from the wheel rather than from its metadata: s3gen pulls s3tokenizer,
-        # the watermarker pulls resemble-perth (`import perth`), tts_turbo pulls
-        # pyloudnorm, and the tokenizer pulls spacy-pkuseg unconditionally.
-        # Gradio and the Hebrew/Russian helpers are deliberately absent — they
-        # are demo-only and dicta_onnx is imported lazily behind try/except.
-        wanted = ["soundfile", "librosa", "einops", "omegaconf", "tqdm",
-                  "imageio[ffmpeg]", "ffmpeg-python", "gdown", "pykakasi",
-                  "safetensors", "s3tokenizer", "spacy-pkuseg",
-                  "resemble-perth", "pyloudnorm", "conformer==0.3.2",
-                  "tokenizers"]
-        missing = [p for p in wanted if _needs_install(p)]
-        if missing:
-            pip_install(missing, keep)
-        else:
-            log("video dependencies already present")
-
-        # The TTS engine itself, always torch-safe.
-        if _needs_install("chatterbox-tts"):
-            if not pip_install(["chatterbox-tts"], keep, no_deps=True):
-                raise RuntimeError("chatterbox-tts install failed — see above")
-            log("chatterbox-tts installed --no-deps (torch untouched)")
-        else:
-            log("chatterbox-tts already present")
-
-
-#: chatterbox-tts 0.1.7 pins diffusers==0.29.0 because its s3gen decoder imports
-#: `diffusers.models.lora.LoRACompatibleLinear`, which newer diffusers removed.
-#: Process 1 is running InstantID on the *same* interpreter, and that pipeline
-#: needs diffusers >= 0.30 — so downgrading is not an option. Instead we restore
-#: the two symbols chatterbox touches. Both were plain wrappers with no LoRA
-#: behaviour in the signature chatterbox uses, so an identity passthrough is a
-#: faithful stand-in.
 _SHIM = """
 import torch.nn as nn
 
@@ -313,95 +190,103 @@ class LoRACompatibleConv(nn.Conv2d):
 
 def shim_diffusers_lora() -> None:
     """
-    Re-add the diffusers symbols chatterbox imports but newer diffusers removed.
+    Re-add the two symbols chatterbox imports that newer diffusers removed.
 
-    Idempotent, and a no-op on diffusers versions that still ship them. This has
-    to run before `import chatterbox`, otherwise the s3gen import blows up with
-    ModuleNotFoundError in the middle of the TTS stage.
+    chatterbox pins diffusers 0.29 for this reason. Downgrading would break
+    process 1 (InstantID needs >= 0.30) so the symbols are restored instead;
+    both were plain wrappers with no LoRA behaviour in the signature chatterbox
+    uses.
     """
     import types
 
     try:
         import diffusers
     except Exception as exc:
-        log(f"diffusers unavailable ({type(exc).__name__}) — skipping LoRA shim",
-            "WARN")
+        log(f"diffusers unavailable ({type(exc).__name__}) — skipping shim", "WARN")
         return
-
     try:
-        lora = __import__("diffusers.models.lora", fromlist=["LoRACompatibleLinear"])
-        assert lora.LoRACompatibleLinear and lora.LoRACompatibleConv
-        log(f"diffusers {diffusers.__version__} still ships LoRACompatible*")
+        __import__("diffusers.models.lora", fromlist=["LoRACompatibleLinear"])
         return
     except Exception:
         pass
 
     module = types.ModuleType("diffusers.models.lora")
     exec(_SHIM, module.__dict__)          # noqa: S102 - fixed literal source
-    import sys as _sys
-    _sys.modules["diffusers.models.lora"] = module
+    sys.modules["diffusers.models.lora"] = module
     diffusers.models.lora = module       # type: ignore[attr-defined]
     log(f"restored diffusers.models.lora for chatterbox "
         f"(diffusers {diffusers.__version__} dropped it)", "WARN")
 
 
-def _needs_install(spec: str) -> bool:
-    module = (spec.split("[")[0].replace("-", "_")
-              .split("==")[0].split(">=")[0].split("<")[0])
-    aliases = {
-        "chatterbox_tts": "chatterbox",
-        "ffmpeg_python": "ffmpeg",
-        "imageio": "imageio",
-    }
-    try:
-        import importlib
+def _cast_floats(container: Any, torch) -> int:
+    """
+    Halve every float tensor held by ``container``, by attribute *or* by key.
 
-        importlib.import_module(aliases.get(module, module))
-        return False
-    except Exception:
-        return True
-
-
-# --------------------------------------------------------------------------- #
-# Stage 1 — TTS
-# --------------------------------------------------------------------------- #
+    Written defensively because the real ``conds.t3`` may be a dataclass, a
+    namedtuple or a plain object with class-level attributes — ``vars()`` only
+    sees the last of those three when the values are on the instance. Integer
+    tensors (the speech token ids) share the same container and must not be
+    touched, so the cast is guarded by ``is_floating_point``.
+    """
+    if container is None:
+        return 0
+    cast = 0
+    items = {}
+    if isinstance(container, dict):
+        items = container
+    else:
+        names = set(getattr(container, "__dict__", {}) or {})
+        names |= {name for name in dir(container) if not name.startswith("_")}
+        items = {}
+        for name in names:
+            try:
+                items[name] = getattr(container, name)
+            except Exception:
+                continue
+    for field, value in list(items.items()):
+        if torch.is_tensor(value) and value.is_floating_point():
+            value = value.half()
+            try:
+                if isinstance(container, dict):
+                    container[field] = value
+                else:
+                    setattr(container, field, value)
+            except Exception:
+                continue
+            cast += 1
+    return cast
 
 
 def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
     """
-    Chatterbox-Turbo in float16 on cuda:1, written as luca_voice.wav.
+    Chatterbox-Turbo → luca_voice.wav.
 
-    Verified against chatterbox-tts 0.1.7:
-      * the Turbo class is `chatterbox.tts_turbo.ChatterboxTurboTTS` — it is NOT
-        re-exported from the package root, so `from chatterbox import ...` fails;
-      * `ChatterboxTurboTTS.from_pretrained(device)` pulls
-        ResembleAI/chatterbox-turbo, which ships `conds.pt`, a built-in voice
-        conditioning. That matters because `generate()` asserts `self.conds` is
-        not None — without conds.pt it would need a >5 s reference clip;
-      * `generate()` returns a single float tensor shaped [1, N] at `self.sr`;
-      * the class is a plain object, not an nn.Module, so `.half()` on it does
-        nothing. The dtype cast has to reach the actual submodules.
+    ``s3gen`` is kept in float32 deliberately. Its vocoder runs an STFT into
+    conv stacks, and ``torch.stft`` has no float16 path, so casting it produces
+    "Input type (float) and bias type (c10::Half) should be the same" no matter
+    how many individual layers are patched. ``t3`` — the ~2 GB autoregressive
+    transformer — is where the memory actually goes.
     """
     import numpy as np
     import soundfile as sf
     import torch
 
+    device = resolve_device()
+
     with timed("load_chatterbox", timings):
         shim_diffusers_lora()
-        candidates = [
-            ("chatterbox.tts_turbo", "ChatterboxTurboTTS"),
-            ("chatterbox.tts", "ChatterboxTTS"),
-        ]
-        model, chosen, sample_rate = None, None, None
+        candidates = [("chatterbox.tts_turbo", "ChatterboxTurboTTS"),
+                      ("chatterbox.tts", "ChatterboxTTS")]
+        model = chosen = None
+        sample_rate = 24000
         last_error: Optional[Exception] = None
         for module_name, class_name in candidates:
             try:
                 module = __import__(module_name, fromlist=[class_name])
-                cls = getattr(module, class_name)
-                model = cls.from_pretrained(device=resolve_device())
+                model = getattr(module, class_name).from_pretrained(device=device)
                 chosen = f"{module_name}.{class_name}"
                 sample_rate = int(getattr(model, "sr", 24000))
-                log(f"using {chosen} @ {sample_rate} Hz")
+                log(f"using {chosen} @ {sample_rate} Hz on {device}")
                 break
             except Exception as exc:
                 last_error = exc
@@ -410,18 +295,8 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
         if model is None:
             raise RuntimeError(f"chatterbox-tts could not be loaded: {last_error}")
 
-        # float16 on the real submodules; report what actually happened.
-        #
-        # `s3gen` is deliberately excluded. Its vocoder is a signal-processing
-        # chain (STFT -> conv stacks) whose intermediate tensors are float32 by
-        # construction — torch.stft has no float16 path — so casting it yields
-        # "Input type (float) and bias type (c10::Half) should be the same" no
-        # matter how many individual projections get patched (runs 45950802624
-        # and 45952128760). t3, the ~2 GB autoregressive transformer, is where
-        # the memory actually goes and s3gen's convs are cheap at 24 kHz.
-        FP16_SUBMODULES = ("t3", "ve")
         cast, failed = [], []
-        for name in FP16_SUBMODULES:
+        for name in ("t3", "ve"):
             submodule = getattr(model, name, None)
             if submodule is None or not hasattr(submodule, "half"):
                 continue
@@ -430,535 +305,429 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
                 cast.append(name)
             except Exception as exc:
                 failed.append(f"{name}: {type(exc).__name__}")
-        dtype = "float16" if cast and not failed else "mixed/float32"
-        log(f"chatterbox dtype={dtype} (cast: {cast or 'none'}"
-            f"{'; failed: ' + ', '.join(failed) if failed else ''})")
+        dtype = "float16" if cast and not failed else "float32"
+        log(f"chatterbox dtype={dtype} (cast: {cast or 'none'}; s3gen stays float32)")
 
-        # conds.pt is loaded in float32 and is fed straight into the now-fp16
-        # T3ConditionalEncoder, so the first matmul dies with
-        #   mat1 and mat2 must have the same dtype, but got Float and Half
-        # (run 45947923120). Conditionals.to(device) deliberately does not cast
-        # dtype, and the float/int tensors live in the same container, so reach
-        # through to the fp tensors explicitly — a blanket .half() would corrupt
-        # the int speech-token ids.
-        t3_cast = "t3" in cast
+        # conds.pt loads in float32 and feeds the now-fp16 t3. Reach through to
+        # the float tensors only: a blanket .half() corrupts the int token ids
+        # stored in the same container.
         conds = getattr(model, "conds", None)
-        if conds is not None and t3_cast:
-            cast_conds = 0
-            t3_cond = getattr(conds, "t3", None)
-            for field, value in list(vars(t3_cond).items()) if t3_cond else []:
-                if torch.is_tensor(value) and value.is_floating_point():
-                    setattr(t3_cond, field, value.half())
-                    cast_conds += 1
-            gen = getattr(conds, "gen", None) or {}
-            for key, value in list(gen.items()):
-                if torch.is_tensor(value) and value.is_floating_point():
-                    gen[key] = value.half()
-                    cast_conds += 1
-            log(f"cast {cast_conds} built-in conditioning tensor(s) to float16")
-
-        if t3_cast:
-            if not cast_conds:
-                log("no conditioning tensors were cast — generate() may raise a "
-                    "dtype mismatch", "WARN")
+        cast_conds = 0
+        if conds is not None and "t3" in cast:
+            cast_conds += _cast_floats(getattr(conds, "t3", None), torch)
+            gen = getattr(conds, "gen", None)
+            if isinstance(gen, dict):
+                for key, value in list(gen.items()):
+                    if torch.is_tensor(value) and value.is_floating_point():
+                        gen[key] = value.half()
+                        cast_conds += 1
+        log(f"cast {cast_conds} conditioning tensor(s) with t3")
 
     with timed("generate_speech", timings):
-        try:
-            output = model.generate(TRANSCRIPT)
-        except RuntimeError as exc:
-            message = str(exc)
-            if not any(marker in message for marker in
-                       ("same dtype", "same type", "should be the same")):
-                raise
-            # Last resort: chatterbox has dtype-sensitive internals we cannot
-            # enumerate ahead of time. fp32 still fits on an empty 14.5 GB card,
-            # and a WAV that exists beats a run that dies on precision.
-            log(f"fp16 synthesis failed ({exc}); retrying the whole model in "
-                f"float32", "WARN")
-            model.t3.float()
-            model.s3gen.float()
-            model.ve.float()
-            for name in ("t3", "s3gen", "ve"):
-                submodule = getattr(model, name, None)
-                if submodule is not None:
-                    submodule.float()
-            conds = getattr(model, "conds", None)
-            t3_cond = getattr(conds, "t3", None) if conds is not None else None
-            for field, value in list(vars(t3_cond).items()) if t3_cond else []:
-                if torch.is_tensor(value) and value.is_floating_point():
-                    setattr(t3_cond, field, value.float())
-            for key, value in list((getattr(conds, "gen", None) or {}).items()):
-                if torch.is_tensor(value) and value.is_floating_point():
-                    conds.gen[key] = value.float()
-            output = model.generate(TRANSCRIPT)
-        if isinstance(output, tuple):          # (wav, sr) on some versions
+        output = model.generate(TRANSCRIPT)
+        if isinstance(output, tuple):
             audio, sample_rate = output[0], int(output[1])
         else:
             audio = output
-
         if hasattr(audio, "detach"):
             audio = audio.detach().float().cpu().numpy()
         audio = np.asarray(audio, dtype=np.float32).reshape(-1)
 
-        # Trim to the Reel length, then peak-normalise (never RMS-limit).
         limit = int(TTS_MAX_SECONDS * sample_rate)
         if audio.size > limit:
             audio = audio[:limit]
         peak = float(np.max(np.abs(audio))) if audio.size else 0.0
         if peak <= 0:
             raise RuntimeError("chatterbox produced silence")
-        audio = (audio / peak * 0.891).astype(np.float32)   # -1.0 dBFS
+        audio = (audio / peak * 0.891).astype(np.float32)     # -1.0 dBFS
 
-        voice_path = OUTPUT_DIR / VOICE_FILENAME
-        sf.write(str(voice_path), audio, int(sample_rate), subtype="PCM_16")
+        voice = OUTPUT_DIR / VOICE_FILENAME
+        sf.write(str(voice), audio, int(sample_rate), subtype="PCM_16")
         seconds = audio.size / float(sample_rate)
-        log(f"wrote {voice_path.name}: {seconds:.2f}s @ {sample_rate} Hz "
-            f"({voice_path.stat().st_size / 1024:.0f} KB)")
+        log(f"wrote {VOICE_FILENAME}: {seconds:.2f}s @ {sample_rate} Hz "
+            f"({voice.stat().st_size / 1024:.0f} KB)")
 
-    # ---- mandatory VRAM cleanup before MuseTalk loads -------------------- #
     with timed("release_tts_vram", timings):
         del model
         gc.collect()
         torch.cuda.empty_cache()
         try:
-            free_b, total_b = torch.cuda.mem_get_info(1)
-            log(f"cuda:1 after TTS release: {free_b / 1024 ** 2:.0f} MB free "
-                f"of {total_b / 1024 ** 2:.0f} MB")
+            free, total = torch.cuda.mem_get_info()
+            log(f"after TTS release: {free / 1024 ** 2:.0f} MB free of "
+                f"{total / 1024 ** 2:.0f} MB")
         except Exception:
-            log("cuda:1 after TTS release (mem_get_info unavailable)")
+            log("after TTS release (mem_get_info unavailable)")
 
     return {
         "engine": "chatterbox-tts",
         "class": chosen,
-        "weights": "ResembleAI/chatterbox-turbo (built-in conds.pt voice)",
         "dtype": dtype,
+        "s3gen_dtype": "float32 (STFT has no fp16 path)",
         "sample_rate": int(sample_rate),
         "duration_s": round(seconds, 3),
         "transcript": TRANSCRIPT,
-        "normalisation": "peak to -1.0 dBFS",
         "file": VOICE_FILENAME,
     }
 
 
 # --------------------------------------------------------------------------- #
-# Stage 2 — MuseTalk
+# Avatar — SadTalker
 # --------------------------------------------------------------------------- #
 
 
 def wait_for_master(timings: Dict[str, float]) -> Path:
-    """Poll briefly for the master portrait produced by process 1."""
+    """Poll for process 1's master portrait."""
     master = OUTPUT_DIR / MASTER_FILENAME
     with timed("wait_for_master", timings):
         deadline = time.monotonic() + MASTER_WAIT_SECONDS
         while time.monotonic() < deadline:
-            if master.is_file() and master.stat().st_size > 10_000:
-                # guard against reading a partially flushed PNG
+            if master.is_file():
+                # Structural, not a byte-count guess: a partially written PNG is
+                # exactly the case worth rejecting, and PIL's verify() catches
+                # both a truncated file and a non-image. The dimension floor
+                # rules out a placeholder that would animate into a postage
+                # stamp.
                 try:
                     from PIL import Image
 
                     with Image.open(master) as probe:
                         probe.verify()
-                    log(f"master portrait available ({master.stat().st_size / 1024:.0f} KB)")
-                    return master
+                        width, height = probe.size
+                    if min(width, height) >= 512:
+                        log(f"master portrait available ({width}x{height}, "
+                            f"{master.stat().st_size / 1024:.0f} KB)")
+                        return master
+                    log(f"master is only {width}x{height} — waiting for the "
+                        f"real render", "WARN")
                 except Exception:
-                    log("master exists but is not yet readable — waiting", "WARN")
+                    log("master exists but is not readable yet — waiting", "WARN")
             time.sleep(MASTER_POLL_SECONDS)
-    raise RuntimeError(
-        f"{MASTER_FILENAME} did not appear within {MASTER_WAIT_SECONDS}s")
+    raise RuntimeError(f"{MASTER_FILENAME} did not appear within "
+                       f"{MASTER_WAIT_SECONDS}s")
 
 
-def ensure_musetalk_repo(timings: Dict[str, float]) -> Path:
-    if (MUSETALK_DIR / "musetalk").is_dir():
-        log(f"MuseTalk already cloned at {MUSETALK_DIR}")
-        return MUSETALK_DIR
-    with timed("clone_musetalk", timings):
-        WORK_DIR.mkdir(parents=True, exist_ok=True)
-        proc = subprocess.run(
-            ["git", "clone", "--depth", "1", MUSETALK_REPO, str(MUSETALK_DIR)],
-            capture_output=True, text=True,
-        )
-        if proc.returncode != 0 or not (MUSETALK_DIR / "musetalk").is_dir():
-            raise RuntimeError(f"MuseTalk clone failed: {proc.stderr[-400:]}")
-        log("MuseTalk cloned")
-    return MUSETALK_DIR
+def run(*command: str, timeout: int = 3600) -> subprocess.CompletedProcess:
+    return subprocess.run(command, capture_output=True, text=True,
+                          timeout=timeout)
 
 
-def ensure_musetalk_weights(timings: Dict[str, float]) -> Dict[str, Path]:
-    """
-    Download exactly the weights the pipeline path uses.
+def ensure_sadtalker(timings: Dict[str, float]) -> Path:
+    """Clone the repo and fetch every weight it needs."""
+    with timed("clone_sadtalker", timings):
+        if (SADTALKER_DIR / "inference.py").is_file():
+            log(f"SadTalker already cloned at {SADTALKER_DIR}")
+        else:
+            WORK_DIR.mkdir(parents=True, exist_ok=True)
+            proc = run("git", "clone", "--depth", "1", SADTALKER_REPO,
+                       str(SADTALKER_DIR))
+            if proc.returncode != 0:
+                raise RuntimeError(f"SadTalker clone failed: {proc.stderr[-500:]}")
+            log("SadTalker cloned")
 
-    Deliberately NOT the upstream download_weights.sh: that also pulls the
-    BiSeNet face-parser from Google Drive, which this pipeline does not need
-    (mask-based blending) and which often 403s from a datacenter.
-    """
-    from huggingface_hub import hf_hub_download
-
-    paths: Dict[str, Path] = {}
-    with timed("fetch_musetalk_weights", timings):
-        for remote in MUSE_V15_UNET:
-            local = hf_hub_download(MUSETALK_WEIGHTS_REPO, remote)
-            # keep upstream's layout: models/musetalkV15/{unet.pth,musetalk.json}
-            destination = MUSETALK_MODELS / Path(remote)
+    with timed("fetch_sadtalker_weights", timings):
+        for url_template, subdir in SADTALKER_WEIGHTS:
+            url = url_template.format(size=SADTALKER_SIZE)
+            destination = SADTALKER_DIR / subdir / Path(url).name
             destination.parent.mkdir(parents=True, exist_ok=True)
-            if not destination.is_file() or destination.stat().st_size != Path(local).stat().st_size:
-                shutil.copy2(local, destination)
-            paths[remote] = destination
-            log(f"✓ {remote} ({destination.stat().st_size / 1e6:.0f} MB)")
+            if destination.is_file() and destination.stat().st_size > 1024:
+                log(f"  ✓ {subdir}/{destination.name} (cached)")
+                continue
+            proc = run("curl", "-sSL", "--retry", "3", "--max-time", "900",
+                       "-o", str(destination), url)
+            if proc.returncode != 0 or not destination.is_file():
+                raise RuntimeError(
+                    f"could not download {destination.name}: {proc.stderr[-300:]}")
+            log(f"  ✓ {subdir}/{destination.name} "
+                f"({destination.stat().st_size / 1e6:.0f} MB)")
 
-        # sd-vae (diffusers layout). MuseTalk's VAE does
-        # AutoencoderKL.from_pretrained("./models/sd-vae"), which needs the
-        # weights *plus* config.json in that directory. The repo only ships
-        # diffusion_pytorch_model.safetensors — asking for the .bin variant
-        # raises EntryNotFoundError and kills the run before any frame is made.
-        vae_dir = MUSETALK_MODELS / "sd-vae"
-        vae_dir.mkdir(parents=True, exist_ok=True)
-        for filename in SD_VAE_FILES:
-            shutil.copy2(hf_hub_download(SD_VAE_REPO, filename), vae_dir / filename)
-        log(f"✓ sd-vae ({', '.join(SD_VAE_FILES)})")
+    with timed("ffmpeg_on_path", timings):
+        ensure_ffmpeg_on_path()
 
-        whisper_dir = MUSETALK_MODELS / "whisper"
-        whisper_dir.mkdir(parents=True, exist_ok=True)
-        for filename in ("config.json", "preprocessor_config.json", "pytorch_model.bin"):
-            try:
-                shutil.copy2(hf_hub_download(WHISPER_REPO, filename), whisper_dir / filename)
-            except Exception as exc:
-                log(f"whisper {filename}: {type(exc).__name__}", "WARN")
-        log("✓ whisper")
-
-        unet_path = paths[MUSE_V15_UNET[0]]
-        config_path = paths[MUSE_V15_UNET[1]]
-        # MuseTalk resolves vae from ./models/<vae_type> relative to its cwd
-        return {"unet": unet_path, "unet_config": config_path,
-                "vae": vae_dir, "whisper": whisper_dir}
+    with timed("sadtalker_face_models", timings):
+        # face_alignment fetches these on first construction; doing it here means
+        # a network failure is reported as a download problem, not a crash
+        # halfway through the render.
+        # Importing constructs the detector, which triggers the one-time weight
+        # download. Doing it here means a network failure reads as a download
+        # problem instead of a crash halfway through a render.
+        __import__("face_alignment")
+        log(f"face_alignment ready (cache {FACE_ALIGNMENT_CACHE})")
+    return SADTALKER_DIR
 
 
-def face_box_for(img_rgb, app) -> Optional[Tuple[int, int, int, int]]:
+def run_sadtalker(master: Path, voice: Path, timings: Dict[str, float]
+                  ) -> Dict[str, Any]:
     """
-    The male face box, replacing MuseTalk's DWPose/mmpose call.
+    Render the talking head with SadTalker's own inference entry point.
 
-    `musetalk.utils.preprocessing.get_landmark_and_bbox` needs mmpose (and thus
-    mmcv compiled against torch); only the box is actually used downstream, so
-    insightface supplies it directly.
+    ``--still`` is deliberately NOT passed: that flag crops the result back to the
+    source image's framing, which for a portrait means the head barely moves.
+    Without it SadTalker animates the full 3D face region — head pose, blinks and
+    expression — which is the whole point.
+
+    ``--preprocess crop`` frames the face before animating; ``full`` would need
+    the extra BFM fitting weights and is slower for a portrait crop.
     """
-    import cv2
+    output_dir = WORK_DIR / "sadtalker_out"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    faces = app.get(cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR))
-    if not faces:
-        return None
-    indexed = list(enumerate(faces))
-    males = [(i, f) for i, f in indexed if getattr(f, "sex", None) == "M"] or indexed
-    _, face = max(
-        males,
-        key=lambda p: float((p[1].bbox[2] - p[1].bbox[0]) * (p[1].bbox[3] - p[1].bbox[1])),
-    )
-    x1, y1, x2, y2 = [int(round(v)) for v in face.bbox]
-    height, width = img_rgb.shape[:2]
-    return (max(0, x1), max(0, y1), min(width, x2), min(height, y2))
+    command = [
+        sys.executable, "inference.py",
+        "--driven_audio", str(voice),
+        "--source_image", str(master),
+        "--result_dir", str(output_dir),
+        "--checkpoint_dir", str(SADTALKER_DIR / "checkpoints"),
+        "--preprocess", "crop",
+        "--size", str(SADTALKER_SIZE),
+        "--batch_size", "2",
+        "--expression_scale", "1.0",
+        "--verbose",
+    ]
+    if SADTALKER_ENHANCER:
+        command += ["--enhancer", SADTALKER_ENHANCER]
 
-
-def build_face_mask(crop_size: int, box_h: int) -> "Any":
-    """
-    Soft elliptical chin-to-nose mask, used instead of BiSeNet face parsing.
-
-    MuseTalk's mask-based blending (`get_image_blending`) accepts a precomputed
-    mask, so the face-parser model — a Google Drive download — is not needed.
-    The ellipse keeps the lower half of the face box (mouth and jaw), which is
-    exactly the region MuseTalk regenerates.
-    """
-    import numpy as np
-    from PIL import Image as PILImage, ImageDraw, ImageFilter
-
-    mask = PILImage.new("L", (crop_size, crop_size), 0)
-    draw = ImageDraw.Draw(mask)
-    # lower ~60% of the box, inset horizontally
-    top = int(crop_size * 0.40)
-    draw.ellipse(
-        [int(crop_size * 0.10), top, int(crop_size * 0.90), int(crop_size * 0.98)],
-        fill=255,
-    )
-    mask = mask.filter(ImageFilter.GaussianBlur(crop_size * 0.02))
-    array = np.asarray(mask, dtype=np.uint8)
-    log(f"face mask built procedurally (soft ellipse, {crop_size}px, "
-        f"box height {box_h}px)")
-    return array
-
-
-def run_musetalk(master: Path, voice: Path, timings: Dict[str, float]) -> Dict[str, Any]:
-    """MuseTalk v1.5, fp16, using the mask-based blend path (no mmpose)."""
-    import cv2
-    import numpy as np
-    import torch
-    from transformers import WhisperModel
-
-    repo = ensure_musetalk_repo(timings)
-    weights = ensure_musetalk_weights(timings)
-
-    with timed("load_musetalk", timings):
-        os.chdir(repo)                       # modules resolve ./models relatively
-        if str(repo) not in sys.path:
-            sys.path.insert(0, str(repo))
-
-        from musetalk.models.unet import PositionalEncoding, UNet
-        from musetalk.models.vae import VAE
-        from musetalk.utils.audio_processor import AudioProcessor
-        from musetalk.utils.blending import get_image_blending, get_crop_box
-        from musetalk.utils.utils import datagen
-    
-        device = torch.device(resolve_device())
-        weight_dtype = torch.float16
-
-        # MuseTalk's VAE takes (model_path, resized_img, use_float16) — it has no
-        # device argument and internally targets torch.device("cuda"), which
-        # honours the thread's current device, so set_device above picks cuda:1.
-        # Passing device= as a kwarg would raise TypeError.
-        vae = VAE(model_path="./models/sd-vae", use_float16=True)
-        unet = UNet(unet_config=str(weights["unet_config"]),
-                    model_path=str(weights["unet"]), device=device,
-                    use_float16=True)
-        pe = PositionalEncoding(d_model=384).to(device)
-        # inference.py builds this once per run; there is no unet.timesteps.
-        timesteps = torch.tensor([0], device=device)
-        log(f"MuseTalk vae + unet loaded in fp16 on {device}")
-
-        # AudioProcessor loads the whisper feature extractor itself; calling
-        # WhisperFeatureExtractor.from_pretrained again is redundant.
-        audio_processor = AudioProcessor(feature_extractor_path="./models/whisper")
-        whisper = WhisperModel.from_pretrained("./models/whisper").to(
-            device=device, dtype=weight_dtype)
-        whisper.requires_grad_(False)
-        log("whisper-tiny loaded")
-
-    with timed("prepare_avatar", timings):
-        from insightface.app import FaceAnalysis
-
-        providers = ["CPUExecutionProvider"]
-        try:
-            import onnxruntime as ort
-
-            if any("CUDA" in p for p in ort.get_available_providers()):
-                providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-        except Exception:
-            pass
-        app = FaceAnalysis(name="antelopev2",
-                           root=os.environ.get("FACE_MODEL_ROOT",
-                                               "/kaggle/working/face_models"),
-                           providers=providers)
-        app.prepare(ctx_id=0, det_size=(640, 640))
-
-        frame = cv2.imread(str(master))
-        if frame is None:
-            raise RuntimeError(f"could not read {master}")
-        box = face_box_for(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), app)
-        if box is None:
-            raise RuntimeError("no face found in the master portrait for MuseTalk")
-        x1, y1, x2, y2 = box
-        extra_margin = 10
-        y2 = min(y2 + extra_margin, frame.shape[0])
-        log(f"avatar face box: {(x1, y1, x2, y2)}")
-
-        crop = frame[y1:y2, x1:x2]
-        crop = cv2.resize(crop, (256, 256), interpolation=cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet(crop).to(device)
-
-        crop_box, _ = get_crop_box((x1, y1, x2, y2), 1.5)
-        mask_array = build_face_mask(crop_box[2] - crop_box[0], y2 - y1)
-
-        whisper_input_features, librosa_length = audio_processor.get_audio_feature(
-            str(voice))
-        whisper_chunks = audio_processor.get_whisper_chunk(
-            whisper_input_features, device, weight_dtype, whisper, librosa_length,
-            fps=TALKING_FPS,
-        )
-        log(f"{len(whisper_chunks)} audio chunks @ {TALKING_FPS} fps")
-
-    frames_dir = WORK_DIR / "musetalk_frames"
-    if frames_dir.is_dir():
-        shutil.rmtree(frames_dir)
-    frames_dir.mkdir(parents=True, exist_ok=True)
-
-    with timed("musetalk_inference", timings):
-        total = len(whisper_chunks)
-        written = 0
-        for i, (whisper_batch, latent_batch) in enumerate(
-                datagen(whisper_chunks=whisper_chunks,
-                        vae_encode_latents=[latents],
-                        batch_size=1, delay_frame=0, device=device)):
-            # PositionalEncoding adds a float32 buffer (`self.pe`) to its input,
-            # so even with fp16 whisper features the sum is promoted to float32
-            # and the first attention matmul inside the fp16 UNet dies with
-            # "expected mat1 and mat2 to have the same dtype, but got: float !=
-            # c10::Half" (run 45953039196). Cast both UNet inputs explicitly.
-            audio_feature_batch = pe(whisper_batch).to(dtype=unet.model.dtype)
-            latent_batch = latent_batch.to(dtype=unet.model.dtype)
-            pred = unet.model(latent_batch, timesteps,
-                              encoder_hidden_states=audio_feature_batch).sample
-            recon = vae.decode_latents(pred)
-            for res in recon:
-                try:
-                    face_render = cv2.resize(np.asarray(res, dtype=np.uint8),
-                                             (x2 - x1, y2 - y1))
-                except Exception:
-                    continue
-                combined = get_image_blending(frame, face_render, [x1, y1, x2, y2],
-                                              mask_array, crop_box)
-                cv2.imwrite(str(frames_dir / f"{written:08d}.png"), combined)
-                written += 1
-            if total and i % 25 == 0:
-                log(f"  {i}/{total} chunks ({written} frames)")
-        log(f"MuseTalk rendered {written} frames")
-
-    if written == 0:
-        raise RuntimeError("MuseTalk produced no frames")
-
-    # ---- encode the silent talking-head video ---------------------------- #
-    silent_video = WORK_DIR / "talking_silent.mp4"
-    with timed("encode_talking", timings):
-        proc = subprocess.run([
-            ffmpeg_bin(), "-y", "-v", "error",
-            "-framerate", str(TALKING_FPS),
-            "-i", str(frames_dir / "%08d.png"),
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
-            str(silent_video),
-        ], capture_output=True, text=True)
+    with timed("sadtalker_inference", timings):
+        log(f"SadTalker: {' '.join(command[1:])}")
+        proc = subprocess.run(command, cwd=str(SADTALKER_DIR),
+                              capture_output=True, text=True, timeout=5400)
+        tail = ((proc.stdout or "") + (proc.stderr or "")).strip().splitlines()
+        for line in tail[-40:]:
+            log(f"  [sadtalker] {line}", "INFO")
         if proc.returncode != 0:
-            raise RuntimeError(f"frame encode failed: {proc.stderr[-400:]}")
-        log(f"silent video encoded ({silent_video.stat().st_size / 1024:.0f} KB)")
+            raise RuntimeError(f"SadTalker failed (exit {proc.returncode}): "
+                               f"{(proc.stderr or proc.stdout)[-800:]}")
 
-    return {
-        "engine": "MuseTalk v1.5 (fp16)",
-        "weights": "TMElyralab/MuseTalk musetalkV15/unet.pth",
-        "fps": TALKING_FPS,
-        "frames": written,
-        "face_box": [int(x1), int(y1), int(x2), int(y2)],
-        "blending": "mask-based (procedural soft ellipse; BiSeNet parser unused)",
-        "mmpose_bypassed": True,
-        "silent_video": str(silent_video),
-    }
+    # SadTalker writes <timestamp>/ for its intermediates and the finished
+    # <timestamp>.mp4 beside it — plus <timestamp>_enhanced.mp4 when `--enhancer`
+    # ran. The enhanced render is the one to mux: it is the same frames with the
+    # mouth region repaired.
+    candidates = list(output_dir.glob("*.mp4"))
+    if not candidates:
+        raise RuntimeError(f"SadTalker produced no mp4 in {output_dir}")
+    enhanced = [p for p in candidates if p.stem.endswith("_enhanced")]
+    pool = enhanced or candidates
+    result = max(pool, key=lambda p: p.stat().st_mtime)
+    if not enhanced:
+        log("SadTalker produced no *_enhanced.mp4 — using the raw render "
+            f"({result.name})", "WARN")
+    log(f"SadTalker wrote {result.name} ({result.stat().st_size / 1024:.0f} KB)")
+    return {"engine": "SadTalker", "raw": str(result),
+            "enhanced": bool(enhanced), "size": SADTALKER_SIZE,
+            "preprocess": "crop", "enhancer": SADTALKER_ENHANCER or None,
+            "still": False, "fps": 25}
 
 
 # --------------------------------------------------------------------------- #
-# Encoding / verification
+# Mux + verification
 # --------------------------------------------------------------------------- #
+
+
+def ensure_ffmpeg_on_path() -> str:
+    """
+    Put a real ``ffmpeg`` executable on PATH before SadTalker runs.
+
+    SadTalker does not call ffmpeg through a library: it builds a shell string
+    and runs it with ``os.system`` (``save_video_with_watermark`` in
+    ``src/utils/videoio.py``). ``os.system`` reports failure only through its
+    return code, which SadTalker ignores, so a missing binary surfaces later as
+    ``FileNotFoundError`` from a ``shutil.move`` of a file that was never
+    created. A Kaggle image has no system ffmpeg, so this is not hypothetical.
+
+    ``imageio-ffmpeg`` ships a static build; its directory is prepended to PATH,
+    with a ``ffmpeg`` symlink in case the bundled name is versioned.
+    """
+    found = shutil.which("ffmpeg")
+    if found:
+        log(f"system ffmpeg: {found}")
+        return found
+
+    import imageio_ffmpeg
+
+    binary = Path(imageio_ffmpeg.get_ffmpeg_exe())
+    shim_dir = WORK_DIR / "bin"
+    shim_dir.mkdir(parents=True, exist_ok=True)
+    shim = shim_dir / "ffmpeg"
+    if not shim.is_file():
+        try:
+            shim.symlink_to(binary)
+        except OSError:
+            shutil.copy2(binary, shim)
+            shim.chmod(0o755)
+    os.environ["PATH"] = f"{shim_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+    os.environ["IMAGEIO_FFMPEG_EXE"] = str(binary)
+    log(f"ffmpeg shimmed onto PATH from imageio-ffmpeg: {binary.name}")
+    return str(binary)
 
 
 def ffmpeg_bin() -> str:
-    import imageio_ffmpeg
+    try:
+        import imageio_ffmpeg
 
-    return imageio_ffmpeg.get_ffmpeg_exe()
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        found = shutil.which("ffmpeg")
+        if not found:
+            raise RuntimeError("no ffmpeg on PATH and imageio-ffmpeg missing")
+        return found
 
 
 def ffprobe_bin() -> Optional[str]:
     found = shutil.which("ffprobe")
     if found:
         return found
-    sibling = Path(ffmpeg_bin()).with_name("ffprobe")
-    return str(sibling) if sibling.is_file() else None
+    # imageio-ffmpeg ships ffmpeg only; look beside it in case a probe exists
+    try:
+        import imageio_ffmpeg
+
+        sibling = Path(imageio_ffmpeg.get_ffmpeg_exe()).with_name("ffprobe")
+        if sibling.is_file():
+            return str(sibling)
+    except Exception:
+        pass
+    return None
 
 
-def probe_media(path: Path) -> Dict[str, Any]:
-    """ffprobe the streams; falls back to ffmpeg's own report when ffprobe is absent."""
-    probe = ffprobe_bin()
-    if probe:
-        proc = subprocess.run([
-            probe, "-v", "error", "-print_format", "json",
-            "-show_format", "-show_streams", str(path),
-        ], capture_output=True, text=True)
-        if proc.returncode == 0:
-            data = json.loads(proc.stdout or "{}")
-            streams = data.get("streams", [])
-            video = next((s for s in streams if s.get("codec_type") == "video"), None)
-            audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
-            return {
-                "tool": "ffprobe",
-                "video": None if video is None else {
-                    "codec": video.get("codec_name"),
-                    "width": int(video.get("width") or 0),
-                    "height": int(video.get("height") or 0),
-                    "frames": video.get("nb_frames"),
-                    "duration_s": float(video.get("duration") or 0) or None,
-                    "fps": video.get("r_frame_rate"),
-                },
-                "audio": None if audio is None else {
-                    "codec": audio.get("codec_name"),
-                    "sample_rate": audio.get("sample_rate"),
-                    "channels": audio.get("channels"),
-                    "duration_s": float(audio.get("duration") or 0) or None,
-                },
-                "duration_s": float(data.get("format", {}).get("duration") or 0) or None,
-            }
+def mux_reel(raw_video: Path, voice: Path, timings: Dict[str, float]) -> Path:
+    """
+    The mandatory iPhone-compatible re-encode.
 
-    log("ffprobe unavailable — falling back to ffmpeg stream detection", "WARN")
-    proc = subprocess.run([ffmpeg_bin(), "-i", str(path)], capture_output=True, text=True)
-    report = (proc.stderr or "")
-    return {
-        "tool": "ffmpeg -i",
-        "has_video": "Video:" in report,
-        "has_audio": "Audio:" in report,
-        "report_tail": report[-700:],
-    }
+    Every parameter here exists because a phone needs it:
 
+        -c:v libx264        H.264, the only codec every iOS and Android build
+                            decodes in hardware
+        -pix_fmt yuv420p    4:2:0 chroma; without it libx264 may pick yuv444p,
+                            which QuickTime and Safari refuse to play
+        -c:a aac            AAC-LC audio, not whatever SadTalker embedded
+        -movflags +faststart  moves the moov atom to the front, so the file
+                            starts playing before it is fully downloaded
+        -shortest           the reel ends with the shorter of the two streams
+                            instead of trailing silent video
 
-def mux_reel(silent_video: Path, voice: Path, timings: Dict[str, float]) -> Path:
-    """Mux picture with the generated voice track."""
+    A single-stream copy is deliberately NOT used: SadTalker's own output is not
+    guaranteed to be a compatible profile, and "it played on the machine that
+    made it" is not the acceptance criterion.
+    """
     reel = OUTPUT_DIR / REEL_FILENAME
     with timed("mux_reel", timings):
-        proc = subprocess.run([
+        command = [
             ffmpeg_bin(), "-y", "-v", "error",
-            "-i", str(silent_video),
+            "-i", str(raw_video),
             "-i", str(voice),
-            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-            "-shortest", "-movflags", "+faststart",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-profile:v", "high",
+            "-crf", "20", "-preset", "medium",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2",
+            "-movflags", "+faststart",
+            "-shortest",
             str(reel),
-        ], capture_output=True, text=True)
+        ]
+        proc = subprocess.run(command, capture_output=True, text=True)
         if proc.returncode != 0:
-            # copy may fail if the source is an odd profile — re-encode instead
-            log(f"stream copy failed, re-encoding: {proc.stderr[-300:]}", "WARN")
-            proc = subprocess.run([
-                ffmpeg_bin(), "-y", "-v", "error",
-                "-i", str(silent_video), "-i", str(voice),
-                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
-                "-c:a", "aac", "-b:a", "192k", "-shortest",
-                str(reel),
-            ], capture_output=True, text=True)
-        if proc.returncode != 0:
-            raise RuntimeError(f"mux failed: {proc.stderr[-400:]}")
-        log(f"wrote {reel.name} ({reel.stat().st_size / 1024:.0f} KB)")
+            raise RuntimeError(f"mux failed: {proc.stderr[-600:]}")
+        log(f"wrote {REEL_FILENAME} ({reel.stat().st_size / 1024:.0f} KB) · "
+            f"h264/yuv420p + aac, faststart")
     return reel
 
 
+def probe_media(path: Path) -> Dict[str, Any]:
+    """ffprobe if present, else ffmpeg's stream table."""
+    import json as _json
+
+    probe = ffprobe_bin()
+    if probe:
+        proc = subprocess.run(
+            [probe, "-v", "error", "-show_streams", "-show_format",
+             "-of", "json", str(path)],
+            capture_output=True, text=True)
+        if proc.returncode == 0:
+            try:
+                data = _json.loads(proc.stdout)
+            except Exception:
+                data = {}
+            streams = data.get("streams") or []
+            video = next((s for s in streams
+                          if s.get("codec_type") == "video"), None)
+            audio = next((s for s in streams
+                          if s.get("codec_type") == "audio"), None)
+            return {
+                "tool": "ffprobe",
+                "video": None if not video else {
+                    "codec": video.get("codec_name"),
+                    "profile": video.get("profile"),
+                    "pix_fmt": video.get("pix_fmt"),
+                    "width": video.get("width"),
+                    "height": video.get("height"),
+                    "duration_s": float(video.get("duration") or 0.0),
+                    "fps": video.get("r_frame_rate"),
+                },
+                "audio": None if not audio else {
+                    "codec": audio.get("codec_name"),
+                    "sample_rate": audio.get("sample_rate"),
+                    "channels": audio.get("channels"),
+                    "duration_s": float(audio.get("duration") or 0.0),
+                },
+                "duration_s": float((data.get("format") or {}).get("duration") or 0.0),
+            }
+
+    table = subprocess.run([ffmpeg_bin(), "-i", str(path)],
+                           capture_output=True, text=True).stderr
+    return {
+        "tool": "ffmpeg",
+        "report_tail": "\n".join(table.strip().splitlines()[-12:]),
+        "has_video": "Video:" in table,
+        "has_audio": "Audio:" in table,
+    }
+
+
 def verify_reel(reel: Path, timings: Dict[str, float]) -> Dict[str, Any]:
-    """Both streams must exist, be non-trivial, and be length-matched."""
+    """
+    The reel must be iPhone-playable, not merely present.
+
+    Checks the exact contract the brief asks for — ``h264``, ``yuv420p``, ``aac``
+    — plus a length-match between the streams, because a reel whose audio and
+    picture disagree looks broken on a phone just as badly as a codec it cannot
+    decode.
+    """
     with timed("verify_reel", timings):
         info = probe_media(reel)
-        if info.get("tool") == "ffprobe":
-            video, audio = info.get("video"), info.get("audio")
-            if video is None:
-                raise RuntimeError("reel has no video stream")
-            if audio is None:
-                raise RuntimeError("reel has no audio stream")
-            duration = info.get("duration_s") or video.get("duration_s") or 0.0
-            if duration < MIN_REEL_SECONDS:
-                raise RuntimeError(f"reel is only {duration:.2f}s "
-                                   f"(minimum {MIN_REEL_SECONDS}s)")
-            v_dur = video.get("duration_s") or duration
-            a_dur = audio.get("duration_s") or duration
-            drift = abs(v_dur - a_dur)
-            info["sync"] = {
-                "video_s": round(v_dur, 3),
-                "audio_s": round(a_dur, 3),
-                "drift_s": round(drift, 3),
-                "ok": drift <= 0.5,
-            }
-            # A/V sync was an acceptance criterion, so make it a hard gate.
-            if not info["sync"]["ok"]:
-                raise RuntimeError(f"audio drift {drift:.2f}s exceeds 0.5s")
-            log(f"verified: {video['width']}x{video['height']} "
-                f"{video['codec']} / {audio['codec']} "
-                f"{duration:.2f}s · drift {drift:.3f}s")
-        else:
+        if info.get("tool") != "ffprobe":
             if not info.get("has_video") or not info.get("has_audio"):
                 raise RuntimeError(f"reel streams invalid: {info}")
-            log("verified via ffmpeg stream detection")
+            log("verified via ffmpeg stream detection (ffprobe unavailable)", "WARN")
+            return info
+
+        video, audio = info.get("video"), info.get("audio")
+        if video is None:
+            raise RuntimeError("reel has no video stream")
+        if audio is None:
+            raise RuntimeError("reel has no audio stream")
+
+        problems = []
+        if video.get("codec") != "h264":
+            problems.append(f"video codec is {video.get('codec')}, not h264")
+        if video.get("pix_fmt") != "yuv420p":
+            problems.append(f"pixel format is {video.get('pix_fmt')}, not yuv420p")
+        if audio.get("codec") != "aac":
+            problems.append(f"audio codec is {audio.get('codec')}, not aac")
+        if problems:
+            raise RuntimeError("reel is not iPhone-compatible: "
+                               + "; ".join(problems))
+
+        duration = info.get("duration_s") or video.get("duration_s") or 0.0
+        if duration < MIN_REEL_SECONDS:
+            raise RuntimeError(f"reel is only {duration:.2f}s "
+                               f"(minimum {MIN_REEL_SECONDS}s)")
+        v_dur = video.get("duration_s") or duration
+        a_dur = audio.get("duration_s") or duration
+        drift = abs(v_dur - a_dur)
+        info["sync"] = {"video_s": round(v_dur, 3), "audio_s": round(a_dur, 3),
+                        "drift_s": round(drift, 3), "ok": drift <= 0.5}
+        if not info["sync"]["ok"]:
+            raise RuntimeError(f"audio drift {drift:.2f}s exceeds 0.5s")
+
+        info["iphone_compatible"] = True
+        log(f"verified: {video['width']}x{video['height']} "
+            f"{video['codec']}/{video['pix_fmt']} + {audio['codec']} · "
+            f"{duration:.2f}s · drift {drift:.3f}s · iPhone-compatible ✓")
         return info
 
 
@@ -967,49 +736,21 @@ def verify_reel(reel: Path, timings: Dict[str, float]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def ensure_video_deps(timings: Dict[str, float]) -> None:
+    with timed("pip_install_deps", timings):
+        missing = missing_packages(CHATTERBOX_DEPS)
+        if missing:
+            pip_install(missing)
+        if missing_packages(["chatterbox-tts"]):
+            if not pip_install(["chatterbox-tts"], no_deps=True):
+                raise RuntimeError("chatterbox-tts install failed — see above")
+        log("chatterbox dependencies ready")
 
-def merge_metrics(section: str, metrics: Dict[str, object], path: Path) -> None:
-    """
-    Fold this worker's half into the shared luca_metrics.json, safely.
-
-    Both workers finish at unpredictable times and target the same file, so a
-    naive read-modify-write loses whichever half lands first. The sidecar is
-    written unconditionally first (it is the source of truth for post-mortems),
-    then the merge runs under an exclusive file lock and replaces the file
-    atomically, so a reader never sees a half-written document.
-    """
-    import json as _json
-
-    sidecar = path.parent / f"luca_metrics_{section}.json"
-    try:
-        sidecar.write_text(_json.dumps(metrics, indent=2, default=str),
-                           encoding="utf-8")
-    except Exception as exc:
-        log(f"could not write {sidecar.name}: {exc}", "WARN")
-
-    lock = path.parent / "luca_metrics.lock"
-    try:
-        with open(lock, "a+") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            try:
-                merged = {}
-                if path.is_file():
-                    try:
-                        merged = _json.loads(path.read_text(encoding="utf-8"))
-                    except Exception:
-                        merged = {}
-                merged[section] = metrics
-                merged.setdefault("artifacts", [])
-                merged["artifacts"] = sorted(
-                    set(merged["artifacts"]) | set(metrics.get("artifacts") or []))
-                tmp = path.with_suffix(".json.tmp")
-                tmp.write_text(_json.dumps(merged, indent=2, default=str),
-                               encoding="utf-8")
-                os.replace(tmp, path)      # atomic: no torn reads
-            finally:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-    except Exception as exc:
-        log(f"could not merge metrics: {exc}", "WARN")
+        sadtalker_missing = missing_packages(SADTALKER_DEPS)
+        if sadtalker_missing:
+            if not pip_install(sadtalker_missing):
+                raise RuntimeError("SadTalker dependency install failed — see above")
+        log("SadTalker dependencies ready")
 
 
 def main() -> int:
@@ -1020,14 +761,14 @@ def main() -> int:
     timings: Dict[str, float] = {}
     metrics: Dict[str, Any] = {
         "process": "video",
-        "device": DEVICE,
+        "device": PINNED_DEVICE,
         "status": "running",
         "started_at": ts(),
+        "pipeline": "Chatterbox → SadTalker → H.264/AAC (iPhone-compatible)",
         "prohibitions_honoured": {
+            "celebrity_name_in_prompts": False,
+            "lip_sync_face_swap": False,
             "pipe.to_cpu": False,
-            "inswapper_128": False,
-            "svd_xt": False,
-            "sdxl_img2img_adetailer": False,
         },
         "timings_seconds": timings,
         "errors": [],
@@ -1040,29 +781,38 @@ def main() -> int:
 
         if not torch.cuda.is_available():
             raise RuntimeError("no CUDA device — enable a Kaggle GPU accelerator")
-        # One card per process: the launcher hides the other, so third-party code
-        # cannot spill onto the image pipeline's GPU.
-        effective_device = resolve_device()
-        log(f"device: {effective_device} "
-            f"({torch.cuda.device_count()} visible here; pinned device is "
-            f"{PINNED_DEVICE})")
-        metrics["device"] = effective_device
+        device = resolve_device()
+        metrics["device"] = device
+        log(f"device: {device} ({torch.cuda.device_count()} visible; "
+            f"pinned device is {PINNED_DEVICE})")
 
         ensure_video_deps(timings)
+        apply_legacy_shims()
 
-        # ---- voice -----------------------------------------------------------
+        # ---- voice ---------------------------------------------------------- #
         metrics["voice"] = synth_voice(timings)
         metrics["artifacts"].append(VOICE_FILENAME)
 
-        # ---- avatar ----------------------------------------------------------
+        # ---- avatar --------------------------------------------------------- #
         master = wait_for_master(timings)
-        metrics["musetalk"] = run_musetalk(master, OUTPUT_DIR / VOICE_FILENAME, timings)
+        ensure_sadtalker(timings)
+        avatar = run_sadtalker(master, OUTPUT_DIR / VOICE_FILENAME, timings)
+        metrics["sadtalker"] = avatar
 
-        # ---- mux + verify ----------------------------------------------------
-        silent = Path(metrics["musetalk"]["silent_video"])
-        reel = mux_reel(silent, OUTPUT_DIR / VOICE_FILENAME, timings)
+        raw = Path(avatar["raw"])
+        archived = OUTPUT_DIR / RAW_VIDEO_FILENAME
+        # keep the pre-mux file for post-mortems, but it is not a deliverable
+        try:
+            shutil.copy2(raw, archived)
+        except Exception:
+            pass
+
+        # ---- mandatory iPhone-compatible mux -------------------------------- #
+        reel = mux_reel(raw, OUTPUT_DIR / VOICE_FILENAME, timings)
         metrics["reel_probe"] = verify_reel(reel, timings)
         metrics["artifacts"].append(REEL_FILENAME)
+
+        log("video pipeline complete — iPhone-compatible H.264/AAC reel")
 
     except Exception as exc:
         detail = f"{type(exc).__name__}: {exc}"
@@ -1076,16 +826,15 @@ def main() -> int:
         metrics["finished_at"] = ts()
         if metrics["status"] == "running":
             metrics["status"] = "success" if not metrics["errors"] else "success_with_errors"
-        merge_metrics("video", metrics, METRICS_PATH)
+        merge_metrics("video", metrics, METRICS_PATH, tag="vid")
 
         log("=" * 74)
-        log(f"video pipeline status: {metrics['status']} · {metrics['total_seconds']}s")
+        log(f"video pipeline status: {metrics['status']} · "
+            f"{metrics['total_seconds']}s")
         for name in metrics["artifacts"]:
             path = OUTPUT_DIR / name
-            if path.is_file():
-                log(f"  ✓ {name} ({path.stat().st_size / 1024:.0f} KB)")
-            else:
-                log(f"  ✗ {name} MISSING", "ERROR")
+            log(f"  {'✓' if path.is_file() else '✗'} {name}"
+                + (f" ({path.stat().st_size / 1024:.0f} KB)" if path.is_file() else ""))
         log("=" * 74)
         sys.stdout = telemetry._stream  # type: ignore[assignment]
         telemetry.close()

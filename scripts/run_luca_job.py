@@ -37,19 +37,28 @@ KERNEL_TITLE = KERNEL_SLUG
 KERNEL_DIR = REPO_ROOT / "kaggle_kernel_luca"
 CODE_FILE = "luca_studio.py"
 
-#: Success = the full v2 pack: the master portrait, three scenes, the voice
-#: and the finished reel. Each is a separate deliverable from one run.
+#: Success = the full v2 pack: the master portrait, three scenes, the trained
+#: adapter, the voice and the finished reel. Each is a separate deliverable from
+#: one run.
+#:
+#: `luca_lora.safetensors` is required, not optional. It is the artifact that
+#: makes the identity reproducible — without it the carousel is a set of four
+#: one-off images, which is exactly what the LoRA upgrade was meant to stop
+#: being the case. If training fails, the run must fail with it.
 REQUIRED_ARTIFACTS: List[str] = [
     "01_luca_master.png",
     "02_luca_yacht.png",
     "03_luca_porsche.png",
     "04_luca_party.png",
+    "luca_lora.safetensors",
     "luca_voice.wav",
     "luca_reel.mp4",
     "luca_metrics.json",
 ]
 #: Warn only.
 OPTIONAL_ARTIFACTS: List[str] = [
+    "luca_raw.mp4",
+    "dataset",
     "luca_metrics_images.json",
     "luca_metrics_video.json",
     "build.log",
@@ -60,6 +69,7 @@ COMMITTABLE_ARTIFACTS: List[str] = [
     "outputs/02_luca_yacht.png",
     "outputs/03_luca_porsche.png",
     "outputs/04_luca_party.png",
+    "outputs/luca_lora.safetensors",
     "outputs/luca_voice.wav",
     "outputs/luca_reel.mp4",
     "outputs/luca_metrics.json",
@@ -67,12 +77,13 @@ COMMITTABLE_ARTIFACTS: List[str] = [
     "outputs/luca_metrics_video.json",
     "outputs/build.log",
 ]
-#: Must exceed the kernel's own budget plus provisioning, the ~8 GB of weights
-#: (SDXL + InstantID + Chatterbox + MuseTalk + whisper) and the artifact pull,
-#: or we kill a kernel that is about to report success.
-POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(55 * 60)))
+#: Must exceed the kernel's own budget plus provisioning, the ~9 GB of weights
+#: (SDXL + InstantID + Chatterbox + SadTalker + GFPGAN) and the artifact pull, or
+#: we kill a kernel that is about to report success. The LoRA training loop adds
+#: ~10 minutes on top of the previous 40.
+POLL_TIMEOUT_SECONDS = int(os.environ.get("KAGGLE_POLL_TIMEOUT_SECONDS", str(75 * 60)))
 #: Runtime guard for the warning only.
-MAX_RUNTIME_SECONDS = 2400
+MAX_RUNTIME_SECONDS = 3900
 
 
 #: `kaggle kernels push` uploads ONLY CODE_FILE, so the kernel is generated as a
@@ -103,14 +114,17 @@ def build_kernel(orchestrator) -> None:
         orchestrator.log_group_end()
 
     # Fail here rather than after a Kaggle queue: the kernel must actually
-    # contain both workers.
+    # contain both workers *and* the three modules they import, or the first
+    # thing the run does is die on an ImportError.
     source = (KERNEL_DIR / CODE_FILE).read_text(encoding="utf-8")
-    for token in ("GENERATE_IMAGES_PY", "GENERATE_VIDEO_PY",
-                  "INSTANTID_PIPELINE_PY", "def run_parallel"):
-        if token not in source:
-            raise RuntimeError(f"generated kernel is missing {token}")
-    orchestrator.log(f"kernel verified: {len(source) / 1024:.0f} KB, both workers "
-                     f"and the vendored pipeline embedded")
+    required = ("LUCA_COMMON_PY", "LUCA_CHARACTER_PY", "LUCA_LORA_PY",
+                "GENERATE_IMAGES_PY", "GENERATE_VIDEO_PY", "FETCH_INSTANTID_PY",
+                "INSTANTID_PIPELINE_PY", "def run_parallel", "def verify_embedded")
+    missing = [token for token in required if token not in source]
+    if missing:
+        raise RuntimeError(f"generated kernel is missing {missing}")
+    orchestrator.log(f"kernel verified: {len(source) / 1024:.0f} KB, 7 embedded "
+                     f"sources and the parallel launcher present")
 
 
 def load_orchestrator():
@@ -177,46 +191,76 @@ def summarize(orchestrator) -> None:
 
     images = data.get("images") or {}
     video = data.get("video") or {}
+
     if images:
         orchestrator.log(
             f"images: {images.get('status')} in {images.get('total_seconds')}s "
-            f"on {images.get('device')} · master face "
-            f"{images.get('master_face')}"
+            f"on {images.get('device')} · {images.get('base_model')}"
         )
-        for filename, result in (images.get("identity") or {}).items():
-            orchestrator.log(
-                f"  {filename}: cosine={result.get('cosine')} "
-                f"verdict={result.get('verdict')} "
-                f"repaired={result.get('repaired')}"
-            )
-        env = images.get("environment") or {}
+
+        dataset = images.get("dataset") or {}
         orchestrator.log(
-            f"  prompt chunks: master={images.get('master_prompt_tokens')} words · "
-            f"{env.get('base_model')} · {env.get('insightface_provider')}"
+            f"  dataset: {dataset.get('images')} image(s) via "
+            f"{dataset.get('method')} · master face "
+            f"{dataset.get('master_face')}"
         )
+
+        training = images.get("training") or {}
+        if training:
+            orchestrator.log(
+                f"  LoRA: r={training.get('rank')} alpha={training.get('alpha')} "
+                f"· {training.get('max_train_steps')} steps @ "
+                f"{training.get('resolution')}px on {training.get('images')} "
+                f"image(s) · {training.get('train_seconds')}s · "
+                f"loss {training.get('loss_first_25')}→"
+                f"{training.get('loss_last_25')} "
+                f"({'' if training.get('loss_decreasing') else 'NOT '}decreasing) "
+                f"· {training.get('adapter_mb')} MB"
+            )
+        else:
+            orchestrator.log("  LoRA: NOT TRAINED — carousel fell back to the "
+                             "base model", "ERROR")
+
+        carousel = images.get("carousel") or {}
+        orchestrator.log(
+            f"  carousel: {len(carousel.get('files') or [])} image(s) · "
+            f"lora_used={carousel.get('lora_used')} · "
+            f"instantid_at_inference="
+            f"{(images.get('prohibitions_honoured') or {}).get('instantid_at_inference')}"
+        )
+        scale = (images.get("identity") or {}).get("lora_scale")
+        orchestrator.log(
+            f"  identity: trigger={(images.get('identity') or {}).get('trigger_word')} "
+            f"age={(images.get('identity') or {}).get('age')} "
+            f"lora_scale={scale}"
+        )
+        for name in carousel.get("files") or []:
+            orchestrator.log(f"    • {name}")
 
     if video:
         voice = video.get("voice") or {}
         probe = video.get("reel_probe") or {}
+        video_stream = probe.get("video") or {}
+        audio_stream = probe.get("audio") or {}
         sync = probe.get("sync") or {}
         orchestrator.log(
             f"voice: {voice.get('duration_s')}s @ {voice.get('sample_rate')} Hz · "
-            f"{voice.get('class')} {voice.get('dtype')} · "
-            f"peak {voice.get('peak_dbfs')} dBFS · vram freed "
-            f"{video.get('vram_after_tts_mb')} MB"
+            f"{voice.get('class')} t3={voice.get('dtype')} "
+            f"s3gen={voice.get('s3gen_dtype')}"
         )
         orchestrator.log(
-            f"reel: {probe.get('video', {}).get('width')}x"
-            f"{probe.get('video', {}).get('height')} "
-            f"{probe.get('video', {}).get('codec')} / "
-            f"{probe.get('audio', {}).get('codec')} · "
-            f"{probe.get('format', {}).get('duration')}s · "
-            f"drift {sync.get('drift_s')}s"
+            f"reel: {video_stream.get('width')}x{video_stream.get('height')} "
+            f"{video_stream.get('codec')}/{video_stream.get('pix_fmt')} + "
+            f"{audio_stream.get('codec')} · {probe.get('duration_s')}s · "
+            f"drift {sync.get('drift_s')}s · "
+            f"iPhone-compatible={probe.get('iphone_compatible')}"
         )
-        musetalk = video.get("musetalk") or {}
+        sadtalker = video.get("sadtalker") or {}
         orchestrator.log(
-            f"musetalk: {musetalk.get('frames')} frames @ "
-            f"{musetalk.get('fps')} fps"
+            f"sadtalker: size {sadtalker.get('size')} · "
+            f"preprocess {sadtalker.get('preprocess')} · "
+            f"enhancer {sadtalker.get('enhancer')} · "
+            f"enhanced={sadtalker.get('enhanced')} · still={sadtalker.get('still')}"
         )
 
     artifacts = data.get("artifacts") or []

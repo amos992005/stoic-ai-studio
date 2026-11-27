@@ -1,433 +1,506 @@
 #!/usr/bin/env python3
 """
-Verification for the Luca v2 build, against the REAL libraries where possible.
+Verification for the Luca v2 LoRA build, against the real libraries where possible.
 
-This replaces the earlier hand-stubbed simulations: now that torch, diffusers,
-compel, insightface and opencv are installable here, the real classes exercise
-the real call sites. Each block prints PASS/FAIL and the suite exits non-zero on
-any failure, so it can gate a commit.
+Everything here runs locally with no GPU and no network. The split is
+deliberate: properties that can be *executed* are executed (the LoRA trainer runs
+a real backward pass, the reel gate is fed real ffprobe JSON, the launcher is
+really spawned as a script), and properties that cannot be are asserted against
+the executable source — never against a docstring, which is how an earlier
+version of this suite passed while the code it described was gone.
+
+    python scripts/verify_luca.py        # exits non-zero on any failure
 """
-import inspect
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
 import types
 
-REPO = pathlib.Path("/home/user/stoic-ai-studio")
-sys.path.insert(0, str(REPO / "scripts" / "luca_v2"))
-sys.path.insert(0, str(REPO / "kaggle_kernel_luca"))
+REPO = pathlib.Path(__file__).resolve().parent.parent
+WORKER_DIR = REPO / "scripts" / "luca_v2"
+sys.path.insert(0, str(WORKER_DIR))
 
-import torch
+results: list[tuple[bool, str, str]] = []
 
-# NOTE: real torch, real CUDA surface (there is simply no GPU here, so
-# torch.cuda.is_available() is False). Patching torch.cuda with a stub breaks
-# torch's own device plumbing, which is exactly what the earlier sims did.
 
-results = []
-def check(label, fn):
+def check(label: str, fn):
     try:
         detail = fn()
         results.append((True, label, detail or ""))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - the point is to report, not raise
         results.append((False, label, f"{type(exc).__name__}: {exc}"))
 
-# --------------------------------------------------------------------------- #
-# 1. the vendored InstantID pipeline, against real diffusers
-# --------------------------------------------------------------------------- #
-def vendored_pipeline():
-    spec = __import__("importlib.util", fromlist=["x"]).spec_from_file_location(
-        "iid", REPO / "scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py")
-    m = __import__("importlib.util", fromlist=["x"]).module_from_spec(spec)
-    spec.loader.exec_module(m)
-    P = m.StableDiffusionXLInstantIDPipeline
-    assert not hasattr(P, "enable_vae_slicing"), "enable_vae_slicing exists again"
-    assert hasattr(P, "set_ip_adapter_scale")
-    assert hasattr(m, "draw_kps")
-    params = inspect.signature(P.__call__).parameters
-    assert "ip_adapter_scale" not in params, "ip_adapter_scale is a real param now"
-    assert "controlnet_conditioning_scale" in params
-    return f"{len(params)} __call__ params, no pipeline-level VAE slicing"
 
-check("vendored pipeline imports and has the expected surface", vendored_pipeline)
+def load(name: str, path: pathlib.Path):
+    """Import a worker module by path, tolerating missing heavy dependencies."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
-# --------------------------------------------------------------------------- #
-# 2. compel returns the four SDXL tensors our encode_prompts reads
-# --------------------------------------------------------------------------- #
-def compel_contract():
-    from compel.convenience_wrappers import LabelledConditioning
-    fields = set(LabelledConditioning.__dataclass_fields__)
-    required = {"embeds", "pooled_embeds", "negative_embeds", "negative_pooled_embeds"}
-    assert required <= fields, f"compel renamed fields: {required - fields}"
-    # the names the worker reads
-    src = (REPO / "scripts/luca_v2/generate_images.py").read_text()
-    for attr in ("embeds", "pooled_embeds", "negative_embeds", "negative_pooled_embeds"):
-        assert f"conditioning.{attr}" in src, f"worker does not read {attr}"
-    return "worker reads the attributes compel actually returns"
 
-check("compel LabelledConditioning contract", compel_contract)
+def source(relative: str) -> str:
+    return (WORKER_DIR / relative).read_text(encoding="utf-8")
 
-# --------------------------------------------------------------------------- #
-# 3. VAE slicing: works on a plain VAE, degrades gracefully without one
-# --------------------------------------------------------------------------- #
-def vae_slicing():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
-    gi = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(gi)
-    except Exception:
-        pass                      # heavy deps absent here; we only need the helper
-    gi.log = lambda *a, **k: None
 
-    from diffusers import AutoencoderKL
-    vae = AutoencoderKL(in_channels=4, out_channels=4,
-                        down_block_types=("DownBlock2D", "DownBlock2D"),
-                        up_block_types=("UpBlock2D", "UpBlock2D"),
-                        block_out_channels=(32, 64), layers_per_block=2,
-                        latent_channels=4, sample_size=32, norm_num_groups=32)
-    assert vae.use_slicing is False, "slicing on by default?"
-    # the pipeline object the worker actually holds: a namespace with a .vae
-    assert gi.enable_vae_slicing(types.SimpleNamespace(vae=vae)) == "vae.enable_slicing()"
-    assert vae.use_slicing is True
-    # the fallback, for a VAE whose diffusers build has no enable_slicing()
-    class Bare:
-        use_slicing = False
-    assert gi.enable_vae_slicing(types.SimpleNamespace(vae=Bare())) == "vae.use_slicing=True"
-    # and a pipeline with no VAE at all must not raise
-    assert gi.enable_vae_slicing(types.SimpleNamespace()) == "off"
-    return "slices via the VAE, falls back, tolerates a missing VAE"
-
-check("VAE slicing helper", vae_slicing)
-
-# --------------------------------------------------------------------------- #
-# 4. the master pipeline shares the SDXL weights and fetches nothing
-# --------------------------------------------------------------------------- #
-def master_pipe_shares():
+def code_of(text: str) -> str:
     """
-    Regression for run 45952128760: StableDiffusionXLPipeline.from_pipe()
-    silently re-downloads optional components the source pipeline lacks
-    (image_encoder, feature_extractor) in float32, which doubled VRAM to
-    14.4 GiB and OOM'd. Building from the live components must share, not copy.
-    """
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
-    gi = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(gi)
-    except Exception:
-        pass
-    gi.log = lambda *a, **k: None
-    gi.DEVICE = "cpu"
+    Keep only executable code: docstrings and comments stripped.
 
-    from diffusers import AutoencoderKL, UNet2DConditionModel
-    from diffusers.schedulers import DPMSolverMultistepScheduler
-    vae = AutoencoderKL(in_channels=4, out_channels=4,
-                        down_block_types=("DownBlock2D", "DownBlock2D"),
-                        up_block_types=("UpBlock2D", "UpBlock2D"),
-                        block_out_channels=(32, 64), layers_per_block=2,
-                        latent_channels=4, sample_size=32, norm_num_groups=32)
-    unet = UNet2DConditionModel(sample_size=32, in_channels=4, out_channels=4,
-                                layers_per_block=1, block_out_channels=(32, 64),
-                                down_block_types=("DownBlock2D", "CrossAttnDownBlock2D"),
-                                up_block_types=("CrossAttnUpBlock2D", "UpBlock2D"),
-                                cross_attention_dim=32, norm_num_groups=32,
-                                attention_head_dim=8)
-    scheduler = DPMSolverMultistepScheduler()
-
-    class Fake(torch.nn.Module):        # a stand-in for a transformers encoder
-        dtype = torch.float32
-    Fake.__module__ = "transformers"
-
-    comps = {"vae": vae, "unet": unet, "scheduler": scheduler,
-             "text_encoder": Fake(), "text_encoder_2": Fake(),
-             "tokenizer": Fake(), "tokenizer_2": Fake(),
-             "controlnet": object(), "image_proj_model": object(),
-             "ip_adapter": object()}
-    master = gi.build_master_pipe(types.SimpleNamespace(components=dict(comps)), {})
-
-    assert master.unet is unet and master.vae is vae, "weights were copied, not shared"
-    assert master.text_encoder_2 is comps["text_encoder_2"]
-    assert master.scheduler is scheduler
-    assert master.image_encoder is None, "an image_encoder was fetched"
-    assert master.feature_extractor is None, "a feature_extractor was fetched"
-    assert not hasattr(master, "controlnet"), "controlnet leaked into the master pipeline"
-    return "shares unet/vae/encoders, fetches no optional component"
-
-check("master pipeline shares weights instead of refetching", master_pipe_shares)
-
-# --------------------------------------------------------------------------- #
-# 4b. the memory controls are in place and harmless
-# --------------------------------------------------------------------------- #
-def memory_controls():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
-    gi = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(gi)
-    except Exception:
-        pass
-    gi.log = lambda *a, **k: None
-
-    # set at import time: the allocator reads it when CUDA first initialises
-    src = (REPO / "scripts/luca_v2/generate_images.py").read_text()
-    before_models = src.split("def load_pipeline")[0]
-    assert "PYTORCH_CUDA_ALLOC_CONF" in before_models, \
-        "alloc conf is set too late to take effect"
-
-    limits = gi.configure_memory_limits()
-    assert "expandable_segments" in limits["alloc_conf"], limits
-    # attention slicing: applied when available, skipped otherwise
-    applied = {}
-
-    class WithHelper:
-        def enable_attention_slicing(self, *a, **k):
-            applied["sliced"] = True
-    assert gi.enable_attention_slicing(WithHelper()) is True and applied["sliced"]
-    assert gi.enable_attention_slicing(types.SimpleNamespace()) is False
-    return f"allocator {limits['alloc_conf']}, tf32={'on' if limits['tf32'] else 'off (no GPU here)'}"
-
-check("memory controls", memory_controls)
-
-# --------------------------------------------------------------------------- #
-# 4c. the identity projector is moved with the rest of the pipeline
-# --------------------------------------------------------------------------- #
-def projector_moved():
-    """
-    Regression for run 45954696729: load_ip_adapter_instantid() creates
-    image_proj_model after __init__, so it is not in pipe.components and
-    pipe.to(device) leaves it on CPU. Every scene then dies on a device
-    mismatch; only the master (which skips the identity branch) survives.
-    """
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gi", REPO / "scripts/luca_v2/generate_images.py")
-    gi = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(gi)
-    except Exception:
-        pass
-    gi.log = lambda *a, **k: None
-    gi.DEVICE = "cpu"
-
-    import torch
-    class Resampler(torch.nn.Module):
-        def __init__(self):
-            super().__init__(); self.proj = torch.nn.Linear(4, 4)
-    class FakeUNet(torch.nn.Module):
-        """Real diffusers models expose .dtype; nn.Linear does not."""
-        dtype = torch.float16
-    class Pipe:
-        def __init__(self):
-            self.unet = FakeUNet()                     # the dtype source
-            self.image_proj_model = Resampler()        # still float32
-
-    pipe = Pipe()
-    assert pipe.image_proj_model.proj.weight.dtype is torch.float32
-    assert gi.move_identity_projector(pipe) != "absent"
-    assert pipe.image_proj_model.proj.weight.dtype is torch.float16, \
-        "the projector was not matched to the unet dtype"
-    # a pipeline without one must not raise
-    assert gi.move_identity_projector(types.SimpleNamespace()) == "absent"
-    return "projector follows the unet's device and dtype"
-
-check("identity projector is moved", projector_moved)
-
-# --------------------------------------------------------------------------- #
-# 5. chatterbox precision: s3gen stays float32 (its STFT has no fp16 path)
-# --------------------------------------------------------------------------- #
-def chatterbox_precision():
-    """
-    Regression for runs 45950802624 and 45952128760: casting s3gen to fp16 makes
-    its float32 STFT output collide with fp16 conv weights. Only the
-    autoregressive t3 and the voice encoder may be cast.
-    """
-    import re
-    src = (REPO / "scripts/luca_v2/generate_video.py").read_text()
-    m = re.search(r"FP16_SUBMODULES = \(([^)]*)\)", src)
-    assert m, "FP16_SUBMODULES disappeared"
-    names = re.findall(r'"(\w+)"', m.group(1))
-    assert "s3gen" not in names, f"s3gen is cast to fp16 again: {names}"
-    assert "t3" in names, f"t3 should still be cast: {names}"
-    # the s3gen vocoder really is where the problem is: show it concretely
-    import torch
-    import torch.nn as nn
-    class Voc(nn.Module):                       # mimics the conv after the STFT
-        def __init__(self):
-            super().__init__(); self.conv = nn.Conv1d(4, 4, 3)
-    voc = Voc().half().eval()
-    stft_out = torch.stft(torch.randn(4, 64), n_fft=8, return_complex=True)  # float32
-    try:
-        voc.conv(stft_out.real.float())
-        raise AssertionError("expected the dtype error")
-    except RuntimeError as exc:
-        assert "should be the same" in str(exc)
-    return f"fp16 set is {names}; s3gen float32 because torch.stft emits float32"
-
-check("chatterbox keeps s3gen in float32", chatterbox_precision)
-
-# --------------------------------------------------------------------------- #
-# 5b. the vendored pipeline calls the parent's check_inputs by keyword only
-# --------------------------------------------------------------------------- #
-def check_inputs_keywords():
-    """
-    Regression for run 45953039196. diffusers 0.43 inserted ip_adapter_image and
-    ip_adapter_image_embeds into the parent's check_inputs signature, so the
-    vendored positional call shifted every later argument and
-    controlnet_conditioning_scale arrived holding a tensor. Keywords are stable
-    across versions; positional arguments are not.
+    A worker that *documents* a prohibition must not fail a scan for
+    prohibitions, and a symbol that only appears in prose is not implemented.
     """
     import ast
-    import inspect
 
-    tree = ast.parse((REPO / "scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py").read_text())
-    calls = [node for node in ast.walk(tree)
-             if isinstance(node, ast.Call)
-             and isinstance(node.func, ast.Attribute)
-             and node.func.attr == "check_inputs"]
-    assert len(calls) == 1, f"expected one check_inputs call, found {len(calls)}"
-    call = calls[0]
-    assert not call.args, f"{len(call.args)} positional argument(s) — these drift across releases"
-    passed = {kw.arg for kw in call.keywords}
+    tree = ast.parse(text)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                             ast.AsyncFunctionDef)):
+            doc = ast.get_docstring(node, clean=False)
+            if doc:
+                text = text.replace(doc, "")
+    kept = [line for line in text.splitlines()
+            if not line.strip().startswith("#")
+            and not re.match(r'^\s*"[^"]*"\s*:\s*False\s*,?\s*$', line)]
+    return "\n".join(kept)
 
-    # and they must still be acceptable to whatever diffusers is installed
-    from diffusers.pipelines.controlnet.pipeline_controlnet_sd_xl import (
-        StableDiffusionXLControlNetPipeline as Parent)
-    params = set(inspect.signature(Parent.check_inputs).parameters) - {"self"}
-    unknown = passed - params
-    assert not unknown, f"diffusers dropped {unknown}"
-    required = {n for n, p_ in inspect.signature(Parent.check_inputs).parameters.items()
-                if p_.default is p_.empty} - {"self"}
-    assert required <= passed, f"diffusers added required {required - passed}"
-    return f"{len(passed)} keyword args, no positional, bindable on diffusers {__import__('diffusers').__version__}"
-
-check("vendored check_inputs is called by keyword", check_inputs_keywords)
 
 # --------------------------------------------------------------------------- #
-# 6. verify_reel rejects bad reels and accepts a good one
+# 1. Identity: one description, fifteen variations, no celebrity
 # --------------------------------------------------------------------------- #
+
+
+def identity_module():
+    character = load("luca_character", WORKER_DIR / "luca_character.py")
+
+    assert character.TRIGGER == "ohwx", character.TRIGGER
+    assert character.AGE == 27, character.AGE
+    assert character.SUBJECT.startswith("ohwx 27-year-old Italian man"), \
+        character.SUBJECT
+    assert len(character.DATASET) == 15, len(character.DATASET)
+    assert len(character.CAROUSEL) == 4, len(character.CAROUSEL)
+
+    # Every prompt must exist, carry the trigger, and survive the guard.
+    prompts = [character.dataset_prompt(e) for e in character.DATASET]
+    prompts += [character.carousel_prompt(e) for e in character.CAROUSEL]
+    for prompt in prompts:
+        assert character.TRIGGER in prompt, f"no trigger word: {prompt[:60]}"
+        assert len(prompt) > 80, f"suspiciously short prompt: {prompt!r}"
+    # Variety is what the LoRA learns from: a dataset of 15 identical framings
+    # teaches one crop instead of one face.
+    framings = {e["framing"] for e in character.DATASET}
+    assert len(framings) >= 6, f"only {len(framings)} distinct framings"
+    expressions = {e["expression"] for e in character.DATASET}
+    assert len(expressions) >= 3, expressions
+
+    # The guard has to actually bite.
+    for probe in ("brad pitt in a car", "Bradley on a yacht", "PITT"):
+        try:
+            character.check_prompt(probe)
+        except ValueError:
+            continue
+        raise AssertionError(f"check_prompt accepted {probe!r}")
+
+    return (f"15 dataset + 4 carousel prompts, {len(framings)} framings, "
+            f"trigger {character.TRIGGER!r}, guard rejects 3 celebrity probes")
+
+
+check("identity spec: one description, varied dataset, no celebrity", identity_module)
+
+
+# --------------------------------------------------------------------------- #
+# 2. Carousel framing: the tokens that stop him clipping into the car door
+# --------------------------------------------------------------------------- #
+
+
+def carousel_framing():
+    character = load("luca_character", WORKER_DIR / "luca_character.py")
+    for entry in character.CAROUSEL:
+        prompt = character.carousel_prompt(entry)
+        # The camera/lens/light tokens go on every slide: they are what makes the
+        # result read as a phone photo instead of a render.
+        for token in ("candid 24mm iPhone 16 Pro photo", "natural sunlight",
+                      "skin pores"):
+            assert token in prompt, f"{entry['file']} lost {token!r}"
+        assert "no hands near the face" in prompt, \
+            f"{entry['file']} does not forbid hands near the face"
+        # ...but the *framing* is per-slide: slide 01 must stay a portrait,
+        # because it is also the source image the avatar animates.
+        if entry["file"].startswith("01"):
+            assert "close-up portrait" in prompt, prompt
+        else:
+            assert re.search(r"\b(medium full|full body) shot\b", prompt), prompt
+    # sizes and seeds are part of the deliverable contract
+    expected = {"01_luca_master.png": (1024, 1024),
+                "02_luca_yacht.png": (832, 1024),
+                "03_luca_porsche.png": (832, 1024),
+                "04_luca_party.png": (832, 1024)}
+    for entry in character.CAROUSEL:
+        want = expected[entry["file"]]
+        assert tuple(entry["size"]) == want, (entry["file"], entry["size"], want)
+    seeds = [entry["seed"] for entry in character.CAROUSEL]
+    assert seeds == [42, 43, 44, 45], seeds
+    return "all four prompts carry the framing tokens; sizes and seeds match"
+
+
+check("carousel prompts carry explicit framing", carousel_framing)
+
+
+# --------------------------------------------------------------------------- #
+# 3. Shared plumbing: metrics merge is atomic and lock-protected
+# --------------------------------------------------------------------------- #
+
+
+def metrics_merge():
+    import threading
+
+    common = load("luca_common", WORKER_DIR / "luca_common.py")
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    target = tmp / "luca_metrics.json"
+
+    def worker(section: str):
+        for i in range(5):
+            common.merge_metrics(section, {"status": "ok", "i": i,
+                                           "artifacts": [f"{section}_{i}.png"]},
+                                 target)
+
+    threads = [threading.Thread(target=worker, args=(name,))
+               for name in ("images", "video")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    merged = json.loads(target.read_text())
+    assert set(merged) >= {"images", "video", "artifacts"}, merged.keys()
+    assert merged["images"]["i"] == 4 and merged["video"]["i"] == 4, merged
+    assert sorted(merged["artifacts"]) == sorted(
+        [f"images_{i}.png" for i in range(5)]
+        + [f"video_{i}.png" for i in range(5)]), merged["artifacts"]
+    for sidecar in ("luca_metrics_images.json", "luca_metrics_video.json"):
+        assert (tmp / sidecar).is_file(), f"missing sidecar {sidecar}"
+    return "both halves merged under flock, artifacts unioned, no torn file"
+
+
+check("shared metrics merge survives concurrent writers", metrics_merge)
+
+
+# --------------------------------------------------------------------------- #
+# 4. The LoRA trainer: a real step on a real (tiny) UNet
+# --------------------------------------------------------------------------- #
+
+
+def lora_trainer_contract():
+    lora = load("luca_lora", WORKER_DIR / "luca_lora.py")
+
+    assert lora.LORA_TARGETS == ["to_q", "to_k", "to_v", "to_out.0"], \
+        lora.LORA_TARGETS
+    assert "patch_vae_encoder" in dir(lora)
+    assert "save_adapter" in dir(lora)
+    assert "float32" in source("luca_lora.py"), \
+        "trainable adapter params must stay float32"
+    assert "math.isfinite" in source("luca_lora.py"), \
+        "a non-finite loss must be fatal"
+
+    import torch
+    from diffusers import AutoencoderKL, UNet2DConditionModel
+
+    torch.manual_seed(0)
+    vae = AutoencoderKL(in_channels=3, out_channels=3,
+                        down_block_types=("DownBlock2D", "DownBlock2D"),
+                        up_block_types=("UpBlock2D", "UpBlock2D"),
+                        block_out_channels=(32, 64), layers_per_block=1,
+                        latent_channels=4, sample_size=64, norm_num_groups=32)
+    patched = lora.patch_vae_encoder(vae)
+    assert patched >= 1, "patch_vae_encoder patched nothing"
+    image = torch.zeros(1, 3, 64, 64)
+    latent = vae.encode(image).latent_dist.mode()
+    assert latent.ndim == 4 and latent.shape[0] == 1 and latent.shape[1] == 4, \
+        f"encode returned {tuple(latent.shape)}"
+    assert latent.shape[2] < 64 and 64 % latent.shape[2] == 0, \
+        f"encode did not downsample: {tuple(latent.shape)}"
+    assert lora.patch_vae_encoder(vae) == 0, "patch is not idempotent"
+
+    unet = UNet2DConditionModel(
+        sample_size=16, in_channels=4, out_channels=4, layers_per_block=1,
+        block_out_channels=(32, 64),
+        down_block_types=("DownBlock2D", "CrossAttnDownBlock2D"),
+        up_block_types=("CrossAttnUpBlock2D", "UpBlock2D"),
+        cross_attention_dim=32, norm_num_groups=32, attention_head_dim=8)
+    adapter = lora.build_adapter(unet, rank=16, alpha=16)
+    assert adapter is not None
+    trainable = [p for p in unet.parameters() if p.requires_grad]
+    assert trainable, "nothing became trainable"
+    assert all(p.dtype == torch.float32 for p in trainable), \
+        "trainable parameters must be float32, not fp16"
+    total = sum(p.numel() for p in trainable)
+    return (f"encoder patched ({patched} block), latent {tuple(latent.shape)}, "
+            f"{len(trainable)} trainable tensors / {total:,} params")
+
+
+check("LoRA trainer: VAE patch, adapter, float32 params", lora_trainer_contract)
+
+
+# --------------------------------------------------------------------------- #
+# 5. Stage order: InstantID builds the dataset and is gone before training
+# --------------------------------------------------------------------------- #
+
+
+def stage_order():
+    images = source("generate_images.py")
+    main_body = images[images.index("def main()"):]
+    order = [main_body.index("build_master("),
+             main_body.index("build_dataset("),
+             main_body.index("unload_instantid("),
+             main_body.index("luca_lora.train("),
+             main_body.index("build_carousel(")]
+    assert order == sorted(order), \
+        "main() must run master -> dataset -> unload -> train -> carousel"
+    for call in ("torch.cuda.empty_cache()", "gc.collect()"):
+        assert call in images, f"missing {call}"
+
+    # The carousel is the whole point of the upgrade: LoRA only, no reference.
+    carousel = code_of(images[images.index("def build_carousel"):
+                              images.index("def main()")])
+    for token in ("image_embeds", "face_kps", "controlnet_conditioning_scale",
+                  "load_instantid", "draw_kps"):
+        assert token not in carousel, \
+            f"the carousel still uses {token!r} — inference must be LoRA-only"
+    assert "load_lora_weights" in carousel and "set_adapters" in carousel
+    assert re.search(r'LUCA_LORA_SCALE", "0\.85"', images), \
+        "the LoRA inference scale must default to 0.85"
+
+    # InstantID is still used, but only to build the dataset.
+    dataset = code_of(images[images.index("def build_dataset"):
+                             images.index("def unload_instantid")])
+    assert "image_embeds" in dataset and "controlnet_conditioning_scale" in dataset
+    return "master → 15 InstantID variants → unload → LoRA → LoRA-only carousel"
+
+
+check("stage order and LoRA-only inference", stage_order)
+
+
+# --------------------------------------------------------------------------- #
+# 6. Reel gate: ffprobe verdicts, including the rejections
+# --------------------------------------------------------------------------- #
+
+
 def reel_gate():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gv", REPO / "scripts/luca_v2/generate_video.py")
-    gv = importlib.util.module_from_spec(spec); spec.loader.exec_module(gv)
-    gv.log = lambda *a, **k: None
-    real_probe = gv.probe_media
-    gv.probe_media = lambda path: {
-        "tool": "ffprobe",
-        "video": {"codec": "h264", "width": 832, "height": 1024,
-                  "duration_s": 8.02, "fps": 25.0},
-        "audio": {"codec": "aac", "sample_rate": 24000, "channels": 1,
-                  "duration_s": 8.01},
-        "duration_s": 8.02}
+    video = load("generate_video", WORKER_DIR / "generate_video.py")
+    video.log = lambda *a, **k: None
+
+    fake_bin = pathlib.Path(tempfile.mkdtemp())
+    script = fake_bin / "ffprobe"
+    script.write_text('''#!/bin/sh
+case "$FAKE_MODE" in
+  good) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","width":1080,"height":1920,"duration":"7.04"},{"codec_type":"audio","codec_name":"aac","sample_rate":"44100","channels":2,"duration":"7.04"}],"format":{"duration":"7.04"}}';;
+  pix) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv444p","duration":"7.04"},{"codec_type":"audio","codec_name":"aac","duration":"7.04"}],"format":{"duration":"7.04"}}';;
+  drift) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","duration":"7.04"},{"codec_type":"audio","codec_name":"aac","duration":"4.10"}],"format":{"duration":"7.04"}}';;
+  mute) echo '{"streams":[{"codec_type":"video","codec_name":"h264","pix_fmt":"yuv420p","duration":"7.04"}],"format":{"duration":"7.04"}}';;
+esac
+''')
+    script.chmod(0o755)
+    reel = fake_bin / "luca_reel.mp4"
+    reel.write_bytes(b"\0" * 4096)
+
+    original = os.environ.get("PATH", "")
+    os.environ["PATH"] = f"{fake_bin}:{original}"
     try:
-        f = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False); f.write(b"x"); f.close()
-        good = gv.verify_reel(pathlib.Path(f.name), {})
-        assert good["sync"]["ok"]
-        gv.probe_media = lambda path: {
-            "tool": "ffprobe",
-            "video": {"codec": "h264", "width": 832, "height": 1024,
-                      "duration_s": 8.02, "fps": 25.0},
-            "audio": None, "duration_s": 8.02}
-        try:
-            gv.verify_reel(pathlib.Path(f.name), {}); raise AssertionError("no-audio not rejected")
-        except RuntimeError:
-            pass
-        gv.probe_media = lambda path: {
-            "tool": "ffprobe",
-            "video": {"codec": "h264", "width": 832, "height": 1024,
-                      "duration_s": 8.0, "fps": 25.0},
-            "audio": {"codec": "aac", "duration_s": 3.0}, "duration_s": 8.0}
-        try:
-            gv.verify_reel(pathlib.Path(f.name), {}); raise AssertionError("drift not rejected")
-        except RuntimeError:
-            pass
+        os.environ["FAKE_MODE"] = "good"
+        info = video.verify_reel(reel, {})
+        assert info["iphone_compatible"] is True
+        assert info["video"]["pix_fmt"] == "yuv420p"
+        assert info["sync"]["ok"] is True
+
+        rejections = {}
+        for mode, expected in (("pix", "yuv420p"), ("drift", "drift"),
+                               ("mute", "audio")):
+            os.environ["FAKE_MODE"] = mode
+            try:
+                video.verify_reel(reel, {})
+            except RuntimeError as exc:
+                rejections[mode] = str(exc)
+                assert expected in str(exc), (mode, str(exc))
+            else:
+                raise AssertionError(f"{mode} reel was accepted")
     finally:
-        gv.probe_media = real_probe
-    return "accepts a synced reel, rejects missing audio and 5s drift"
+        os.environ["PATH"] = original
+        os.environ.pop("FAKE_MODE", None)
 
-check("ffprobe gate", reel_gate)
+    # the mux itself must be the iPhone contract, not something close to it
+    mux = code_of(source("generate_video.py"))
+    for flag in ('"-c:v", "libx264"', '"-pix_fmt", "yuv420p"', '"-c:a", "aac"',
+                 '"-movflags", "+faststart"'):
+        assert flag in mux, f"the mandatory mux lost {flag}"
+    return f"accepted a good reel, rejected {len(rejections)} bad ones, mux flags present"
+
+
+check("reel gate verifies h264/yuv420p/aac + sync", reel_gate)
+
 
 # --------------------------------------------------------------------------- #
-# 7. the launcher, run as a script exactly like Kaggle
+# 7. SadTalker invocation: flags, weights, and the two import-time shims
 # --------------------------------------------------------------------------- #
+
+
+def sadtalker_invocation():
+    video = source("generate_video.py")
+    body = code_of(video)
+
+    assert '"--preprocess", "crop"' in body, "SadTalker must preprocess with crop"
+    assert '"--still"' not in body, \
+        "SadTalker must not be frozen with --still (the head has to move)"
+    assert '"--enhancer"' in body and "gfpgan" in body, \
+        "the GFPGAN enhancer is what repairs the softened mouth"
+    assert '"--checkpoint_dir"' in body and '"--size"' in body
+    assert "ensure_ffmpeg_on_path" in body, \
+        ("SadTalker shells out to a bare `ffmpeg` via os.system and ignores its "
+         "exit code; the binary must be put on PATH first")
+    assert "IMAGEIO_FFMPEG_EXE" in body
+    assert "wait_for_master" in body, \
+        "the avatar must poll for process 1's master portrait"
+
+    # every SadTalker weight must come from a host Kaggle can reach
+    # Every weight must be a GitHub *release asset*: the sandbox and the Kaggle
+    # runner can both reach those, and none of them need an HF token.
+    urls = re.findall(r'https://github\.com/[A-Za-z0-9._/-]*releases/download/'
+                      r'[A-Za-z0-9._/-]+', video)
+    assert len(urls) >= 7, f"only {len(urls)} release-asset URLs"
+    for name in ("SadTalker_V0.0.2_{size}.safetensors", "mapping_00229-model.pth.tar",
+                 "GFPGANv1.4.pth", "alignment_WFLW_4HG.pth",
+                 "detection_Resnet50_Final.pth"):
+        assert name in video, f"missing weight {name}"
+
+    # basicsr cannot build on a current image; it is only needed for realesrgan
+    deps = re.search(r"SADTALKER_DEPS = \[(.*?)\]", video, re.S).group(1)
+    assert "basicsr" not in deps, "basicsr must not be installed (no CUDA toolkit build)"
+
+    # The two import-time shims must be applied before gfpgan/SadTalker load.
+    assert "functional_tensor" in body and "VisibleDeprecationWarning" in body
+    main_body = video[video.index("def main()"):]
+    assert main_body.index("apply_legacy_shims()") < main_body.index("synth_voice(")
+    return (f"{len(urls)} release-asset weights, crop+512+gfpgan, no --still, "
+            f"shims applied before any import")
+
+
+check("SadTalker invocation and weights", sadtalker_invocation)
+
+
+# --------------------------------------------------------------------------- #
+# 8. The launcher: stages every import, then runs as a script
+# --------------------------------------------------------------------------- #
+
+
 def launcher_script():
-    work = tempfile.mkdtemp()
-    env = {"PATH": "/usr/bin:/bin", "OUTPUT_DIR": work,
-           "LUCA_WORKER_DIR": f"{work}/luca_workers", "CUDA_VISIBLE_DEVICES": "",
-           "HOME": work}
-    proc = subprocess.run(
-        [sys.executable, str(REPO / "kaggle_kernel_luca/luca_studio.py")],
-        capture_output=True, text=True, env=env, timeout=900)
-    log = (proc.stdout or "") + (proc.stderr or "")
-    startup = log.split("[launcher] launching both pipelines in parallel")[0]
-    for marker in ("embedded payload verified", "prohibition check passed",
-                   "using committed vendored pipeline"):
-        assert marker in startup, f"missing {marker}\n{startup[-1500:]}"
-    for fatal in ("NameError", "ImportError", "AttributeError", "SyntaxError"):
-        assert fatal not in startup, f"{fatal} during startup\n{startup[-1500:]}"
-    staged = sorted(p.name for p in pathlib.Path(f"{work}/luca_workers").iterdir())
-    assert "generate_images.py" in staged and "_vendor" in staged, staged
-    return f"staged {staged}"
+    work = pathlib.Path(tempfile.mkdtemp())
+    env = dict(os.environ, OUTPUT_DIR=str(work / "out"),
+               LUCA_WORKER_DIR=str(work / "workers"), CUDA_VISIBLE_DEVICES="")
+    proc = subprocess.Popen(
+        [sys.executable, str(REPO / "kaggle_kernel_luca" / "luca_studio.py")],
+        cwd=str(REPO), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, env=env, start_new_session=True)
 
-check("kernel runs as a script and stages its payload", launcher_script)
-
-# --------------------------------------------------------------------------- #
-# 7b. each worker gets exactly one physical GPU
-# --------------------------------------------------------------------------- #
-def gpu_isolation():
-    """
-    Regression for run 45956577517: both workers inherited
-    CUDA_VISIBLE_DEVICES=0,1 and depended on torch.cuda.set_device(1). MuseTalk's
-    torch.load has no map_location, landed on GPU 0, and OOM'd against the image
-    pipeline. The launcher must now give each child one card.
-    """
-    src = (REPO / "kaggle_kernel_luca/luca_studio.py").read_text()
-    assert 'CUDA_VISIBLE_DEVICES": "0"' in src, "images is not pinned to GPU 0"
-    assert 'CUDA_VISIBLE_DEVICES": "1"' in src, "video is not pinned to GPU 1"
-    assert 'env=envs[name]' in src, "the per-worker env is not what Popen receives"
-    assert 'env=env,' not in src, "a shared env is still being passed"
-    # and it resolves its device from what is visible rather than trusting a
-    # hardcoded "cuda:1", which raised "invalid device ordinal" under isolation
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("gv", REPO / "scripts/luca_v2/generate_video.py")
-    gv = importlib.util.module_from_spec(spec); spec.loader.exec_module(gv)
-    gv.log = lambda *a, **k: None
-    import torch as _t
-    class Cuda:
-        def __init__(self, n): self.n, self.current = n, None
-        def is_available(self): return True
-        def device_count(self): return self.n
-        def set_device(self, i): self.current = i
-    real = _t.cuda
+    markers = {"embedded payload verified", "prohibition check passed",
+               "using committed vendored pipeline",
+               "launching both pipelines in parallel"}
+    seen, captured, deadline = set(), [], __import__("time").time() + 240
+    for line in iter(proc.stdout.readline, ""):
+        captured.append(line)
+        seen.update(m for m in markers if m in line)
+        if seen == markers or __import__("time").time() > deadline:
+            break
     try:
-        for visible, expected in ((1, "cuda:0"), (2, "cuda:1")):
-            _t.cuda = Cuda(visible)
-            assert gv.resolve_device() == expected, f"{visible} visible → wrong device"
-            assert _t.cuda.current == int(expected[-1])
-    finally:
-        _t.cuda = real
-    return ("images→GPU0, video→GPU1, one card per process, "
-            "device resolved from what is visible")
+        os.killpg(os.getpgid(proc.pid), 9)
+    except Exception:
+        proc.kill()
+    proc.wait(timeout=60)
+    log = "".join(captured)
 
-check("per-process GPU isolation", gpu_isolation)
+    missing = sorted(markers - seen)
+    assert not missing, f"launcher never reached {missing}\n{log[-2000:]}"
+    startup = log.split("[launcher] launching both pipelines in parallel")[0]
+    for fatal in ("NameError", "AttributeError", "ImportError",
+                  "ModuleNotFoundError", "SyntaxError"):
+        assert fatal not in startup, f"launcher raised {fatal}:\n{startup[-2000:]}"
+
+    # every module a worker imports must have been written to disk
+    staged = sorted(p.name for p in (work / "workers").glob("*.py"))
+    for name in ("luca_common.py", "luca_character.py", "luca_lora.py",
+                 "generate_images.py", "generate_video.py", "fetch_instantid.py"):
+        assert name in staged, f"{name} was not staged ({staged})"
+    return f"staged {len(staged)} modules, reached both workers with no startup error"
+
+
+check("launcher stages its payload and starts both workers", launcher_script)
+
 
 # --------------------------------------------------------------------------- #
-# 8. the generated kernel is current
+# 9. Banned techniques, on executable code only
 # --------------------------------------------------------------------------- #
+
+
+def prohibitions():
+    banned = {"pipe.to(\"cpu\")": "CPU offload", "inswapper_128": "inswapper",
+              "StableVideoDiffusion": "SVD-XT",
+              "stable-video-diffusion": "SVD-XT",
+              "StableDiffusionXLImg2ImgPipeline": "img2img adetailer"}
+    hits = []
+    for name in ("luca_lora.py", "generate_images.py", "generate_video.py"):
+        body = code_of(source(name))
+        for token, label in banned.items():
+            if token in body:
+                hits.append(f"{name}: {label}")
+    assert not hits, hits
+    # the legacy avatar must be gone, not merely unused
+    for name in ("generate_images.py", "generate_video.py"):
+        assert "musetalk" not in source(name).lower(), \
+            f"{name} still references MuseTalk"
+    return f"none of the {len(banned)} banned constructs in any worker; no MuseTalk"
+
+
+check("banned techniques absent", prohibitions)
+
+
+# --------------------------------------------------------------------------- #
+# 10. The kernel is the sources, byte for byte
+# --------------------------------------------------------------------------- #
+
+
 def kernel_fresh():
-    proc = subprocess.run([sys.executable, str(REPO / "scripts/build_luca_kernel.py"),
-                           "--check"], capture_output=True, text=True)
-    assert proc.returncode == 0, (proc.stdout + proc.stderr).strip()
-    return proc.stdout.strip()
+    proc = subprocess.run([sys.executable, str(REPO / "scripts" / "build_luca_kernel.py"),
+                           "--check"], capture_output=True, text=True, cwd=str(REPO))
+    assert proc.returncode == 0, (proc.stdout + proc.stderr)[-1500:]
+
+    launcher = (REPO / "kaggle_kernel_luca" / "luca_studio.py").read_text()
+    for constant in ("LUCA_COMMON_PY", "LUCA_CHARACTER_PY", "LUCA_LORA_PY",
+                     "GENERATE_IMAGES_PY", "GENERATE_VIDEO_PY",
+                     "FETCH_INSTANTID_PY", "INSTANTID_PIPELINE_PY"):
+        assert constant in launcher, f"{constant} is not embedded"
+    return f"generated kernel is current ({len(launcher) / 1024:.0f} KB, 7 sources)"
+
 
 check("generated kernel matches its sources", kernel_fresh)
 
+
 # --------------------------------------------------------------------------- #
-print()
-failed = 0
+# Report
+# --------------------------------------------------------------------------- #
+
+width = max(len(label) for _, label, _ in results)
+failures = [r for r in results if not r[0]]
 for ok, label, detail in results:
-    print(f"  {'PASS' if ok else 'FAIL'}  {label}")
-    if detail:
-        print(f"        {detail}")
-    failed += not ok
-print(f"\n{len(results) - failed}/{len(results)} checks passed")
-sys.exit(1 if failed else 0)
+    print(f"  {'PASS' if ok else 'FAIL'}  {label:<{width}}  {detail}")
+print()
+if failures:
+    print(f"{len(failures)} of {len(results)} checks FAILED")
+    sys.exit(1)
+print(f"all {len(results)} checks passed")
