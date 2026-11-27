@@ -398,6 +398,31 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
         log(f"chatterbox dtype={dtype} (cast: {cast or 'none'}"
             f"{'; failed: ' + ', '.join(failed) if failed else ''})")
 
+        # conds.pt is loaded in float32 and is fed straight into the now-fp16
+        # T3ConditionalEncoder, so the first matmul dies with
+        #   mat1 and mat2 must have the same dtype, but got Float and Half
+        # (run 45947923120). Conditionals.to(device) deliberately does not cast
+        # dtype, and the float/int tensors live in the same container, so reach
+        # through to the fp tensors explicitly — a blanket .half() would corrupt
+        # the int speech-token ids.
+        conds = getattr(model, "conds", None)
+        if conds is not None and dtype == "float16":
+            cast_conds = 0
+            t3_cond = getattr(conds, "t3", None)
+            for field, value in list(vars(t3_cond).items()) if t3_cond else []:
+                if torch.is_tensor(value) and value.is_floating_point():
+                    setattr(t3_cond, field, value.half())
+                    cast_conds += 1
+            gen = getattr(conds, "gen", None) or {}
+            for key, value in list(gen.items()):
+                if torch.is_tensor(value) and value.is_floating_point():
+                    gen[key] = value.half()
+                    cast_conds += 1
+            log(f"cast {cast_conds} built-in conditioning tensor(s) to float16")
+            if not cast_conds:
+                log("no conditioning tensors were cast — generate() may raise a "
+                    "dtype mismatch", "WARN")
+
     with timed("generate_speech", timings):
         output = model.generate(TRANSCRIPT)
         if isinstance(output, tuple):          # (wav, sr) on some versions

@@ -384,12 +384,30 @@ def load_instantid_pipeline(timings: Dict[str, float]):
 
     with timed("configure_pipeline", timings):
         pipe.to(DEVICE)                 # no CPU offload, no .to("cpu") anywhere
-        pipe.enable_vae_slicing()
+        # The community InstantID pipeline inherits from
+        # StableDiffusionXLControlNetPipeline but does NOT mix in
+        # DiffusionPipeline, so the enable_vae_slicing() helper does not exist —
+        # calling it aborts the run after ~2 minutes of model loading (run
+        # 45947923120). The flag it sets is just `vae.enable_slicing()`, so set
+        # it on the VAE directly, and fall back to `use_slicing = True`.
+        slicing = "off"
+        vae = getattr(pipe, "vae", None)
+        for attempt in ("enable_slicing",):
+            if vae is not None and hasattr(vae, attempt):
+                getattr(vae, attempt)()
+                slicing = f"vae.{attempt}()"
+                break
+        if slicing == "off":
+            if vae is not None:
+                vae.use_slicing = True
+                slicing = "vae.use_slicing=True"
+            else:
+                log("no VAE on the pipeline — VAE slicing not enabled", "WARN")
         try:
             pipe.set_progress_bar_config(disable=True)
         except Exception:
             pass
-        log(f"pipeline on {DEVICE} · vae slicing on")
+        log(f"pipeline on {DEVICE} · vae slicing: {slicing}")
 
     return pipe
 

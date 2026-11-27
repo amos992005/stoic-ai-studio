@@ -104,8 +104,11 @@ jobs:
               import ast
               try:
                   tree = ast.parse(src)
-              except SyntaxError:
-                  tree = None
+              except SyntaxError as exc:
+                  # Falling back to text here would report a bogus ban violation
+                  # for a file that is simply broken; say what is wrong instead.
+                  raise AssertionError(
+                      f"cannot parse a worker for the ban scan: {exc}") from exc
               if tree is not None:
                   for node in ast.walk(tree):
                       if isinstance(node, (ast.Module, ast.ClassDef,
@@ -166,7 +169,26 @@ jobs:
           assert "antelopev2" in images, "identity analysis must use antelopev2"
           assert "CUDAExecutionProvider" in images, \
               "insightface must run on the GPU provider"
-          assert "enable_vae_slicing()" in images, "VAE slicing missing"
+          # The vendored pipeline inherits ControlNetPipeline, not
+          # DiffusionPipeline, so `pipe.enable_vae_slicing()` does NOT exist —
+          # it aborted run 45947923120 after two minutes of model loading.
+          # Slicing must be enabled on the VAE itself.
+          assert not re.search(r"^\s*pipe\.enable_vae_slicing\(\)", images, re.M), \
+              "pipe.enable_vae_slicing() does not exist on this pipeline"
+          assert "vae.enable_slicing()" in images, \
+              "VAE slicing must be enabled on the VAE object"
+          # chatterbox ships conds.pt in float32; feeding it to fp16 submodules
+          # dies with "mat1 and mat2 must have the same dtype" (run 45947923120).
+          assert "is_floating_point()" in video, \
+              "the conditioning cast must skip integer speech-token ids"
+          # Must be the *guarded* cast: a blanket .half() would corrupt the
+          # integer speech-token ids that share the same container.
+          assert re.search(
+              r"if torch\.is_tensor\(value\) and value\.is_floating_point\(\):\s*\n"
+              r"\s*setattr\(t3_cond, field, value\.half\(\)\)", video), \
+              "conds.pt float tensors must be cast to fp16 behind an is_floating_point guard"
+          assert 'getattr(model, "conds", None)' in video or "model.conds" in video, \
+              "the built-in conditioning must be reached through the model"
           assert "CompelForSDXL" in images, "compel is required to bypass 77 tokens"
           assert "DPMSolverMultistepScheduler" in images and \
                  "use_karras_sigmas=True" in images, "scheduler must be DPM++ Karras"
