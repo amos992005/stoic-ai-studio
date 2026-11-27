@@ -3,7 +3,7 @@
     "process": "video",
     "device": "cuda:1",
     "status": "failed",
-    "started_at": "2026-11-27T06:06:37Z",
+    "started_at": "2026-11-27T06:17:04Z",
     "prohibitions_honoured": {
       "pipe.to_cpu": false,
       "inswapper_128": false,
@@ -11,26 +11,26 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "vid/pip_install_deps": 8.678,
-      "vid/load_chatterbox": 113.312,
-      "vid/generate_speech": 0.055
+      "vid/pip_install_deps": 8.454,
+      "vid/load_chatterbox": 99.404,
+      "vid/generate_speech": 11.384
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half"
+        "error": "RuntimeError: expected mat1 and mat2 to have the same dtype, but got: float != c10::Half"
       }
     ],
     "artifacts": [],
-    "total_seconds": 124.4,
-    "finished_at": "2026-11-27T06:08:41Z"
+    "total_seconds": 126.3,
+    "finished_at": "2026-11-27T06:19:10Z"
   },
   "artifacts": [],
   "images": {
     "process": "images",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T06:06:37Z",
+    "started_at": "2026-11-27T06:17:04Z",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
     "face_encoder": "insightface antelopev2",
@@ -42,16 +42,18 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 34.633,
-      "img/load_controlnet": 36.044,
-      "img/load_sdxl": 38.686,
-      "img/load_identity_adapter": 20.035,
-      "img/configure_pipeline": 14.044
+      "img/pip_install_deps": 39.593,
+      "img/load_controlnet": 35.424,
+      "img/load_sdxl": 35.715,
+      "img/load_identity_adapter": 19.38,
+      "img/configure_pipeline": 13.908,
+      "img/configure_scheduler": 0.007,
+      "img/master_portrait": 0.743
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "AttributeError: 'StableDiffusionXLInstantIDPipeline' object has no attribute 'enable_vae_slicing'"
+        "error": "TypeError: image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is <class 'NoneType'>"
       }
     ],
     "artifacts": [],
@@ -63,7 +65,7 @@
       "cuda_available": true,
       "gpu_count": 2
     },
-    "total_seconds": 143.9,
-    "finished_at": "2026-11-27T06:09:01Z"
+    "total_seconds": 145.1,
+    "finished_at": "2026-11-27T06:19:29Z"
   }
 }

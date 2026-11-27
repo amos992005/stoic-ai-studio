@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:1",
   "status": "failed",
-  "started_at": "2026-11-27T06:06:37Z",
+  "started_at": "2026-11-27T06:17:04Z",
   "prohibitions_honoured": {
     "pipe.to_cpu": false,
     "inswapper_128": false,
@@ -10,17 +10,17 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "vid/pip_install_deps": 8.678,
-    "vid/load_chatterbox": 113.312,
-    "vid/generate_speech": 0.055
+    "vid/pip_install_deps": 8.454,
+    "vid/load_chatterbox": 99.404,
+    "vid/generate_speech": 11.384
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "RuntimeError: mat1 and mat2 must have the same dtype, but got Float and Half"
+      "error": "RuntimeError: expected mat1 and mat2 to have the same dtype, but got: float != c10::Half"
     }
   ],
   "artifacts": [],
-  "total_seconds": 124.4,
-  "finished_at": "2026-11-27T06:08:41Z"
+  "total_seconds": 126.3,
+  "finished_at": "2026-11-27T06:19:10Z"
 }
