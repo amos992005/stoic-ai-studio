@@ -78,6 +78,8 @@ jobs:
             scripts/luca_v2/fetch_instantid.py \
             scripts/luca_v2/_vendor/pipeline_stable_diffusion_xl_instantid.py \
             scripts/run_luca_job.py
+          # The kernel is generated; a stale copy silently ships old workers.
+          python scripts/build_luca_kernel.py --check
           python - <<'PY'
           import pathlib
           import re
@@ -150,16 +152,20 @@ jobs:
               "the launcher must fail fast on a banned construct"
           assert "preflight_instantid" in launcher, \
               "the InstantID pipeline must be staged before the GPU work starts"
-          # `kaggle kernels push` uploads ONLY the code file, so the workers must
-          # arrive as a mounted dataset. Run 45947135155 died on exactly this.
-          assert "/kaggle/input" in launcher, \
-              "the launcher must probe /kaggle/input for the worker dataset"
-          assert "worker script not found" in launcher, \
-              "a missing worker must fail loudly, not mysteriously"
+          # `kaggle kernels push` uploads ONLY the code file. Three approaches
+          # have failed: staging siblings in the kernel dir (silently dropped,
+          # run 45947135155) and a dataset mount (stale until re-versioned, run
+          # 45949661268). The kernel is now generated with the workers embedded,
+          # so it must contain them and must stage them itself.
+          assert "GENERATE_IMAGES_PY" in launcher and "GENERATE_VIDEO_PY" in launcher, \
+              "the workers must be embedded in the generated kernel"
+          assert "INSTANTID_PIPELINE_PY" in launcher, \
+              "the vendored pipeline must be embedded too (no network fetch)"
+          assert "def stage_workers" in launcher and "verify_embedded" in launcher, \
+              "the kernel must write and then verify its embedded payload"
           driver = pathlib.Path("scripts/run_luca_job.py").read_text()
-          assert "publish_dataset" in driver and "dataset_sources" in driver, \
-              ("the driver must publish the workers as a dataset and mount it — "
-               "kernels push drops sibling files")
+          assert "build_luca_kernel" in driver, \
+              "the driver must regenerate the kernel from scripts/luca_v2/"
           assert '"cuda:0"' in images, "image pipeline must pin cuda:0"
           assert '"cuda:1"' in video, "voice/avatar pipeline must pin cuda:1"
 
