@@ -303,8 +303,12 @@ jobs:
           # diffusers drops keys whose adapter-name segment it cannot match, so
           # the saved format is what makes the adapter loadable at all: a
           # ".default." segment lands 0/64 tensors and renders the base model.
-          want(".lora_A.default.weight" not in code_of(lora),
-               "save_adapter must not emit '.default.' keys (diffusers drops them)")
+          # the emitted key must be plain: ".default." survives only in the
+          # comment that explains why, so strip comments before looking.
+          lora_code = code_of(lora)
+          lora_code = "\n".join(line.split("#")[0] for line in lora_code.splitlines())
+          want('key.replace(".lora_A.default.weight", ".lora_A.weight")' in lora_code,
+               "save_adapter must normalise '.default.' keys away")
           want("def verify_adapter_loaded" in images,
                "a load must be proven by the weights landing, not by no error")
           want("produced[\"lora_load\"]" in images,
