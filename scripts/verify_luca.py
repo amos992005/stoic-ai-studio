@@ -385,10 +385,28 @@ def gpu_isolation():
     assert 'CUDA_VISIBLE_DEVICES": "1"' in src, "video is not pinned to GPU 1"
     assert 'env=envs[name]' in src, "the per-worker env is not what Popen receives"
     assert 'env=env,' not in src, "a shared env is still being passed"
-    # and the worker copes with only one card visible
-    worker = (REPO / "scripts/luca_v2/generate_video.py").read_text()
-    assert "visible < 2" in worker, "video worker still assumes two visible GPUs"
-    return "images→GPU0, video→GPU1, each process sees a single card"
+    # and it resolves its device from what is visible rather than trusting a
+    # hardcoded "cuda:1", which raised "invalid device ordinal" under isolation
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gv", REPO / "scripts/luca_v2/generate_video.py")
+    gv = importlib.util.module_from_spec(spec); spec.loader.exec_module(gv)
+    gv.log = lambda *a, **k: None
+    import torch as _t
+    class Cuda:
+        def __init__(self, n): self.n, self.current = n, None
+        def is_available(self): return True
+        def device_count(self): return self.n
+        def set_device(self, i): self.current = i
+    real = _t.cuda
+    try:
+        for visible, expected in ((1, "cuda:0"), (2, "cuda:1")):
+            _t.cuda = Cuda(visible)
+            assert gv.resolve_device() == expected, f"{visible} visible → wrong device"
+            assert _t.cuda.current == int(expected[-1])
+    finally:
+        _t.cuda = real
+    return ("images→GPU0, video→GPU1, one card per process, "
+            "device resolved from what is visible")
 
 check("per-process GPU isolation", gpu_isolation)
 

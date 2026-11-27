@@ -59,7 +59,34 @@ WORK_DIR = Path(os.environ.get("LUCA_WORK_DIR", "/kaggle/working/luca_work"))
 MUSETALK_DIR = WORK_DIR / "MuseTalk"
 MUSETALK_MODELS = MUSETALK_DIR / "models"
 
-DEVICE = "cuda:1"
+# The launcher gives this worker its own card via CUDA_VISIBLE_DEVICES, so the
+# card it must use is *always* cuda:0 inside this process; with both cards
+# visible (running this file by hand) it is the second one. A hardcoded
+# "cuda:1" raised "CUDA error: invalid device ordinal" once isolation was in
+# place (run 45959575047), so resolve it from what is actually visible.
+PINNED_DEVICE = "cuda:1"   # the architecture, for logging
+DEVICE = "cuda:0"          # what this process may use; fixed by resolve_device()
+
+
+def resolve_device() -> str:
+    """
+    Return the device string this process should use, and set it current.
+
+    One visible GPU (the normal, isolated case) → cuda:0. Two or more (hand
+    runs) → cuda:1, preserving the original architecture.
+    """
+    global DEVICE
+    try:
+        import torch
+    except Exception:
+        return DEVICE
+    if not torch.cuda.is_available():
+        return DEVICE
+    visible = torch.cuda.device_count()
+    index = 0 if visible < 2 else 1
+    torch.cuda.set_device(index)
+    DEVICE = f"cuda:{index}"
+    return DEVICE
 MASTER_FILENAME = "01_luca_master.png"
 VOICE_FILENAME = "luca_voice.wav"
 REEL_FILENAME = "luca_reel.mp4"
@@ -371,7 +398,7 @@ def synth_voice(timings: Dict[str, float]) -> Dict[str, Any]:
             try:
                 module = __import__(module_name, fromlist=[class_name])
                 cls = getattr(module, class_name)
-                model = cls.from_pretrained(device=DEVICE)
+                model = cls.from_pretrained(device=resolve_device())
                 chosen = f"{module_name}.{class_name}"
                 sample_rate = int(getattr(model, "sr", 24000))
                 log(f"using {chosen} @ {sample_rate} Hz")
@@ -677,7 +704,7 @@ def run_musetalk(master: Path, voice: Path, timings: Dict[str, float]) -> Dict[s
         from musetalk.utils.blending import get_image_blending, get_crop_box
         from musetalk.utils.utils import datagen
     
-        device = torch.device(f"cuda:{torch.cuda.current_device()}")
+        device = torch.device(resolve_device())
         weight_dtype = torch.float16
 
         # MuseTalk's VAE takes (model_path, resized_img, use_float16) — it has no
@@ -1013,18 +1040,12 @@ def main() -> int:
 
         if not torch.cuda.is_available():
             raise RuntimeError("no CUDA device — enable a Kaggle GPU accelerator")
-        # The launcher gives each worker its own card via CUDA_VISIBLE_DEVICES, so
-        # inside this process the GPU is always cuda:0 and nothing can spill onto
-        # the card the image pipeline is using. Falling back to device 1 only
-        # applies when both cards are visible (running this file by hand).
-        visible = torch.cuda.device_count()
-        index = 0 if visible < 2 else 1
-        torch.cuda.set_device(index)
-        effective_device = f"cuda:{index}"
-        if DEVICE != effective_device:
-            log(f"device: {DEVICE} is not present in this process "
-                f"({visible} visible) — using {effective_device}, which the "
-                f"launcher pinned to the same physical card", "WARN")
+        # One card per process: the launcher hides the other, so third-party code
+        # cannot spill onto the image pipeline's GPU.
+        effective_device = resolve_device()
+        log(f"device: {effective_device} "
+            f"({torch.cuda.device_count()} visible here; pinned device is "
+            f"{PINNED_DEVICE})")
         metrics["device"] = effective_device
 
         ensure_video_deps(timings)
