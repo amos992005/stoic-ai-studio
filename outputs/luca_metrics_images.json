@@ -2,7 +2,7 @@
   "process": "images",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T06:17:04Z",
+  "started_at": "2026-11-27T06:30:26Z",
   "base_model": "SG161222/RealVisXL_V5.0",
   "identity_method": "InstantID (ip-adapter.bin + IdentityNet ControlNet)",
   "face_encoder": "insightface antelopev2",
@@ -14,18 +14,18 @@
     "sdxl_img2img_adetailer": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 39.593,
-    "img/load_controlnet": 35.424,
-    "img/load_sdxl": 35.715,
-    "img/load_identity_adapter": 19.38,
-    "img/configure_pipeline": 13.908,
+    "img/pip_install_deps": 39.757,
+    "img/load_controlnet": 35.414,
+    "img/load_sdxl": 37.617,
+    "img/load_identity_adapter": 20.961,
+    "img/configure_pipeline": 16.592,
     "img/configure_scheduler": 0.007,
-    "img/master_portrait": 0.743
+    "img/build_master_pipe": 0.179
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "TypeError: image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is <class 'NoneType'>"
+      "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 50.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 22.81 MiB is free. Including non-PyTorch memory, this process has 14.54 GiB memory in use. Of the allocated memory 14.40 GiB is allocated by PyTorch, and 19.43 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
     }
   ],
   "artifacts": [],
@@ -37,6 +37,6 @@
     "cuda_available": true,
     "gpu_count": 2
   },
-  "total_seconds": 145.1,
-  "finished_at": "2026-11-27T06:19:29Z"
+  "total_seconds": 150.8,
+  "finished_at": "2026-11-27T06:32:57Z"
 }
