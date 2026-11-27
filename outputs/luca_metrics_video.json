@@ -2,7 +2,7 @@
   "process": "video",
   "device": "cuda:0",
   "status": "failed",
-  "started_at": "2026-11-27T11:29:33Z",
+  "started_at": "2026-11-27T12:01:56Z",
   "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
   "prohibitions_honoured": {
     "celebrity_name_in_prompts": false,
@@ -10,21 +10,21 @@
     "pipe.to_cpu": false
   },
   "timings_seconds": {
-    "img/pip_install_deps": 26.496,
-    "img/load_chatterbox": 81.631,
-    "img/generate_speech": 14.406,
-    "img/release_tts_vram": 0.537,
-    "img/wait_for_master": 25.008,
-    "img/clone_sadtalker": 3.711,
-    "img/fetch_sadtalker_weights": 28.013,
-    "img/ffmpeg_on_path": 15.986,
-    "img/sadtalker_face_models": 0.319,
-    "img/sadtalker_inference": 6.248
+    "img/pip_install_deps": 36.854,
+    "img/load_chatterbox": 83.316,
+    "img/generate_speech": 13.694,
+    "img/release_tts_vram": 0.508,
+    "img/wait_for_master": 5.008,
+    "img/clone_sadtalker": 4.995,
+    "img/fetch_sadtalker_weights": 27.829,
+    "img/ffmpeg_on_path": 19.082,
+    "img/sadtalker_face_models": 0.355,
+    "img/sadtalker_inference": 16.481
   },
   "errors": [
     {
       "stage": "fatal",
-      "error": "RuntimeError: SadTalker failed (exit 1): work/run_sadtalker.py\", line 27, in <module>\n    runpy.run_path(entry, run_name=\"__main__\")\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen runpy>\", line 294, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/kaggle/working/luca_work/SadTalker/inference.py\", line 10, in <module>\n    from src.facerender.animate import AnimateFromCoeff\n  File \"/kaggle/working/luca_work/SadTalker/src/facerender/animate.py\", line 23, in <module>\n    from src.utils.face_enhancer import enhancer_generator_with_len, enhancer_list\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/face_enhancer.py\", line 4, in <module>\n    from gfpgan import GFPGANer\nImportError: cannot import name 'GFPGANer' from 'gfpgan' (unknown location)\n"
+      "error": "RuntimeError: SadTalker failed (exit 1): rk/SadTalker/src/face3d/util/my_awing_arch.py\", line 18, in calculate_points\n    preds = preds.astype(np.float, copy=False)\n                         ^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/numpy/__init__.py\", line 397, in __getattr__\n    raise AttributeError(__former_attrs__[attr], name=None)\nAttributeError: module 'numpy' has no attribute 'float'.\n`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.\nThe aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:\n    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations\n"
     }
   ],
   "artifacts": [
@@ -36,10 +36,10 @@
     "dtype": "float16",
     "s3gen_dtype": "float32 (STFT has no fp16 path)",
     "sample_rate": 24000,
-    "duration_s": 6.28,
+    "duration_s": 5.88,
     "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
     "file": "luca_voice.wav"
   },
-  "total_seconds": 218.4,
-  "finished_at": "2026-11-27T11:33:11Z"
+  "total_seconds": 223.6,
+  "finished_at": "2026-11-27T12:05:40Z"
 }

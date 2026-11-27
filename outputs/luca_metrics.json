@@ -3,7 +3,7 @@
     "process": "video",
     "device": "cuda:0",
     "status": "failed",
-    "started_at": "2026-11-27T11:29:33Z",
+    "started_at": "2026-11-27T12:01:56Z",
     "pipeline": "Chatterbox \u2192 SadTalker \u2192 H.264/AAC (iPhone-compatible)",
     "prohibitions_honoured": {
       "celebrity_name_in_prompts": false,
@@ -11,21 +11,21 @@
       "pipe.to_cpu": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 26.496,
-      "img/load_chatterbox": 81.631,
-      "img/generate_speech": 14.406,
-      "img/release_tts_vram": 0.537,
-      "img/wait_for_master": 25.008,
-      "img/clone_sadtalker": 3.711,
-      "img/fetch_sadtalker_weights": 28.013,
-      "img/ffmpeg_on_path": 15.986,
-      "img/sadtalker_face_models": 0.319,
-      "img/sadtalker_inference": 6.248
+      "img/pip_install_deps": 36.854,
+      "img/load_chatterbox": 83.316,
+      "img/generate_speech": 13.694,
+      "img/release_tts_vram": 0.508,
+      "img/wait_for_master": 5.008,
+      "img/clone_sadtalker": 4.995,
+      "img/fetch_sadtalker_weights": 27.829,
+      "img/ffmpeg_on_path": 19.082,
+      "img/sadtalker_face_models": 0.355,
+      "img/sadtalker_inference": 16.481
     },
     "errors": [
       {
         "stage": "fatal",
-        "error": "RuntimeError: SadTalker failed (exit 1): work/run_sadtalker.py\", line 27, in <module>\n    runpy.run_path(entry, run_name=\"__main__\")\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen runpy>\", line 294, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/kaggle/working/luca_work/SadTalker/inference.py\", line 10, in <module>\n    from src.facerender.animate import AnimateFromCoeff\n  File \"/kaggle/working/luca_work/SadTalker/src/facerender/animate.py\", line 23, in <module>\n    from src.utils.face_enhancer import enhancer_generator_with_len, enhancer_list\n  File \"/kaggle/working/luca_work/SadTalker/src/utils/face_enhancer.py\", line 4, in <module>\n    from gfpgan import GFPGANer\nImportError: cannot import name 'GFPGANer' from 'gfpgan' (unknown location)\n"
+        "error": "RuntimeError: SadTalker failed (exit 1): rk/SadTalker/src/face3d/util/my_awing_arch.py\", line 18, in calculate_points\n    preds = preds.astype(np.float, copy=False)\n                         ^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/numpy/__init__.py\", line 397, in __getattr__\n    raise AttributeError(__former_attrs__[attr], name=None)\nAttributeError: module 'numpy' has no attribute 'float'.\n`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.\nThe aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:\n    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations\n"
       }
     ],
     "artifacts": [
@@ -37,12 +37,12 @@
       "dtype": "float16",
       "s3gen_dtype": "float32 (STFT has no fp16 path)",
       "sample_rate": 24000,
-      "duration_s": 6.28,
+      "duration_s": 5.88,
       "transcript": "Morning in Monaco, sunset in Ibiza. Honestly, the hardest part of today was choosing the view.",
       "file": "luca_voice.wav"
     },
-    "total_seconds": 218.4,
-    "finished_at": "2026-11-27T11:33:11Z"
+    "total_seconds": 223.6,
+    "finished_at": "2026-11-27T12:05:40Z"
   },
   "artifacts": [
     "01_luca_master.png",
@@ -56,7 +56,7 @@
     "process": "images",
     "device": "cuda:0",
     "status": "success",
-    "started_at": "2026-11-27T11:29:42Z",
+    "started_at": "2026-11-27T12:02:04Z",
     "pipeline": "character LoRA (dataset \u2192 train \u2192 carousel, no InstantID at inference)",
     "base_model": "SG161222/RealVisXL_V5.0",
     "identity": {
@@ -75,16 +75,16 @@
       "sdxl_img2img_adetailer": false
     },
     "timings_seconds": {
-      "img/pip_install_deps": 77.901,
-      "img/build_master": 72.269,
-      "img/load_instantid": 45.257,
-      "img/build_dataset": 728.433,
-      "img/unload_instantid": 0.626,
-      "img/load_carousel_pipe": 31.106,
-      "img/generate_01_luca_master.png": 32.284,
-      "img/generate_02_luca_yacht.png": 26.765,
-      "img/generate_03_luca_porsche.png": 26.14,
-      "img/generate_04_luca_party.png": 26.201
+      "img/pip_install_deps": 51.231,
+      "img/build_master": 95.917,
+      "img/load_instantid": 47.541,
+      "img/build_dataset": 656.084,
+      "img/unload_instantid": 0.635,
+      "img/load_carousel_pipe": 31.486,
+      "img/generate_01_luca_master.png": 67.473,
+      "img/generate_02_luca_yacht.png": 27.424,
+      "img/generate_03_luca_porsche.png": 28.891,
+      "img/generate_04_luca_party.png": 28.064
     },
     "errors": [],
     "artifacts": [
@@ -105,6 +105,11 @@
     },
     "master": {
       "file": "01_luca_master.png",
+      "stats": {
+        "mean": 133.47,
+        "std": 52.87,
+        "unique_colors": 170374
+      },
       "prompt": "ohwx 27-year-old Italian man, athletic build, sun-kissed dirty blonde tousled hair, piercing blue-green eyes, sharp jawline, light 3-day stubble, close-up portrait facing the camera, soft window light, relaxed neutral expression, plain white linen shirt, no hands near the face, blurred Mediterranean harbour behind him",
       "bytes": 1337549
     },
@@ -167,13 +172,13 @@
       "loss_last_25": 0.0782,
       "loss_decreasing": true,
       "adapter_mb": 93.07,
-      "train_seconds": 574.9,
+      "train_seconds": 566.3,
       "timings_seconds": {
-        "img/lora_load_text_encoders": 21.34,
-        "img/lora_encode_prompts": 0.408,
-        "img/lora_cache_latents": 6.974,
-        "img/lora_load_unet": 94.135,
-        "img/lora_save": 0.236
+        "img/lora_load_text_encoders": 23.612,
+        "img/lora_encode_prompts": 0.394,
+        "img/lora_cache_latents": 7.185,
+        "img/lora_load_unet": 94.838,
+        "img/lora_save": 0.218
       }
     },
     "carousel": {
@@ -183,9 +188,38 @@
         "03_luca_porsche.png",
         "04_luca_party.png"
       ],
-      "lora_used": true
+      "lora_used": false,
+      "adapter_cast": {
+        "dtype": "torch.float16",
+        "tensors": 0
+      },
+      "degenerate_with_lora": [
+        "01_luca_master.png"
+      ],
+      "stats": {
+        "01_luca_master.png": {
+          "mean": 132.51,
+          "std": 54.62,
+          "unique_colors": 198060
+        },
+        "02_luca_yacht.png": {
+          "mean": 116.59,
+          "std": 53.32,
+          "unique_colors": 187924
+        },
+        "03_luca_porsche.png": {
+          "mean": 110.05,
+          "std": 63.13,
+          "unique_colors": 174162
+        },
+        "04_luca_party.png": {
+          "mean": 82.69,
+          "std": 58.56,
+          "unique_colors": 212703
+        }
+      }
     },
-    "total_seconds": 1598.8,
-    "finished_at": "2026-11-27T11:56:21Z"
+    "total_seconds": 1555.8,
+    "finished_at": "2026-11-27T12:28:00Z"
   }
 }
