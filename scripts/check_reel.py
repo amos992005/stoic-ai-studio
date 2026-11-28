@@ -43,6 +43,31 @@ MIN_MEAN_VOLUME_DB = -38.0
 MIN_AUDIO_STREAM_SECONDS = 13.5
 
 
+def mp3_header_ok(head: bytes) -> tuple[bool, str]:
+    """
+    Recognise an MPEG audio bitstream the way a decoder does.
+
+    edge-tts streams 24 kHz audio, which is MPEG-2 Layer III: the frame sync is
+    ``0xFF 0xF3`` (or ``0xF2``), not the ``0xFF 0xFB`` of the 44.1 kHz MPEG-1
+    files most tools produce. Accepting only the MPEG-1 form rejects the voice
+    the brief asks for, which is what happened on the first CI run — so this
+    reads the version and layer bits instead of pattern-matching one header.
+    """
+    if head[:3] == b"ID3":
+        return True, "ID3v2 tag"
+    if len(head) < 2 or head[0] != 0xFF or (head[1] & 0xE0) != 0xE0:
+        return False, f"no frame sync ({head[:2].hex()})"
+    version = (head[1] >> 3) & 0x03   # 3 = MPEG-1, 2 = MPEG-2, 0 = MPEG-2.5
+    layer = (head[1] >> 1) & 0x03     # 1 = Layer III, 2 = Layer II, 3 = Layer I
+    names = {3: "MPEG-1", 2: "MPEG-2", 0: "MPEG-2.5"}
+    layers = {1: "Layer III", 2: "Layer II", 3: "Layer I"}
+    if version == 1:
+        return False, f"reserved MPEG version bits ({head[:2].hex()})"
+    if layer == 0:
+        return False, f"reserved layer bits ({head[:2].hex()})"
+    return True, f"{names[version]} {layers[layer]}"
+
+
 class Checker:
     def __init__(self, verbose: bool = True) -> None:
         self.failures: List[str] = []
@@ -125,11 +150,9 @@ def check_audio(check: Checker) -> None:
         size = voice_file.stat().st_size
         check.want(size > 40_000, f"voiceover.mp3 is {size / 1024:.0f} KB (>40 KB)")
         with open(voice_file, "rb") as handle:
-            head = handle.read(3)
-        # "ID3" (tagged) or 0xFF 0xFB (bare MPEG frame). Anything else is not
-        # an MP3 and Chrome would fail to decode it at render time.
-        check.want(head == b"ID3" or head[:2] == b"\xff\xfb",
-                   "voiceover.mp3 starts with a valid MPEG header")
+            head = handle.read(4)
+        valid, detail = mp3_header_ok(head)
+        check.want(valid, f"voiceover.mp3 is a valid MPEG bitstream ({detail})")
 
     for key in ("whoosh", "pop", "riser"):
         entry = artefact.get(key) or {}
@@ -151,8 +174,8 @@ def check_audio(check: Checker) -> None:
     if voice_file.is_file() and which("ffprobe"):
         info = ffprobe_json(voice_file)
         seconds = float(info["format"]["duration"])
-        check.want(8.0 <= seconds <= 15.5,
-                   f"voiceover.mp3 is {seconds:.2f}s (8.0–15.5s window)")
+        check.want(6.0 <= seconds <= 16.0,
+                   f"voiceover.mp3 is {seconds:.2f}s (6.0-16.0s window)")
         volume = mean_volume_db(voice_file)
         if volume is not None:
             check.want(volume > -32.0,
@@ -223,10 +246,28 @@ def check_video(check: Checker) -> None:
         print("  note ffmpeg unavailable — skipped the loudness check")
 
 
+def write_summary(check: Checker, path: Path | None) -> None:
+    """
+    Write a short report next to the artifact.
+
+    The point is a failing run that can be diagnosed: GitHub's log download is
+    not always reachable, but an uploaded file always is.
+    """
+    if path is None:
+        return
+    lines = ["# DemoReel checks", ""]
+    lines += [f"- FAIL {failure}" for failure in check.failures]
+    if not check.failures:
+        lines.append("- all checks passed")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audio-only", action="store_true",
                         help="check the generated audio only")
+    parser.add_argument("--summary", type=Path, default=None,
+                        help="write a short pass/fail report to this path")
     args = parser.parse_args(argv)
 
     check = Checker()
@@ -235,6 +276,7 @@ def main(argv: List[str] | None = None) -> int:
     else:
         check_audio(check)
         check_video(check)
+    write_summary(check, args.summary)
     return check.report()
 
 

@@ -76,7 +76,9 @@ jobs:
       - name: Verify the audio before spending 10 minutes on frames
         # Catches a truncated MP3, a wrong duration or a missing SFX in
         # seconds instead of after the render.
-        run: python scripts/check_reel.py --audio-only
+        run: |
+          python scripts/check_reel.py --audio-only \
+            --summary outputs/check_audio.md
 
       - name: Render
         working-directory: remotion
@@ -88,7 +90,8 @@ jobs:
             --pixel-format=yuv420p
 
       - name: Verify the rendered reel
-        run: python scripts/check_reel.py
+        run: |
+          python scripts/check_reel.py --summary outputs/check_reel.md
 
       - name: Write a render report
         run: |
@@ -132,14 +135,21 @@ jobs:
           print(json.dumps(report, indent=2))
           PY
 
-      - name: Upload reel (always, even if a later step fails)
+      - name: Upload reel and evidence (always)
+        # `if: always()` matters for the failure case: when a gate trips, the
+        # artifact is the only way to see what tripped it (the job log
+        # download is not always reachable).
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: demo-reel-${{ github.run_number }}
           path: |
             outputs/demo_reel.mp4
             outputs/demo_reel_report.json
+            outputs/check_audio.md
+            outputs/check_reel.md
             remotion/public/voiceover.mp3
+            remotion/public/audio_manifest.json
           if-no-files-found: warn
           retention-days: 30
 

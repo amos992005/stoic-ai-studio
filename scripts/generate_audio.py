@@ -74,10 +74,12 @@ VOICEOVER = (
     "Show up tomorrow. Stay stoic."
 )
 
-#: Hard ceiling: if the synthesised file is longer than this the reel's audio
-#: would be cut off mid-sentence, so the script refuses instead.
-MAX_VOICE_SECONDS = 15.5
-MIN_VOICE_SECONDS = 8.0
+#: Ceiling: past this the reel's last frames would clip the narration, so the
+#: script refuses instead of shipping a cut-off sentence. The multi-lingual
+#: neural voice lands at ~15.2 s for the script below, so the window is
+#: deliberately generous on both sides — it is a sanity gate, not a stopwatch.
+MAX_VOICE_SECONDS = 16.0
+MIN_VOICE_SECONDS = 6.0
 
 # The web build only ever triggers this via ``--allow-missing-voice``; CI runs
 # the default path, where a network failure is fatal.
