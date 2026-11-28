@@ -43,8 +43,8 @@ const Badge: React.FC<{
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 20,
-        padding: "22px 34px",
+        gap: 16,
+        padding: "18px 26px",
         borderRadius: 999,
         border: `2px solid ${accent}66`,
         background: `linear-gradient(120deg, ${accent}22, rgba(255,255,255,0.03))`,
@@ -65,9 +65,10 @@ const Badge: React.FC<{
       <div
         style={{
           fontFamily: FONTS.text,
-          fontSize: 38,
+          fontSize: 31,
           fontWeight: 800,
-          letterSpacing: "0.16em",
+          letterSpacing: "0.12em",
+          whiteSpace: "nowrap",
           color: COLORS.white,
         }}
       >
@@ -128,7 +129,7 @@ export const SceneHighlight: React.FC = () => {
         <AbsoluteFill
           style={{
             width: "50%",
-            padding: "0 54px",
+            padding: "0 44px",
             justifyContent: "center",
             transform: `translateX(${(1 - left) * -520}px)`,
             opacity: 0.55 * left,
@@ -138,7 +139,7 @@ export const SceneHighlight: React.FC = () => {
           <div
             style={{
               fontFamily: FONTS.display,
-              fontSize: 128,
+              fontSize: 104,
               lineHeight: 0.9,
               color: "rgba(255,255,255,0.32)",
               letterSpacing: "-0.01em",
@@ -150,7 +151,7 @@ export const SceneHighlight: React.FC = () => {
             style={{
               marginTop: 26,
               fontFamily: FONTS.text,
-              fontSize: 30,
+              fontSize: 28,
               fontWeight: 500,
               lineHeight: 1.4,
               color: "rgba(255,255,255,0.34)",
@@ -164,7 +165,7 @@ export const SceneHighlight: React.FC = () => {
         <AbsoluteFill
           style={{
             left: "50%",
-            padding: "0 54px",
+            padding: "0 44px",
             justifyContent: "center",
             transform: `translateX(${(1 - right) * 520}px)`,
             opacity: right,
@@ -174,7 +175,7 @@ export const SceneHighlight: React.FC = () => {
             <div
               style={{
                 fontFamily: FONTS.display,
-                fontSize: 148,
+                fontSize: 104,
                 lineHeight: 0.88,
                 letterSpacing: "-0.01em",
                 backgroundImage: `linear-gradient(96deg, ${COLORS.white} 0%, ${COLORS.gold} 52%, ${COLORS.goldDeep} 100%)`,
@@ -199,9 +200,9 @@ export const SceneHighlight: React.FC = () => {
 
           <div
             style={{
-              marginTop: 30,
+              marginTop: 26,
               fontFamily: FONTS.text,
-              fontSize: 30,
+              fontSize: 27,
               fontWeight: 600,
               lineHeight: 1.4,
               color: COLORS.muted,
