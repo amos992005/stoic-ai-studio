@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -186,6 +187,61 @@ def check_audio(check: Checker) -> None:
         if volume is not None:
             check.want(volume > -32.0,
                        f"voiceover is audible (mean {volume:.1f} dB > -32 dB)")
+
+
+SCENES_DIR = ROOT / "remotion" / "src" / "scenes"
+
+
+def check_composition_source(check: Checker) -> None:
+    """
+    Static checks on the composition itself, runnable without a browser.
+
+    The bug this exists for: every scene component is mounted inside a
+    ``<Sequence>``, so ``useCurrentFrame()`` already returns a frame relative
+    to the scene. The first version subtracted ``SCENES.x.from`` as well, which
+    pushed every spring below zero: the springs stayed at 0 opacity and the
+    render shipped three scenes with visible backgrounds and invisible
+    content. It type-checks and renders "successfully", so only an explicit
+    rule catches it.
+    """
+    print("composition source")
+    scenes = sorted(SCENES_DIR.glob("Scene*.tsx"))
+    check.want(len(scenes) == 4, f"found {len(scenes)} scene components")
+
+    for path in scenes:
+        body = path.read_text(encoding="utf-8")
+        check.want("scene.from" not in body,
+                   f"{path.name} does not offset the local frame by scene.from")
+
+    reel = (ROOT / "remotion" / "src" / "DemoReel.tsx").read_text(encoding="utf-8")
+    theme = (ROOT / "remotion" / "src" / "theme.ts").read_text(encoding="utf-8")
+    root = (ROOT / "remotion" / "src" / "Root.tsx").read_text(encoding="utf-8")
+
+    check.want("DURATION_IN_FRAMES = 450" in theme, "timeline is 450 frames")
+    check.want("FPS = 30" in theme, "timeline is 30 fps")
+    check.want("WIDTH = 1080" in theme and "HEIGHT = 1920" in theme,
+               "composition is 1080x1920 (vertical)")
+    check.want('id="DemoReel"' in root, 'the composition id is "DemoReel"')
+
+    # The four scenes must tile the timeline exactly: no gap, no overlap.
+    from_entries = re.findall(r"(\w+): \{ from: (\d+), duration: (\d+) \}", theme)
+    check.want(len(from_entries) == 4, "four scenes are defined in theme.ts")
+    cursor = 0
+    tiled = True
+    for name, start, length in from_entries:
+        if int(start) != cursor:
+            tiled = False
+        cursor = int(start) + int(length)
+    check.want(tiled and cursor == 450,
+               f"scenes tile 0-449 with no gaps (end at {cursor})")
+
+    for cue in ("voiceover.mp3", "whoosh.wav", "pop.wav", "riser.wav"):
+        check.want(cue in reel, f"the reel cues {cue}")
+
+    for primitive in ("spring(", "interpolate(", "<Sequence", "<Audio", "AbsoluteFill"):
+        check.want(primitive in reel or any(
+            primitive in p.read_text(encoding="utf-8") for p in scenes),
+            f"composition uses {primitive}")
 
 
 def check_video(check: Checker) -> None:

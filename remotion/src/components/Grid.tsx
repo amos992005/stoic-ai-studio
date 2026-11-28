@@ -30,9 +30,11 @@ export const Grid: React.FC<{
     <AbsoluteFill style={{ perspective: 900, opacity }}>
       <AbsoluteFill
         style={{
+          // Tuned so the grid's bright edge lands in the middle of the frame:
+          // lower and it only fills the bottom quarter (which looked empty).
           transform:
-            "rotateX(62deg) translateZ(-120px) translateY(120px) scale(1.9)",
-          transformOrigin: "50% 78%",
+            "rotateX(64deg) translateZ(-120px) translateY(-40px) scale(2.1)",
+          transformOrigin: "50% 62%",
         }}
       >
         <AbsoluteFill

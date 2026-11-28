@@ -81,7 +81,12 @@ export const SceneHighlight: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const scene = SCENES.highlight;
-  const local = frame - scene.from;
+  const local = frame;
+  // IMPORTANT: this component lives inside a <Sequence>, so useCurrentFrame()
+  // already returns the frame *relative to this scene*. Subtracting
+  // SCENES.<x>.from here would offset it twice and leave every spring pinned
+  // at its frame-0 value (invisible) — which is exactly what happened on the
+  // first render: only the spring-free backgrounds appeared.
 
   const left = spring({
     frame: local - 1,

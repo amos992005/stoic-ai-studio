@@ -20,7 +20,7 @@ import { COLORS, FONTS, METRIC, SCENES } from "../theme";
  * stopping dead, and the bars are staggered so attention walks left to right.
  */
 
-const BAR_MAX_HEIGHT = 300;
+const BAR_MAX_HEIGHT = 250;
 
 const Bar: React.FC<{
   label: string;
@@ -90,7 +90,12 @@ export const SceneMetric: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const scene = SCENES.metric;
-  const local = frame - scene.from;
+  const local = frame;
+  // IMPORTANT: this component lives inside a <Sequence>, so useCurrentFrame()
+  // already returns the frame *relative to this scene*. Subtracting
+  // SCENES.<x>.from here would offset it twice and leave every spring pinned
+  // at its frame-0 value (invisible) — which is exactly what happened on the
+  // first render: only the spring-free backgrounds appeared.
 
   const cardIn = spring({
     frame: local - 2,
@@ -132,7 +137,7 @@ export const SceneMetric: React.FC = () => {
           style={{ position: "absolute" }}
         />
 
-        <GlassCard style={{ width: 860 }} glow={0.8} tint={COLORS.mint}>
+        <GlassCard style={{ width: 900 }} glow={0.8} tint={COLORS.mint}>
           <div
             style={{
               fontFamily: FONTS.text,
@@ -150,7 +155,7 @@ export const SceneMetric: React.FC = () => {
             <div
               style={{
                 fontFamily: FONTS.display,
-                fontSize: 300,
+                fontSize: 260,
                 lineHeight: 0.86,
                 color: COLORS.white,
                 // Thirds of a percent are invisible at this size; whole and
@@ -206,8 +211,8 @@ export const SceneMetric: React.FC = () => {
               display: "flex",
               alignItems: "flex-end",
               gap: 22,
-              height: BAR_MAX_HEIGHT + 110,
-              marginTop: 46,
+              height: BAR_MAX_HEIGHT + 100,
+              marginTop: 38,
               paddingTop: 10,
               borderTop: `1px solid ${COLORS.faint}`,
             }}

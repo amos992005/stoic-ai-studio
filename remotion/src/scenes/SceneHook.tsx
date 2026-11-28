@@ -55,7 +55,7 @@ const HookWord: React.FC<{
         opacity: Math.min(1, enter * 1.35),
         filter: blur > 0.2 ? `blur(${blur}px)` : undefined,
         fontFamily: accent ? FONTS.display : FONTS.text,
-        fontSize: accent ? 132 : 86,
+        fontSize: accent ? 168 : 104,
         fontWeight: accent ? 400 : 700,
         letterSpacing: accent ? "0.01em" : "-0.02em",
         lineHeight: accent ? 0.94 : 1.05,
@@ -66,7 +66,7 @@ const HookWord: React.FC<{
         WebkitBackgroundClip: accent ? "text" : undefined,
         backgroundClip: accent ? "text" : undefined,
         textShadow: accent ? undefined : "0 12px 40px rgba(0,0,0,0.65)",
-        marginRight: 26,
+        marginRight: 30,
         marginBottom: 8,
       }}
     >
@@ -80,7 +80,12 @@ export const SceneHook: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const scene = SCENES.hook;
-  const local = frame - scene.from;
+  const local = frame;
+  // IMPORTANT: this component lives inside a <Sequence>, so useCurrentFrame()
+  // already returns the frame *relative to this scene*. Subtracting
+  // SCENES.<x>.from here would offset it twice and leave every spring pinned
+  // at its frame-0 value (invisible) — which is exactly what happened on the
+  // first render: only the spring-free backgrounds appeared.
 
   // Slow push-in over the whole scene keeps the background alive.
   const push = interpolate(local, [0, scene.duration], [1.0, 1.06], {
@@ -150,7 +155,7 @@ export const SceneHook: React.FC = () => {
           THE STOIC EDGE
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
           {HOOK_LINES.map((words, lineIndex) => (
             <div
               key={lineIndex}
