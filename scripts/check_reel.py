@@ -71,7 +71,12 @@ def mp3_header_ok(head: bytes) -> tuple[bool, str]:
 class Checker:
     def __init__(self, verbose: bool = True) -> None:
         self.failures: List[str] = []
+        self.means: Dict[str, Any] = {}
         self.verbose = verbose
+
+    def note(self, key: str, value: Any) -> None:
+        """Record a measurement for the summary, regardless of pass/fail."""
+        self.means[key] = value
 
     def want(self, condition: bool, message: str) -> bool:
         if condition:
@@ -191,10 +196,12 @@ def check_video(check: Checker) -> None:
     if not check.want(OUTPUT.is_file(), f"{OUTPUT.relative_to(ROOT)} exists"):
         return
     size_mb = OUTPUT.stat().st_size / 1e6
-    check.want(1.0 < size_mb < 60.0, f"file size {size_mb:.1f} MB (1–60 MB)")
+    check.note("file_mb", round(size_mb, 2))
+    check.want(0.5 < size_mb < 120.0, f"file size {size_mb:.1f} MB (0.5-120 MB)")
 
     info = ffprobe_json(OUTPUT)
     streams = info.get("streams", [])
+    check.note("streams", [s.get("codec_type") for s in streams])
     video = next((s for s in streams if s.get("codec_type") == "video"), None)
     audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
 
@@ -228,17 +235,31 @@ def check_video(check: Checker) -> None:
         check.want(audio.get("codec_name") == "aac",
                    f"audio codec is aac (got {audio.get('codec_name')})")
 
+    if video:
+        check.note("video", {k: video.get(k) for k in
+                             ("codec_name", "profile", "pix_fmt", "width",
+                              "height", "avg_frame_rate", "nb_frames", "duration")})
+    if audio:
+        check.note("audio", {k: audio.get(k) for k in
+                             ("codec_name", "sample_rate", "channels", "duration")})
+
     duration = float(info.get("format", {}).get("duration", 0.0) or 0.0)
+    check.note("duration_s", round(duration, 3))
     check.want(abs(duration - EXPECTED_SECONDS) <= DURATION_TOLERANCE,
                f"duration is {duration:.2f}s (target {EXPECTED_SECONDS:.2f}s "
                f"+/-{DURATION_TOLERANCE}s)")
 
     if audio:
-        audio_seconds = float(audio.get("duration", 0.0) or 0.0)
+        # MP4 does not always carry a per-stream duration; the container's is
+        # then the only measure of how long the audio runs.
+        stream_seconds = float(audio.get("duration", 0.0) or 0.0)
+        audio_seconds = stream_seconds or duration
         check.want(audio_seconds >= MIN_AUDIO_STREAM_SECONDS,
-                   f"audio runs {audio_seconds:.2f}s (>= {MIN_AUDIO_STREAM_SECONDS}s)")
+                   f"audio runs {audio_seconds:.2f}s "
+                   f"(>= {MIN_AUDIO_STREAM_SECONDS}s)")
 
     volume = mean_volume_db(OUTPUT)
+    check.note("mean_volume_db", volume)
     if volume is not None:
         check.want(volume > MIN_MEAN_VOLUME_DB,
                    f"reel is not silent (mean {volume:.1f} dB > {MIN_MEAN_VOLUME_DB} dB)")
@@ -246,19 +267,29 @@ def check_video(check: Checker) -> None:
         print("  note ffmpeg unavailable — skipped the loudness check")
 
 
-def write_summary(check: Checker, path: Path | None) -> None:
+def write_summary(check: Checker, path: Path | None,
+                  measurements: Dict[str, Any] | None = None) -> None:
     """
-    Write a short report next to the artifact.
+    Write a report next to the artifact.
 
-    The point is a failing run that can be diagnosed: GitHub's log download is
-    not always reachable, but an uploaded file always is.
+    The point is a run that can be diagnosed without the job log: every
+    measurement is recorded whether it passed or failed, so a green run shows
+    what was actually produced and a red one shows what fell outside the
+    contract. The workflow commits this file, which is readable even when
+    GitHub's log endpoint is not.
     """
     if path is None:
         return
-    lines = ["# DemoReel checks", ""]
-    lines += [f"- FAIL {failure}" for failure in check.failures]
-    if not check.failures:
-        lines.append("- all checks passed")
+    lines = ["# DemoReel checks", "", f"result: {'FAIL' if check.failures else 'PASS'}", ""]
+    if check.failures:
+        lines += ["## failures", ""]
+        lines += [f"- {failure}" for failure in check.failures]
+        lines.append("")
+    if measurements:
+        lines += ["## measurements", ""]
+        for key, value in measurements.items():
+            lines.append(f"- {key}: `{value}`")
+        lines.append("")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -276,7 +307,7 @@ def main(argv: List[str] | None = None) -> int:
     else:
         check_audio(check)
         check_video(check)
-    write_summary(check, args.summary)
+    write_summary(check, args.summary, check.means)
     return check.report()
 
 

@@ -135,6 +135,30 @@ jobs:
           print(json.dumps(report, indent=2))
           PY
 
+      - name: Publish the check reports
+        # Runs even when a gate fails: the reports are the only readable trace
+        # of what the renderer actually produced, and they are small enough to
+        # commit on every run. `continue-on-error` keeps the job's own verdict
+        # decided by the gates above, not by this bookkeeping.
+        if: always()
+        continue-on-error: true
+        run: |
+          mkdir -p outputs
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for report in outputs/check_audio.md outputs/check_reel.md; do
+            if [ -f "$report" ]; then
+              git add -f "$report"
+            fi
+          done
+          if git diff --cached --quiet; then
+            echo "no new reports to publish"
+            exit 0
+          fi
+          git commit -m "chore(reel): publish check reports for run ${{ github.run_number }} [skip ci]"
+          git pull --rebase --autostash
+          git push
+
       - name: Upload reel and evidence (always)
         # `if: always()` matters for the failure case: when a gate trips, the
         # artifact is the only way to see what tripped it (the job log
@@ -160,10 +184,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f outputs/demo_reel.mp4 outputs/demo_reel_report.json
+          git add -f outputs/demo_reel.mp4 outputs/demo_reel_report.json \
+            outputs/check_audio.md outputs/check_reel.md
           if git diff --cached --quiet; then
             echo "reel unchanged — nothing to commit"
             exit 0
           fi
           git commit -m "chore(reel): render demo_reel.mp4 (1080x1920, 450f, h264/aac) [skip ci]"
+          git pull --rebase --autostash
           git push
