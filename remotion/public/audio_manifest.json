@@ -1,0 +1,21 @@
+{
+  "status": "sfx-only",
+  "voice": "en-US-AndrewMultilingualNeural",
+  "text": "Everyone wants the view. Nobody wants the climb. One percent of your day, compounding, quietly, for years. That is the whole secret. Show up tomorrow. Stay stoic.",
+  "artefacts": {
+    "sample_rate": 48000,
+    "whoosh": {
+      "file": "whoosh.wav",
+      "scene": 1
+    },
+    "pop": {
+      "file": "pop.wav",
+      "scene": 2
+    },
+    "riser": {
+      "file": "riser.wav",
+      "scene": 4
+    },
+    "voiceover": null
+  }
+}

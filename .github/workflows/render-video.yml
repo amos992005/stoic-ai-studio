@@ -1,0 +1,159 @@
+name: Render demo reel
+
+# Code-first motion graphics: Remotion + edge-tts. CPU only — no GPU, no
+# Kaggle, no model downloads. The whole render is a Node build and a browser
+# rasterising 450 frames of CSS.
+
+on:
+  push:
+    branches:
+      - "arena/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# One render at a time per ref: two concurrent renders would race on the same
+# committed output file.
+concurrency:
+  group: render-video-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  # Fail fast on any uncaught error instead of letting a broken reel ship.
+  PYTHONUNBUFFERED: "1"
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  render:
+    name: Render 15s DemoReel (1080x1920)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The publish step pushes the rendered reel back to this branch.
+          persist-credentials: true
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python audio dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "edge-tts>=6.1.9" "numpy>=1.26" "scipy>=1.11"
+
+      - name: Show toolchain
+        run: |
+          node --version
+          npm --version
+          python --version
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+
+      - name: Install Remotion + Chrome Headless Shell
+        run: bash scripts/render_setup.sh
+
+      - name: Generate voiceover and SFX
+        # edge-tts streams from Microsoft's speech endpoint; a blocked or
+        # failed synthesis must fail the job rather than ship a silent reel.
+        run: python scripts/generate_audio.py
+
+      - name: Verify the audio before spending 10 minutes on frames
+        # Catches a truncated MP3, a wrong duration or a missing SFX in
+        # seconds instead of after the render.
+        run: python scripts/check_reel.py --audio-only
+
+      - name: Render
+        working-directory: remotion
+        run: |
+          mkdir -p ../outputs
+          npx remotion render src/index.ts DemoReel ../outputs/demo_reel.mp4 \
+            --browser=chrome-headless-shell \
+            --codec=h264 \
+            --pixel-format=yuv420p
+
+      - name: Verify the rendered reel
+        run: python scripts/check_reel.py
+
+      - name: Write a render report
+        run: |
+          python - <<'PY'
+          import json, pathlib, subprocess
+
+          reel = pathlib.Path("outputs/demo_reel.mp4")
+          probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-print_format", "json",
+               "-show_format", "-show_streams", str(reel)],
+              capture_output=True, text=True, check=True)
+          info = json.loads(probe.stdout)
+          video = next(s for s in info["streams"] if s["codec_type"] == "video")
+          audio = next(s for s in info["streams"] if s["codec_type"] == "audio")
+          report = {
+              "engine": "Remotion 4 (React/TypeScript), CPU render",
+              "audio": "edge-tts + procedural numpy/scipy SFX",
+              "file": str(reel),
+              "size_mb": round(reel.stat().st_size / 1e6, 2),
+              "video": {
+                  "codec": video["codec_name"],
+                  "profile": video.get("profile"),
+                  "pix_fmt": video["pix_fmt"],
+                  "width": video["width"],
+                  "height": video["height"],
+                  "fps": video["avg_frame_rate"],
+                  "frames": video.get("nb_frames"),
+                  "duration_s": float(video.get("duration", 0)),
+              },
+              "audio_stream": {
+                  "codec": audio["codec_name"],
+                  "sample_rate": audio.get("sample_rate"),
+                  "channels": audio.get("channels"),
+                  "duration_s": float(audio.get("duration", 0)),
+              },
+              "duration_s": float(info["format"]["duration"]),
+              "orientation": "vertical 9:16",
+          }
+          pathlib.Path("outputs/demo_reel_report.json").write_text(
+              json.dumps(report, indent=2) + "\n")
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload reel (always, even if a later step fails)
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-reel-${{ github.run_number }}
+          path: |
+            outputs/demo_reel.mp4
+            outputs/demo_reel_report.json
+            remotion/public/voiceover.mp3
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Commit the rendered reel to the branch
+        # `outputs/*` is git-ignored by default (it used to hold multi-MB model
+        # output), so the deliverable is force-added. `skip ci` keeps this
+        # commit from re-triggering the workflow.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f outputs/demo_reel.mp4 outputs/demo_reel_report.json
+          if git diff --cached --quiet; then
+            echo "reel unchanged — nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(reel): render demo_reel.mp4 (1080x1920, 450f, h264/aac) [skip ci]"
+          git push
