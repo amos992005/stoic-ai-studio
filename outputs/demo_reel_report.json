@@ -2,7 +2,7 @@
   "engine": "Remotion 4 (React/TypeScript), CPU render",
   "audio": "edge-tts + procedural numpy/scipy SFX",
   "file": "outputs/demo_reel.mp4",
-  "size_mb": 4.52,
+  "size_mb": 5.03,
   "video": {
     "codec": "h264",
     "profile": "High",
