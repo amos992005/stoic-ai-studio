@@ -24,11 +24,15 @@ else
 fi
 
 echo "==> downloading Chrome Headless Shell"
+# The render is offline-safe once this succeeds; if it fails, every later
+# render will try to download the browser itself and fail far less clearly.
+npx remotion browser ensure --log=verbose 2>&1 | tail -5 || true
 # Retried: remotion.media is a CDN and occasionally drops the first TLS
 # handshake, which would otherwise fail a whole render job.
 for attempt in 1 2 3; do
   if npx remotion browser ensure; then
     echo "==> browser ready"
+    ls -la ~/.cache/remotion 2>/dev/null || true
     break
   fi
   echo "==> browser download failed (attempt $attempt/3), retrying in 10s"

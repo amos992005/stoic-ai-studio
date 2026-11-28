@@ -89,6 +89,43 @@ jobs:
             --codec=h264 \
             --pixel-format=yuv420p
 
+      - name: Inspect the rendered reel
+        # Records the raw ffprobe/ffmpeg output before any assertion runs, so a
+        # failing gate always has the numbers beside it. `|| true`: this step
+        # is diagnostics, not a gate.
+        if: always()
+        run: |
+          {
+            echo "# raw probe"
+            echo
+            echo '## ffprobe'
+            echo '```json'
+            ffprobe -v error -print_format json -show_format -show_streams \
+              outputs/demo_reel.mp4 2>&1 | head -200
+            echo '```'
+            echo
+            echo '## volumedetect'
+            echo '```'
+            ffmpeg -hide_banner -nostats -i outputs/demo_reel.mp4 -map 0:a:0 \
+              -af volumedetect -f null - 2>&1 | tail -12
+            echo '```'
+            echo
+            echo '## size'
+            ls -l outputs/demo_reel.mp4
+          } > outputs/probe.md 2>&1 || true
+          python - <<'PY2'
+          import pathlib
+          path = pathlib.Path("outputs/probe.md")
+          head = path.read_text()[:3000] if path.exists() else "(no probe output)"
+          summary = pathlib.Path("outputs/probe.md")
+          snippet = "\n".join(head.splitlines()[:60])
+          if "GITHUB_STEP_SUMMARY" in __import__("os").environ:
+              with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+                  fh.write("## ffprobe\n\n```\n" + snippet + "\n```\n")
+          print(snippet)
+          del summary
+          PY2
+
       - name: Verify the rendered reel
         run: |
           python scripts/check_reel.py --summary outputs/check_reel.md
@@ -146,7 +183,7 @@ jobs:
           mkdir -p outputs
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for report in outputs/check_audio.md outputs/check_reel.md; do
+          for report in outputs/check_audio.md outputs/check_reel.md outputs/probe.md; do
             if [ -f "$report" ]; then
               git add -f "$report"
             fi
@@ -172,6 +209,7 @@ jobs:
             outputs/demo_reel_report.json
             outputs/check_audio.md
             outputs/check_reel.md
+            outputs/probe.md
             remotion/public/voiceover.mp3
             remotion/public/audio_manifest.json
           if-no-files-found: warn
