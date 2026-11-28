@@ -48,6 +48,9 @@ const Badge: React.FC<{
         borderRadius: 999,
         border: `2px solid ${accent}66`,
         background: `linear-gradient(120deg, ${accent}22, rgba(255,255,255,0.03))`,
+        // stays inside the column even at its widest spring overshoot
+        maxWidth: "100%",
+        boxSizing: "border-box",
         transform: `translateX(${(1 - enter) * 260}px)`,
         opacity: enter,
         boxShadow: `0 0 46px -14px ${accent}`,
@@ -128,7 +131,9 @@ export const SceneHighlight: React.FC = () => {
         {/* ---- left: NOISE ---------------------------------------------- */}
         <AbsoluteFill
           style={{
+            left: 0,
             width: "50%",
+            boxSizing: "border-box",
             padding: "0 44px",
             justifyContent: "center",
             transform: `translateX(${(1 - left) * -520}px)`,
@@ -165,6 +170,8 @@ export const SceneHighlight: React.FC = () => {
         <AbsoluteFill
           style={{
             left: "50%",
+            width: "50%",
+            boxSizing: "border-box",
             padding: "0 44px",
             justifyContent: "center",
             transform: `translateX(${(1 - right) * 520}px)`,
@@ -202,10 +209,11 @@ export const SceneHighlight: React.FC = () => {
             style={{
               marginTop: 26,
               fontFamily: FONTS.text,
-              fontSize: 27,
+              fontSize: 26,
               fontWeight: 600,
-              lineHeight: 1.4,
+              lineHeight: 1.45,
               color: COLORS.muted,
+              maxWidth: "100%",
             }}
           >
             One hour, every day, when nobody claps.
