@@ -37,7 +37,7 @@
             "start_time": "0.000000",
             "duration_ts": 1350000,
             "duration": "15.000000",
-            "bit_rate": "2084703",
+            "bit_rate": "2356695",
             "bits_per_raw_sample": "8",
             "nb_frames": "450",
             "extradata_size": 51,
@@ -130,8 +130,8 @@
         "format_long_name": "QuickTime / MOV",
         "start_time": "0.000000",
         "duration": "15.019000",
-        "size": "4523725",
-        "bit_rate": "2409601",
+        "size": "5033926",
+        "bit_rate": "2681364",
         "probe_score": 100,
         "tags": {
             "major_brand": "isom",
@@ -148,17 +148,17 @@
 ```
       handler_name    : SoundHandler
       vendor_id       : [0][0][0][0]
-[Parsed_volumedetect_0 @ 0x72f5c0002000] n_samples: 1441792
-[Parsed_volumedetect_0 @ 0x72f5c0002000] mean_volume: -24.4 dB
-[Parsed_volumedetect_0 @ 0x72f5c0002000] max_volume: -5.9 dB
-[Parsed_volumedetect_0 @ 0x72f5c0002000] histogram_5db: 4
-[Parsed_volumedetect_0 @ 0x72f5c0002000] histogram_6db: 56
-[Parsed_volumedetect_0 @ 0x72f5c0002000] histogram_7db: 228
-[Parsed_volumedetect_0 @ 0x72f5c0002000] histogram_8db: 624
-[Parsed_volumedetect_0 @ 0x72f5c0002000] histogram_9db: 1382
-[out#0/null @ 0x652037de0f80] video:0KiB audio:2816KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
-size=N/A time=00:00:15.01 bitrate=N/A speed=1.25e+03x elapsed=0:00:00.01    
+[Parsed_volumedetect_0 @ 0x73b19c002000] n_samples: 1441792
+[Parsed_volumedetect_0 @ 0x73b19c002000] mean_volume: -24.4 dB
+[Parsed_volumedetect_0 @ 0x73b19c002000] max_volume: -6.0 dB
+[Parsed_volumedetect_0 @ 0x73b19c002000] histogram_5db: 2
+[Parsed_volumedetect_0 @ 0x73b19c002000] histogram_6db: 58
+[Parsed_volumedetect_0 @ 0x73b19c002000] histogram_7db: 226
+[Parsed_volumedetect_0 @ 0x73b19c002000] histogram_8db: 630
+[Parsed_volumedetect_0 @ 0x73b19c002000] histogram_9db: 1434
+[out#0/null @ 0x594f5eb5ff80] video:0KiB audio:2816KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:00:15.01 bitrate=N/A speed= 741x elapsed=0:00:00.02    
 ```
 
 ## size
--rw-r--r-- 1 runner runner 4523725 Nov 28 16:15 outputs/demo_reel.mp4
+-rw-r--r-- 1 runner runner 5033926 Nov 28 16:18 outputs/demo_reel.mp4
