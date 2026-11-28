@@ -1,0 +1,24 @@
+{
+  "engine": "Remotion 4 (React/TypeScript), CPU render",
+  "audio": "edge-tts + procedural numpy/scipy SFX",
+  "file": "outputs/demo_reel.mp4",
+  "size_mb": 4.52,
+  "video": {
+    "codec": "h264",
+    "profile": "High",
+    "pix_fmt": "yuv420p",
+    "width": 1080,
+    "height": 1920,
+    "fps": "30/1",
+    "frames": "450",
+    "duration_s": 15.0
+  },
+  "audio_stream": {
+    "codec": "aac",
+    "sample_rate": "48000",
+    "channels": 2,
+    "duration_s": 15.019
+  },
+  "duration_s": 15.019,
+  "orientation": "vertical 9:16"
+}
